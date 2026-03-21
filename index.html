@@ -5763,8 +5763,18 @@
               {/* Flying Cards Animation Layer */}
               {flyingCards.map(fc => {
                 const start = fc.from === 'graveyard' ? { top: '50%', left: '85%' } : fc.from === 'deck' ? { top: '50%', left: '50%' } : getPlayerEdgePosition(fc.from);
+                const end = getPlayerEdgePosition(fc.to);
+                const isDeal = fc.type === 'deal';
+                return (
+                  <div key={fc.id} className={isDeal ? "deal-card-back" : "flying-card-back"} style={{
+                    '--start-top': start.top,
+                    '--start-left': start.left,
+                    '--end-top': end.top,
+                    '--end-left': end.left,
+                    '--start-scale': isDeal ? 1 : 0.5,
+                    '--end-scale': isDeal ? 1 : 0.8,
+                    animation: `card-fly-back 0.8s ${fc.delay || 0}s both cubic-bezier(0.4, 0, 0.2, 1)`
                   }}>
-                    {/* 絵文字アイコンの廃止 */}
                   </div>
                 );
               })}
