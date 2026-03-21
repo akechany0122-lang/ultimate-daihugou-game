@@ -1126,31 +1126,43 @@
       .player-pos.pos-bottom .card {
         width: 85px !important;
         height: 120px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.8) !important; /* 軽量化 */
       }
       .btn-exit-to-title {
         position: fixed;
         top: 15px;
         left: 15px;
         z-index: 10000;
-        background: rgba(40, 0, 0, 0.8);
-        color: #ff4444;
-        border: 1px solid #600;
-        padding: 4px 12px;
-        font-family: 'Cinzel', serif;
-        font-size: 12px;
-        letter-spacing: 1px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-      .btn-exit-to-title:hover {
-        background: #600;
+        background: rgba(80, 0, 0, 0.9);
         color: #fff;
+        border: 2px solid #a00;
+        padding: 6px 16px;
+        font-family: 'Cinzel', serif;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        border-radius: 6px;
+        box-shadow: 0 0 15px rgba(255,0,0,0.3);
+        cursor: pointer;
+      }
+      .on-table .tcg-name {
+        font-size: 13px !important;
+        height: 18px !important;
+        bottom: 5px !important;
+      }
+      .cutin-card-popup .cutin-card-text .cutin-card-name {
+        font-size: 14px !important;
+      }
+      .cutin-card-desc {
+        font-size: 12px !important;
+      }
+      .field-status-label {
+        font-size: 2rem !important;
       }
       .effect-4-shield {
         width: 500vw !important; /* 圧倒的な巨大化 */
         height: 500vw !important; 
-        box-shadow: 0 0 150px #00b4d8, inset 0 0 150px #00b4d8;
+        box-shadow: 0 0 150px #00b4d8; /* 軽量化 */
       }
     }
 
@@ -4096,8 +4108,15 @@
       const [gyShuffling, setGyShuffling] = useState(false);
       const [isAnimating, setIsAnimating] = useState(false); // 全演出完了フラグ
       const lastTouchedId = React.useRef(null);
+      const isSwipingRef = React.useRef(false); // スワイプ中判定
+
+      const handleTouchStart = () => {
+        isSwipingRef.current = false;
+      };
+
       const handleTouchMove = (e, playerIdx) => {
         if (!isMobile || playerIdx !== 0 || turn !== 0 || selectionMode || exchangePhase) return;
+        isSwipingRef.current = true;
         const touch = e.touches[0];
         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
         const cardElem = elem?.closest('.card.selectable');
@@ -4107,7 +4126,8 @@
             const card = hands[0].find(c => c.id === cardId);
             if (card) {
               sm.playLightPaperSE();
-              toggleSelect(card);
+              // ユーザー要望：スワイプ中は「触れている位置のみ」を選択
+              setSelectedCards([card]); 
               lastTouchedId.current = cardId;
             }
           }
@@ -4115,6 +4135,8 @@
       };
       const handleTouchEnd = () => {
         lastTouchedId.current = null;
+        // スワイプ終了後、少し待って判定をリセット
+        setTimeout(() => { isSwipingRef.current = false; }, 50);
       };
 
       const [watchSelecting, setWatchSelecting] = useState(false); // Kウォッチ対象選択モード
@@ -5429,9 +5451,11 @@
         return (
           <div key={playerIdx}
             className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== 0 && !isDead ? 'watch-clickable' : ''}`}
+            onTouchStart={handleTouchStart}
             onTouchMove={(e) => handleTouchMove(e, playerIdx)}
             onTouchEnd={handleTouchEnd}
             onClick={() => {
+              if (isSwipingRef.current) return; // スワイプ後の誤爆防止
               if (watchSelecting && playerIdx !== 0 && !isDead) {
                 const watchDuration = (selectionInfo?.count || 1) * 5000;
                 setWatchTarget({
