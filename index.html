@@ -3516,20 +3516,20 @@
 
       /* Table Cards */
       .card.on-table {
-        width: 140px !important; /* 極限まで巨大化 */
-        height: 195px !important; /* 極限まで巨大化 */
+        width: 110px !important; /* 適正サイズに縮小 */
+        height: 155px !important; /* 適正サイズに縮小 */
       }
       .on-table .tcg-rank-circle {
-        width: 24px !important;
-        height: 24px !important;
-        font-size: 14px !important;
-        top: 4px !important;
-        left: 4px !important;
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 11px !important;
+        top: 3px !important;
+        left: 3px !important;
       }
       .on-table .tcg-name {
-        font-size: 20px !important; /* 拡大 */
-        height: 26px !important;
-        bottom: 15px !important;
+        font-size: 14px !important; /* 縮小 */
+        height: 20px !important;
+        bottom: 10px !important;
         white-space: nowrap !important;
         font-weight: bold !important;
         color: var(--color-gold) !important;
@@ -3550,30 +3550,9 @@
         left: 5px !important;
       }
       /* Cut-in Text MEGA SPECIFICITY SLEDGEHAMMER */
-      html body #root #game-root .cutin-container .cutin-card-popup .cutin-card-text .cutin-card-name {
-        font-size: 36px !important; /* 極限まで巨大化 */
-        letter-spacing: 0px !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: clip !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        text-align: center !important;
-        line-height: 1.0 !important;
-        display: block !important;
-        color: var(--color-gold) !important;
-        font-weight: 900 !important;
-      }
-      /* Reduce padding to give more horizontal room */
+      /* スマホ版のみ場に出た際の説明テキストを廃止 */
       .cutin-card-text {
-        padding: 8px 4px 10px !important;
-      }
-      .cutin-card-desc {
-        font-size: 24px !important; /* 極限まで巨大化 */
-        line-height: 1.2 !important;
-        color: #fff !important; /* 確実に白 */
-        font-weight: bold !important;
-        text-shadow: 0 2px 10px rgba(0,0,0,1) !important;
+        display: none !important;
       }
       
       /* Continuous Effects Scaling Down (SLEDGEHAMMER) */
