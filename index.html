@@ -4117,6 +4117,9 @@
         lastTouchedId.current = null;
       };
 
+      const [watchSelecting, setWatchSelecting] = useState(false); // Kウォッチ対象選択モード
+      const [watchTimerTick, setWatchTimerTick] = useState(0); // タイマー描画更新用
+
       const [isGameOver, setIsGameOver] = useState(false);
       const [roundResults, setRoundResults] = useState([]); // [p0, p1, p2, p3] ranking for the last round
       const [exchangePhase, setExchangePhase] = useState(null); // 'selecting' | 'animating' | null
@@ -5568,7 +5571,7 @@
       };
 
       return (
-        <div id="game-root">
+        <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''}`} onContextMenu={(e) => e.preventDefault()}>
           {(!gameStarted && multiplayerMode !== 'lobby') ? (
             <div className="title-screen">
               <div className="title-card-fan">
