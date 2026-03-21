@@ -1,0 +1,6073 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ULTIMATE DAIHUGOU: DEATH GAME</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Cinzel:wght@700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <style>
+    :root {
+      --bg-iron: #111;
+      --bg-rust: #2a0800;
+      --color-blood: #8a0303;
+      --color-gold: #b8860b;
+      --card-width: 90px;
+      --card-height: 130px;
+      --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
+      --font-main: 'Cormorant Garamond', serif;
+    }
+
+    body {
+      font-family: var(--font-main);
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-iron);
+      color: #ccc;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* SVノイズなどの重い描画を削除し、軽量なグラデーションでパフォーマンスを改善 */
+      background-image:
+        radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.9) 100%),
+        repeating-radial-gradient(ellipse at center, rgba(0, 0, 0, 0.1) 0px, transparent 2px),
+        radial-gradient(ellipse at center, #2e1515 0%, var(--bg-iron) 100%);
+    }
+
+    #root {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* 全体フィルター効果 (11バック、8切り暗転など) */
+    .screen-filter {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 150;
+      transition: all 1s;
+    }
+
+    .filter-11back {
+      background: rgba(138, 3, 3, 0.35);
+      /* 軽量な半透明カラー */
+      mix-blend-mode: multiply;
+      /* backdrop-filterの代替となる軽量なブレンド効果 */
+    }
+
+    .filter-8cut {
+      background: rgba(0, 0, 0, 0.8);
+      transition: background 0.1s;
+    }
+
+    /* 11バック用の逆回転時計の影 */
+    .bg-clock {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80vh;
+      height: 80vh;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2"/><line x1="50" y1="50" x2="50" y2="20" stroke="rgba(255,255,255,0.08)" stroke-width="4" stroke-linecap="round"/><line x1="50" y1="50" x2="30" y2="50" stroke="rgba(255,255,255,0.08)" stroke-width="3" stroke-linecap="round"/></svg>') no-repeat center center;
+      background-size: contain;
+      transition: opacity 1s;
+    }
+
+    .bg-clock.active {
+      opacity: 1;
+      animation: spin-reverse 10s linear infinite;
+    }
+
+    @keyframes spin-clockwise {
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    @keyframes spin-counter-clockwise {
+      100% {
+        transform: translate(-50%, -50%) rotate(-360deg);
+      }
+    }
+
+    /* 9リバース: 点線円全体が回転するインジケーター */
+    .bg-reverse-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 38vh;
+      height: 38vh;
+      border: 3px dashed rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      transform-origin: center;
+      pointer-events: none;
+      z-index: 0;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
+      background: transparent;
+    }
+
+    .bg-reverse-indicator.spin-clockwise {
+      animation: spin-clockwise-indicator 10s linear infinite;
+    }
+
+    .bg-reverse-indicator.spin-counter-clockwise {
+      animation: spin-counter-clockwise-indicator 10s linear infinite;
+    }
+
+    @keyframes spin-clockwise-indicator {
+      from {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    @keyframes spin-counter-clockwise-indicator {
+      from {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      to {
+        transform: translate(-50%, -50%) rotate(-360deg);
+      }
+    }
+
+    /* 回転するマーカー点 */
+    .bg-reverse-indicator::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+    }
+
+    .bg-reverse-indicator::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .btn-start-game {
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--color-blood);
+      border: 1px solid var(--color-blood);
+      padding: 12px 10px;
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      cursor: pointer;
+      position: relative;
+      z-index: 1001;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(138, 3, 3, 0.3);
+      width: 320px;
+      margin-bottom: 12px;
+      white-space: nowrap;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .btn-start-game:hover {
+      background: var(--color-blood);
+      color: #fff;
+      box-shadow: 0 0 20px var(--color-blood);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      font-size: 0.9rem;
+      padding: 8px 15px;
+      width: 180px;
+      opacity: 0.8;
+      border-color: #555;
+      color: #aaa;
+    }
+
+    /* カード説明画面 */
+    .explanation-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vw;
+      height: 85vh;
+      background: rgba(10, 10, 10, 0.98);
+      border: 2px solid var(--color-gold);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+      border-radius: 20px;
+      z-index: 20000;
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      color: #fff;
+    }
+
+    .explanation-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .explanation-header h2 {
+      font-family: 'Cinzel', serif;
+      color: var(--color-gold);
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+    }
+
+    .explanation-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      padding-top: 10px;
+    }
+
+    /* カスタムスクロールバー */
+    .explanation-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .explanation-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .explanation-list::-webkit-scrollbar-thumb {
+      background: var(--color-gold);
+      border-radius: 4px;
+    }
+
+    .explanation-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .explanation-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--color-gold);
+    }
+
+    .explanation-card-view {
+      width: 60px;
+      height: 85px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .explanation-text {
+      flex: 1;
+    }
+
+    .explanation-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: var(--color-gold);
+      margin-bottom: 4px;
+    }
+
+    .explanation-card-desc {
+      font-size: 0.82rem;
+      color: #ccc;
+      line-height: 1.3;
+    }
+
+    /* レスポンシブ対応 (Mobile) */
+    @media (max-width: 768px) {
+      :root {
+        --card-width: 35px;
+        --card-height: 50px;
+      }
+
+      .btn-start-game {
+        width: 260px;
+        font-size: 0.95rem;
+        padding: 10px;
+      }
+
+      .title-logo {
+        width: 280px;
+      }
+
+      .explanation-overlay {
+        width: 95vw;
+        height: 90vh;
+        padding: 15px;
+      }
+
+      .explanation-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .table-container {
+        transform: scale(0.95);
+      }
+
+      .field-area {
+        transform: scale(0.65);
+      }
+
+      .discard-pile {
+        transform: scale(0.65);
+      }
+
+      .player-area.player-1,
+      .player-area.player-2,
+      .player-area.player-3 {
+        transform: scale(0.6);
+      }
+
+      .action-panel {
+        bottom: 30px;
+        transform: translateX(-50%) scale(0.85);
+      }
+
+      .player-pos.pos-bottom {
+        bottom: 130px;
+        transform: translateX(-50%) scale(1.0);
+      }
+
+      .coffin-container {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        transform: scale(0.35);
+        transform-origin: top right;
+        margin: 0;
+        z-index: 1000;
+      }
+
+      .player-info {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+      }
+
+      .card-rank {
+        font-size: 0.75rem;
+      }
+
+      .explanation-card-desc {
+        font-size: 0.72rem;
+      }
+
+      .btn-pass {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+      }
+    }
+
+    .btn-close-explanation {
+      margin-top: 20px;
+      align-self: center;
+    }
+
+    /* PASS表示スタイル */
+    .player-pass-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 5px 15px;
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.2rem;
+      border: 1px solid var(--color-blood);
+      border-radius: 4px;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(138, 3, 3, 0.6);
+      animation: fadeInPass 0.3s ease-out;
+    }
+
+    @keyframes fadeInPass {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    /* Jバック 永続的背景効果（より重厚なダークファンタジーオーラ） */
+    .bg-jback-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(138, 3, 3, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(211, 84, 0, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.4) 0%, rgba(20, 10, 5, 0.6) 100%);
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 2s ease-in-out;
+    }
+
+    .bg-jback-indicator.active {
+      opacity: 1;
+      animation: pulse-jback-aura 4s ease-in-out infinite alternate;
+    }
+
+    .bg-jback-indicator::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    @keyframes pulse-jback-aura {
+      0% {
+        opacity: 0.5;
+        box-shadow: inset 0 0 100px rgba(138, 3, 3, 0.3);
+      }
+
+      100% {
+        opacity: 0.9;
+        box-shadow: inset 0 0 200px rgba(230, 126, 34, 0.4);
+      }
+    }
+
+    /* 革命 永続的背景効果（青紫の不気味なオーラ） */
+    .bg-revolution-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(72, 0, 138, 0.25) 0%, transparent 60%),
+        radial-gradient(circle at 10% 80%, rgba(0, 72, 138, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.2) 0%, rgba(10, 0, 30, 0.7) 100%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 2s ease-in-out;
+    }
+
+    .bg-revolution-indicator.active {
+      opacity: 1;
+      animation: pulse-revolution-aura 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse-revolution-aura {
+      0% {
+        opacity: 0.4;
+        filter: hue-rotate(0deg) contrast(1.1);
+      }
+      100% {
+        opacity: 0.8;
+        filter: hue-rotate(15deg) contrast(1.3);
+      }
+    }
+
+    /* 墓地シャッフル演出 */
+    @keyframes gy-shake {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      25% {
+        transform: translate(-5px, 5px);
+      }
+
+      50% {
+        transform: translate(5px, -5px);
+      }
+
+      75% {
+        transform: translate(-5px, -5px);
+      }
+
+      100% {
+        transform: translate(0, 0);
+      }
+    }
+
+    .graveyard-shuffle {
+      animation: gy-shake 0.1s infinite;
+    }
+
+    /* Kウォッチ対象選択 */
+    .watch-clickable {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .watch-clickable::after {
+      content: 'SELECT';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-gold);
+      color: #000;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 4px;
+      animation: bounce 0.5s infinite alternate;
+      z-index: 200;
+    }
+
+    /* K-Watch Overlay Premium Design */
+    .watch-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px; /* 少しスリムに */
+      padding: 12px;
+      background: rgba(10, 10, 10, 0.98);
+      border: 2px solid var(--color-gold);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 1);
+      border-radius: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      will-change: transform, opacity;
+      transform-origin: center;
+    }
+
+    @media (max-width: 768px) {
+      .watch-overlay {
+        width: 70vw !important; /* スマホではさらにスリムに */
+        padding: 10px !important;
+      }
+    }
+
+    .watch-header {
+      text-align: center;
+    }
+
+    .watch-header h3 {
+      color: var(--color-gold);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .watch-timer {
+      font-family: 'Courier New', monospace;
+      font-size: 1.2rem;
+      background: #000;
+      padding: 5px 15px;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+
+    .watch-hand {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .watch-hand .card {
+      width: 70px;
+      height: 100px;
+      font-size: 0.8rem;
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      to {
+        transform: translateX(-50%) translateY(-5px);
+      }
+    }
+
+    @keyframes pulse-jback-bg {
+      from {
+        background: rgba(230, 126, 34, 0.05);
+      }
+
+      to {
+        background: rgba(230, 126, 34, 0.25);
+      }
+    }
+
+    /* --- テーブルのレイアウト --- */
+    .table-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      perspective: 1200px;
+    }
+
+    .player-pos {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s ease;
+      z-index: 50;
+    }
+
+    .card-rank {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 28px;
+      font-weight: 900;
+      font-family: 'Cinzel', serif;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+      pointer-events: none;
+      -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .tcg-art {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      z-index: 5;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .pos-top {
+      top: 15px;
+      /* 画面上端ギリギリへ移動 */
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .pos-left {
+      left: 24vw;
+      /* 画面左端からさらに中央へ大きく寄せる */
+      top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      transform-origin: center;
+    }
+
+    .pos-right {
+      right: 24vw;
+      /* 画面右端からさらに中央へ大きく寄せる */
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      transform-origin: center;
+    }
+
+    .pos-bottom {
+      bottom: 35vh;
+      /* 以前の見やすい位置に復元 */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      transform: translateX(-50%) scale(1.15);
+    }
+
+    /* --- 現在のターンの禍々しいハイライト --- */
+    .player-pos.active-turn {
+      z-index: 60;
+    }
+
+    .player-pos.active-turn .player-status {
+      color: #fff;
+      text-shadow: 0 0 15px var(--color-blood), 0 0 30px var(--color-blood);
+      box-shadow: 0 0 30px inset var(--color-blood), 0 0 25px var(--color-blood);
+      border: 2px solid var(--color-blood);
+      transform: translateX(-50%) scale(1.25);
+      animation: pulse-blood 1.2s infinite alternate;
+      z-index: 110;
+    }
+
+    /* プレイヤーの床に赤い影（サークル）を表示 */
+    .player-pos.active-turn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 280px;
+      height: 120px;
+      transform: translate(-50%, -10%);
+      /* 足元に広がるように調整 */
+      background: radial-gradient(ellipse at center, rgba(138, 3, 3, 0.6) 0%, rgba(138, 3, 3, 0.2) 50%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10;
+      animation: pulse-blood-floor 1.5s infinite alternate;
+    }
+
+    @keyframes pulse-blood-floor {
+      0% {
+        opacity: 0.6;
+        transform: translate(-50%, -10%) scale(0.9);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -10%) scale(1.1);
+      }
+    }
+
+    /* --- アクションパネル（中央下・横並びへ） --- */
+    .action-panel {
+      position: absolute;
+      left: 50%;
+      bottom: 22vh;
+      /* 手札位置 (35vh) に連動して、以前の見やすい位置に復元 */
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+    }
+
+    .action-btn {
+      width: 200px;
+      padding: 12px 0;
+    }
+
+    @keyframes pulse-blood {
+      0% {
+        box-shadow: 0 0 15px inset rgba(138, 3, 3, 0.5), 0 0 10px rgba(138, 3, 3, 0.3);
+      }
+
+      100% {
+        box-shadow: 0 0 40px inset rgba(138, 3, 3, 0.9), 0 0 25px rgba(138, 3, 3, 0.8);
+      }
+    }
+
+    /* デスゲーム風 階級章 */
+    .rank-badge {
+      display: block;
+      font-size: 12px;
+      font-family: 'Cinzel', serif;
+      color: var(--color-gold);
+      text-shadow: 0 0 5px rgba(184, 134, 11, 0.5);
+      margin-top: 2px;
+    }
+
+    .rank-daifugo {
+      color: #f1c40f;
+      text-shadow: 0 0 10px #f1c40f;
+    }
+
+    .rank-daihinmin {
+      color: #555;
+      text-decoration: line-through;
+    }
+
+    /* --- TCG Dark Fantasy Card Design --- */
+    :root {
+      --card-width: 95px;
+      --card-height: 135px;
+    }
+
+    .card {
+      width: var(--card-width);
+      height: var(--card-height);
+      /* Base container is dark with gold/bronze metallic trim */
+      background: #0d0b0a;
+      border: 3px solid #b38b4d;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      /* シャドウを軽量化 */
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      /* パフォーマンス向上のため will-change を追加 */
+      will-change: transform, left, top, opacity;
+      transition: transform 0.2s, box-shadow 0.2s, top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), margin-left 0.4s ease-out;
+      backface-visibility: hidden;
+      transform-origin: bottom center;
+      overflow: visible;
+      /* ツールチップ表示のため */
+    }
+
+    /* ツールチップ（ホバー時のカード能力説明）: カード上部の半透明黒テキストボックス */
+    .card .tcg-tooltip {
+      position: absolute;
+      bottom: 110%;
+      /* カードの上部 */
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.2;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      transform: translateY(10px);
+      z-index: 2000;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+      font-family: var(--font-main);
+      box-sizing: border-box;
+      border: 1px solid rgba(184, 134, 11, 0.4);
+    }
+
+    .card:hover .tcg-tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 以前の黒い四角（::after）を完全に削除 */
+    .card[data-tooltip]::after,
+    .card::after {
+      display: none !important;
+    }
+
+    /* Outer border metallic shine effect */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border: 2px solid rgba(255, 223, 145, 0.2);
+      border-radius: 8px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ゲーム終了・リザルトUI */
+    .game-over-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;
+      padding: 40px;
+      background: rgba(10, 5, 2, 0.95);
+      border: 4px double var(--color-gold);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 1), 0 0 30px rgba(184, 134, 11, 0.2);
+      border-radius: 8px;
+      z-index: 5000;
+      text-align: center;
+      color: #eadbb1;
+      animation: message-zoom 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      margin: 10px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid transparent;
+      font-family: 'Cinzel', serif;
+    }
+
+    .result-row.highlight-p0 {
+      background: rgba(184, 134, 11, 0.15);
+      border-left-color: var(--color-gold);
+      box-shadow: inset 0 0 10px rgba(184, 134, 11, 0.1);
+    }
+
+    .rank-num {
+      font-size: 1.2rem;
+      color: #888;
+    }
+
+    .rank-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .rank-player {
+      font-size: 1rem;
+      color: #aaa;
+    }
+
+    .result-actions {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .gold-btn {
+      padding: 15px;
+      background: linear-gradient(to bottom, #4a3a1a, #2a1a0a);
+      border: 1px solid var(--color-gold);
+      color: var(--color-gold);
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .gold-btn:hover {
+      background: var(--color-gold);
+      color: #000;
+      box-shadow: 0 0 20px rgba(184, 134, 11, 0.5);
+    }
+
+    /* 階級ラベル */
+    .player-rank-label {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 15px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #444;
+      color: #ccc;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      border-radius: 4px;
+      z-index: 100;
+    }
+
+    .player-rank-label.rank-daifugo {
+      color: var(--color-gold);
+      border-color: var(--color-gold);
+      box-shadow: 0 0 10px rgba(184, 134, 11, 0.4);
+    }
+
+    .player-rank-label.rank-daihinmin {
+      color: #888;
+      border-color: #333;
+    }
+
+    /* 交換UI */
+    .exchange-overlay-ui {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid var(--color-gold);
+      border-radius: 8px;
+      z-index: 4000;
+      text-align: center;
+      width: 400px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 1);
+    }
+
+    /* Multiplayer Lobby Styles */
+    .passphrase-input {
+      background: #000;
+      color: #fff;
+      border: 1px solid var(--color-gold);
+      padding: 12px;
+      width: 260px;
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 20px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 2px;
+      outline: none;
+      box-shadow: inset 0 0 10px rgba(184, 134, 11, 0.2);
+    }
+    .passphrase-input:focus {
+      box-shadow: inset 0 0 15px rgba(184, 134, 11, 0.5), 0 0 10px rgba(184, 134, 11, 0.3);
+    }
+    .player-lobby-list div {
+      transition: all 0.3s;
+    }
+    .player-lobby-list div:hover {
+      background: rgba(184, 134, 11, 0.2) !important;
+      transform: translateX(5px);
+    }
+
+    /* Inner art canvas */
+    .tcg-art {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 1;
+      background-image: radial-gradient(circle at center, #2e1515, #000);
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .card:hover .tcg-art {
+      transform: scale(1.1);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, transparent 40%, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Rank & Icon Circle */
+    .tcg-rank-circle {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 28px;
+      height: 28px;
+      background: rgba(0, 0, 0, 0.85);
+      /* backdrop-filter削除の代わりに不透明度アップ */
+      border: 1.5px solid #b38b4d;
+      border-radius: 4px;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      font-size: 16px;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .tcg-rank-circle span {
+      margin: 0;
+    }
+
+    /* フィールド中央のステータス表示 (Jバック/革命) */
+    .field-status-label {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-family: 'Cinzel', serif;
+      color: #ff4444;
+      font-weight: bold;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 0, 0, 0.5);
+      white-space: nowrap;
+      z-index: 100;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @media (max-width: 768px) {
+      .field-status-label {
+        font-size: 10px;
+        top: -15px;
+        padding: 1px 8px;
+      }
+      .to-graveyard {
+        width: 60px !important;
+        height: 85px !important;
+      }
+      .effect-4-shield {
+        width: 500vw !important; /* 圧倒的な巨大化 */
+        height: 500vw !important; 
+        box-shadow: 0 0 150px #00b4d8, inset 0 0 150px #00b4d8;
+      }
+    }
+
+    /* Name Plate */
+    .tcg-name {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      right: 5px;
+      height: 20px;
+      z-index: 10;
+      color: #fff;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+    }
+
+
+
+
+
+    /* Cut-in overlay – Card Center Popup (背景そのまま・中央カードポップアップ) */
+    .cutin-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      overflow: hidden;
+      /* 背景はそのまま – 暗転なし */
+    }
+
+    /* カード全体のラッパー（中央に大きく浮かぶ） */
+    .cutin-card-popup {
+      position: relative;
+      width: min(340px, 55vw);
+      height: min(500px, 80vh);
+      border-radius: 12px;
+      transform: scale(0) rotate(-8deg);
+      opacity: 0;
+      animation: card-popup-in 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.05s forwards;
+      z-index: 10;
+      /* 属性色アウターグロウ */
+      box-shadow:
+        0 0 0 3px var(--aura, #b8860b),
+        0 0 40px var(--aura, #b8860b),
+        0 0 80px var(--aura-dim, rgba(184, 134, 11, 0.5)),
+        0 30px 60px rgba(0, 0, 0, 0.9);
+    }
+
+    @keyframes card-popup-in {
+      0% {
+        transform: scale(0) rotate(-8deg);
+        opacity: 0;
+      }
+
+      70% {
+        transform: scale(1.08) rotate(2deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    /* カード内キャラクター画像エリア */
+    .cutin-card-art {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 10px;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      /* 下側テキストエリアのグラデーション */
+    }
+
+    /* カード内グラデーションオーバーレイ */
+    .cutin-card-art::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      background: linear-gradient(0deg,
+          rgba(0, 0, 0, 0.92) 0%,
+          rgba(0, 0, 0, 0.4) 35%,
+          transparent 65%,
+          rgba(0, 0, 0, 0.2) 100%);
+    }
+
+    /* ランクサークル（カード左上） */
+    .cutin-card-rank {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 44px;
+      height: 44px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid var(--aura, #b8860b);
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 22px;
+      color: #fff;
+      text-shadow: 0 0 8px var(--aura, #b8860b);
+      box-shadow: 0 0 12px var(--aura, #b8860b);
+      z-index: 5;
+    }
+
+    /* カード内テキストエリア */
+    .cutin-card-text {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 14px 20px;
+      z-index: 5;
+    }
+
+    .cutin-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1rem, 3.5vw, 1.5rem);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 4px;
+      color: var(--aura, #b8860b);
+      text-shadow: 0 0 15px var(--aura, #b8860b), 0 2px 6px rgba(0, 0, 0, 1);
+      margin: 0 0 6px 0;
+      animation: cutin-text-slide 0.5s 0.3s cubic-bezier(0.23, 1, 0.32, 1) both;
+    }
+
+    .cutin-card-desc {
+      font-family: var(--font-main);
+      font-size: clamp(0.75rem, 2vw, 1rem);
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 5px rgba(0, 0, 0, 1);
+      margin: 0;
+      animation: cutin-desc-fade 0.4s 0.5s forwards;
+      opacity: 0;
+    }
+
+    @keyframes cutin-text-slide {
+      0% {
+        transform: translateY(15px);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-desc-fade {
+      to {
+        opacity: 0.92;
+      }
+    }
+
+    /* カード横を走るスラッシュ（上下） */
+    .cutin-slash-top {
+      position: absolute;
+      top: 50%;
+      left: -100%;
+      width: 300%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, white 40%, var(--aura, #b8860b) 60%, transparent 100%);
+      transform: translateY(-160px) rotate(-6deg);
+      opacity: 0;
+      z-index: 8;
+      animation: slash-sweep-top 0.4s 0.2s ease-out forwards;
+      box-shadow: 0 0 10px var(--aura, #b8860b);
+    }
+
+    @keyframes slash-sweep-top {
+      0% {
+        left: -100%;
+        opacity: 0;
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      100% {
+        left: 100%;
+        opacity: 0;
+      }
+    }
+
+    .cutin-slash-bottom {
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 300%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--aura, #b8860b) 40%, white 60%, transparent 100%);
+      transform: translateY(160px) rotate(-6deg);
+      opacity: 0;
+      z-index: 8;
+      animation: slash-sweep-bottom 0.4s 0.3s ease-out forwards;
+      box-shadow: 0 0 10px var(--aura, #b8860b);
+    }
+
+    @keyframes slash-sweep-bottom {
+      0% {
+        left: 100%;
+        opacity: 0;
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      100% {
+        left: -100%;
+        opacity: 0;
+      }
+    }
+
+    /* 属性色パルスリング */
+    .cutin-pulse-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 2px solid var(--aura, #b8860b);
+      box-shadow: 0 0 20px var(--aura, #b8860b);
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 1;
+      animation: pulse-ring-expand 0.9s 0.1s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .cutin-pulse-ring:nth-child(2) {
+      animation-delay: 0.3s;
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: none;
+    }
+
+    @keyframes pulse-ring-expand {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+
+      80% {
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* =========================================
+       個別キャラクター発動エフェクト用クラス群
+       ========================================= */
+
+    /* A: 青い閃光スラッシュ */
+    .effect-a-slash {
+      position: absolute;
+      top: 50%;
+      left: -50%;
+      width: 200%;
+      height: 8px;
+      background: linear-gradient(90deg, transparent, #2980b9, #ffffff, #2980b9, transparent);
+      transform: translateY(-50%) rotate(-15deg);
+      box-shadow: 0 0 30px #2980b9, 0 0 60px #ffffff;
+      opacity: 0;
+      z-index: 15;
+      animation: a-slash-strike 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    @keyframes a-slash-strike {
+      0% {
+        left: -50%;
+        opacity: 0;
+        transform: translateY(-50%) rotate(-15deg) scaleY(0.1);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateY(-50%) rotate(-15deg) scaleY(1.5);
+      }
+
+      100% {
+        left: 50%;
+        opacity: 0;
+        transform: translateY(-50%) rotate(-15deg) scaleY(0.1);
+      }
+    }
+
+    /* 2: 緑の地割れ・揺れ */
+    .effect-2-quake {
+      position: absolute;
+      bottom: -10vh;
+      left: 0;
+      width: 100vw;
+      height: 30vh;
+      background: radial-gradient(ellipse at bottom, rgba(39, 174, 96, 0.6) 0%, transparent 70%);
+      border-top: 4px solid #27ae60;
+      box-shadow: 0 -10px 40px #27ae60;
+      opacity: 0;
+      z-index: 2;
+      animation: quake-shock 0.6s ease-out forwards;
+    }
+
+    @keyframes quake-shock {
+      0% {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+
+      20% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(20%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes screen-shake {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      10%,
+      30%,
+      50%,
+      70%,
+      90% {
+        transform: translate(-10px, 10px);
+      }
+
+      20%,
+      40%,
+      60%,
+      80% {
+        transform: translate(10px, -10px);
+      }
+    }
+
+    /* 3: グレーの土煙 */
+    .effect-3-dust {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at bottom, rgba(127, 140, 141, 0.8) 0%, transparent 60%);
+      opacity: 0;
+      z-index: 4;
+      animation: dust-rise 1s ease-out forwards;
+    }
+
+    @keyframes dust-rise {
+      0% {
+        opacity: 0;
+        transform: translateY(200px) scale(0.8);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateY(0) scale(1.1);
+        filter: blur(5px);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-100px) scale(1.5);
+        filter: blur(15px);
+      }
+    }
+
+    /* 4: 水色の防壁 (回転させず静的な青い壁に) */
+    /* 4: 水色の防壁 (回転させず静的な青い壁に) */
+    .effect-4-shield {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 85vw; /* 拡大：70 -> 85 */
+      height: 85vh;
+      border: 8px solid rgba(0, 180, 216, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 0 60px #00b4d8, inset 0 0 60px #00b4d8;
+      background: rgba(0, 180, 216, 0.15);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 15;
+      animation: shield-deploy 0.4s ease-out forwards;
+    }
+
+    @keyframes shield-deploy {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    /* 5: ターコイズの鎖 */
+    .effect-5-chain {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 20px;
+      background: repeating-linear-gradient(90deg, #e74c3c, #e74c3c 10px, transparent 10px, transparent 20px);
+      box-shadow: 0 0 15px #e74c3c;
+      transform: translateY(-50%) rotate(25deg);
+      opacity: 0;
+      z-index: 15;
+      animation: chain-bind 0.4s ease-out forwards;
+    }
+
+    @keyframes chain-bind {
+      0% {
+        left: -100%;
+        opacity: 0;
+      }
+
+      100% {
+        left: 0;
+        opacity: 0.8;
+      }
+    }
+
+    /* 6: 赤紫の炎 (Phoenix) */
+    .effect-6-fire {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 300px;
+      height: 400px;
+      background: radial-gradient(ellipse at bottom, #8e44ad 0%, #e67e22 50%, transparent 100%);
+      transform: translateX(-50%) scale(0);
+      transform-origin: bottom center;
+      opacity: 0;
+      z-index: 5;
+      filter: blur(8px);
+      animation: fire-burst 0.8s ease-out forwards;
+    }
+
+    @keyframes fire-burst {
+      0% {
+        transform: translateX(-50%) scale(0.2);
+        opacity: 0;
+      }
+
+      50% {
+        transform: translateX(-50%) scale(1.5);
+        opacity: 0.9;
+      }
+
+      100% {
+        transform: translateX(-50%) scale(2);
+        opacity: 0;
+      }
+    }
+
+    /* 7: 黄金の煙 */
+    .effect-7-gold {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
+      opacity: 0;
+      z-index: 5;
+      animation: gold-smoke 1s ease-out forwards;
+    }
+
+    @keyframes gold-smoke {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.5);
+      }
+    }
+
+    /* 8: 斬撃エフェクト (強制暗転を廃止し、オレンジの斧跡だけを残す) */
+    .effect-8-cut {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100vw;
+      height: 12px;
+      background: #d35400;
+      /* オレンジの斧 */
+      box-shadow: 0 0 40px #d35400, 0 0 20px #ffffff;
+      opacity: 0;
+      z-index: 9999;
+      transform: translateY(-50%) rotate(-5deg);
+      /* 斜めの斬撃 */
+      animation: cut-screen 0.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    @keyframes cut-screen {
+      0% {
+        width: 0;
+        left: 50%;
+        opacity: 1;
+      }
+
+      30% {
+        width: 120vw;
+        left: -10vw;
+        opacity: 1;
+        height: 20px;
+      }
+
+      100% {
+        width: 120vw;
+        left: -10vw;
+        opacity: 0;
+        height: 2px;
+        transform: translateY(-50%) rotate(-5deg) scaleY(0);
+      }
+    }
+
+    /* 9: マゼンタの歯車 */
+    .effect-9-gear {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150vw;
+      height: 150vw;
+      border: 40px dashed #f1c40f;
+      border-radius: 50%;
+      opacity: 0;
+      z-index: 2;
+      animation: gear-spin 1s linear forwards;
+    }
+
+    @keyframes gear-spin {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 0.3;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) rotate(-180deg);
+        opacity: 0;
+      }
+    }
+
+    /* 10: 黒い雨 */
+    .effect-10-rain {
+      position: absolute;
+      top: -20vh;
+      left: 0;
+      width: 100vw;
+      height: 120vh;
+      background: linear-gradient(180deg, transparent, rgba(44, 62, 80, 0.8));
+      opacity: 0;
+      z-index: 15;
+      animation: rain-fall 0.8s ease-in forwards;
+    }
+
+    @keyframes rain-fall {
+      0% {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(0);
+        opacity: 0;
+      }
+    }
+
+    /* J: オレンジの全体オーラ演出 */
+    .effect-j-reverse {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(230, 126, 34, 0.4) 0%, transparent 70%),
+        repeating-radial-gradient(circle at center, rgba(230, 126, 34, 0.1) 0, rgba(211, 84, 0, 0.1) 50px, transparent 100px);
+      mix-blend-mode: screen;
+      opacity: 0;
+      z-index: 5;
+      /* 手札や盤面の下に敷く */
+      pointer-events: none;
+      animation: reverse-aura 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes reverse-aura {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+
+      50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1);
+      }
+    }
+
+    /* Q: シルバーと赤の爆炎 */
+    .effect-q-bomb {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, #ffffff 0%, #ff4757 40%, transparent 70%);
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      z-index: 15;
+      border-radius: 50%;
+      animation: explosion-burst 0.6s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    @keyframes explosion-burst {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(5);
+        opacity: 1;
+        filter: brightness(2);
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(8);
+        opacity: 0;
+      }
+    }
+
+    /* K: ゴールド魔法陣 */
+    .effect-k-magic {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 90vmin;
+      height: 90vmin;
+      border: 5px solid #f1c40f;
+      border-radius: 50%;
+      box-shadow: 0 0 40px #f1c40f, inset 0 0 40px #f1c40f;
+      transform: translate(-50%, -50%) rotate(0deg) scale(0);
+      opacity: 0;
+      z-index: 4;
+      animation: magic-circle-deploy 1s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    }
+
+    @keyframes magic-circle-deploy {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(0);
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) rotate(90deg) scale(1.2);
+        opacity: 0.4;
+      }
+    }
+
+    /* Joker: 多色オーブ・ピンク霧 */
+    .effect-joker-mist {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(ellipse at center, rgba(253, 121, 168, 0.7) 0%, transparent 80%);
+      opacity: 0;
+      z-index: 15;
+      animation: joker-mist-spread 1.2s ease-out forwards;
+      filter: blur(10px);
+    }
+
+    @keyframes joker-mist-spread {
+      0% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.2);
+      }
+    }
+
+    /* 旧スタイル（互換のため残す） */
+    @keyframes text-pulse {
+      from {
+        transform: scale(1);
+        text-shadow: 0 0 20px var(--color-blood);
+      }
+
+      to {
+        transform: scale(1.05);
+        text-shadow: 0 0 50px var(--color-blood), 0 0 10px #fff;
+      }
+    }
+
+    @keyframes cutin-show {
+      to {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+
+    /* Individual character styles (placeholders) */
+    .cutin-joker {
+      animation: cutin-joker 2s ease-out;
+    }
+
+    .cutin-2 {
+      animation: cutin-2 2s ease-out;
+    }
+
+    .cutin-a {
+      animation: cutin-a 2s ease-out;
+    }
+
+    .cutin-k {
+      animation: cutin-k 2s ease-out;
+    }
+
+    .cutin-q {
+      animation: cutin-q 2s ease-out;
+    }
+
+    .cutin-j {
+      animation: cutin-j 2s ease-out;
+    }
+
+    .cutin-10 {
+      animation: cutin-10 2s ease-out;
+    }
+
+    .cutin-9 {
+      animation: cutin-9 2s ease-out;
+    }
+
+    .cutin-8 {
+      animation: cutin-8 2s ease-out;
+    }
+
+    .cutin-7 {
+      animation: cutin-7 2s ease-out;
+    }
+
+    .cutin-6 {
+      animation: cutin-6 2s ease-out;
+    }
+
+    .cutin-5 {
+      animation: cutin-5 2s ease-out;
+    }
+
+    .cutin-4 {
+      animation: cutin-4 2s ease-out;
+    }
+
+    .cutin-3 {
+      animation: cutin-3 2s ease-out;
+    }
+
+    /* Placeholder keyframes – developers can replace with detailed effects */
+    @keyframes cutin-joker {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-2 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-a {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-k {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-q {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-j {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-10 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-9 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-8 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-7 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-6 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-5 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-4 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes cutin-3 {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* 7渡し: 受け取ったカードの光る枠 */
+    .highlight-frame {
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      box-shadow: 0 0 20px #fff, 0 0 40px #f1c40f inset;
+      animation: frame-glow 1s infinite alternate;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    @keyframes frame-glow {
+      0% {
+        opacity: 0.5;
+        box-shadow: 0 0 10px #fff;
+      }
+
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 30px #fff, 0 0 20px #f1c40f inset;
+      }
+    }
+
+    .card-new-arrival {
+      animation: card-shake 0.5s ease-in-out;
+    }
+
+    @keyframes card-shake {
+
+      0%,
+      100% {
+        transform: rotate(0);
+      }
+
+      25% {
+        transform: rotate(5deg);
+      }
+
+      75% {
+        transform: rotate(-5deg);
+      }
+    }
+
+    .card::before {
+      /* Bloody stains on the cards */
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 80% 20%, rgba(138, 3, 3, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 10% 90%, rgba(138, 3, 3, 0.15) 0%, transparent 30%);
+      border: 1px solid rgba(138, 3, 3, 0.2);
+    }
+
+    .card.red {
+      color: var(--color-blood);
+    }
+
+    .card.joker {
+      color: #4a004a;
+      font-size: 20px;
+      text-shadow: 0 0 5px rgba(74, 0, 74, 0.5);
+    }
+
+    .card-corner {
+      position: absolute;
+      top: 5px;
+      left: 8px;
+      font-size: 16px;
+      line-height: 1;
+      text-align: left;
+    }
+
+    .card-icon {
+      position: absolute;
+      bottom: 5px;
+      right: 8px;
+      font-size: 18px;
+      filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+    }
+
+
+
+    /* 能力特有のオーラ (インラインスタイル等で動的に付与できるようCSSは準備しておく) */
+    .aura-shield {
+      box-shadow: 0 0 15px rgba(52, 152, 219, 0.8) inset, var(--card-shadow);
+    }
+
+    .aura-fire {
+      box-shadow: 0 0 15px rgba(231, 76, 60, 0.8) inset, var(--card-shadow);
+    }
+
+    .aura-dark {
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.9) inset, var(--card-shadow);
+    }
+
+    .aura-gold {
+      box-shadow: 0 0 15px rgba(241, 196, 15, 0.8) inset, var(--card-shadow);
+    }
+
+    /* プレイヤーのカードホバーと選択 */
+    .card.selectable {
+      cursor: pointer;
+    }
+
+    .card.selectable:hover:not(.selected) {
+      transform: translateX(calc(-50% + var(--spread-x, 0px))) rotate(var(--rot, 0deg)) translateY(calc(var(--trY, 0px) - 25px)) scale(1.05) !important;
+      box-shadow: 0 0 20px var(--color-blood), 0 20px 30px rgba(0, 0, 0, 0.8) !important;
+      z-index: 100 !important;
+      border-color: var(--color-blood);
+    }
+
+    .card.selected {
+      box-shadow: 0 0 25px var(--color-gold), 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+      transform: translateX(calc(-50% + var(--spread-x, 0px))) rotate(var(--rot, 0deg)) translateY(calc(var(--trY, 0px) - 35px)) scale(1.15) !important;
+      z-index: 100 !important;
+      border-color: var(--color-gold);
+    }
+
+    /* Hover Spread Effect */
+    .player-area:hover .card.selectable {
+      --spread-x: -20px;
+    }
+    
+    .player-area .card.selectable:hover ~ .card.selectable {
+      --spread-x: 20px;
+    }
+
+    /* CPUの手札（呪われた裏面） */
+    .card.back {
+      background: #2b0a0a;
+      border: 2px solid #5a1a1a;
+      color: #777;
+      box-shadow: inset 0 0 15px #000, 0 5px 15px rgba(0, 0, 0, 0.8);
+    }
+
+    .card.back::after {
+      /* Skull and Scythes SVG via content */
+      content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="50" height="50"><path fill="%23333" d="M50,15 C35,15 25,30 25,45 C25,55 30,65 35,70 L35,85 L65,85 L65,70 C70,65 75,55 75,45 C75,30 65,15 50,15 Z M40,45 A5,5 0 1,1 40,55 A5,5 0 1,1 40,45 M60,45 A5,5 0 1,1 60,55 A5,5 0 1,1 60,45 M50,65 L45,75 L55,75 Z"/><line x1="10" y1="90" x2="90" y2="10" stroke="%23333" stroke-width="4"/><line x1="90" y1="90" x2="10" y2="10" stroke="%23333" stroke-width="4"/></svg>');
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.8;
+    }
+
+    .hand-container {
+      position: relative;
+      height: var(--card-height);
+      width: 450px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* --- 中央の場（プレイエリア） --- */
+    .play-area {
+      position: absolute;
+      top: 48%;
+      /* やや上へ */
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      height: 380px;
+      /* ブラックホール演出を削除し、赤いサークルの縁のみに簡略化 */
+      border-radius: 50%;
+      border: 3px solid rgba(138, 3, 3, 0.6);
+      box-shadow: 0 0 20px rgba(138, 3, 3, 0.4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      animation: altar-pulse 6s infinite alternate;
+      background: transparent;
+    }
+
+    @keyframes altar-pulse {
+      0% {
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.9) inset, 0 0 15px rgba(138, 3, 3, 0.1);
+        border-color: rgba(138, 3, 3, 0.2);
+      }
+
+      100% {
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.95) inset, 0 0 30px rgba(138, 3, 3, 0.4);
+        border-color: rgba(138, 3, 3, 0.5);
+      }
+    }
+
+    .table-cards-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 打撃着地アニメーション (Slam shockwave) */
+    .card.on-table {
+      position: absolute;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      z-index: 10;
+    }
+
+    .card.slammed::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150%;
+      height: 150%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(138, 3, 3, 0.5) 0%, transparent 70%);
+      animation: slam-blast 0.5s ease-out forwards;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes slam-blast {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+      }
+    }
+
+    /* 場の流れるアニメーション (Black hole clear) */
+    /* 場の流れるアニメーション (墓地移動への変更) */
+    .card.leaving {
+      top: 60px !important;
+      /* 墓地のtop */
+      left: calc(100vw - 150px) !important;
+      /* 墓地のright周辺 */
+      transform: translate(0, 0) rotate(15deg) scale(0.3) !important;
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* 旧Blackhole演出は廃止 */
+    .blackhole {
+      display: none;
+    }
+
+    @keyframes bh-spin {
+      0% {
+        transform: translate(-50%, -50%) scale(0) rotate(0);
+        opacity: 1;
+      }
+
+      80% {
+        transform: translate(-50%, -50%) scale(1) rotate(360deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(0) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* --- 棺桶型墓地 (Coffin Graveyard) --- */
+    .coffin-container {
+      position: absolute;
+      top: 40px;
+      right: 40px;
+      width: 100px;
+      height: 160px;
+      z-index: 200;
+      perspective: 800px;
+      cursor: pointer;
+    }
+
+    /* 棺桶の本体 (箱部) */
+    .coffin-body {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #1a0f0a;
+      border: 3px solid #3d2b1f;
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.8),
+        inset 0 0 20px rgba(0, 0, 0, 0.9);
+      clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transform-style: preserve-3d;
+      transition: all 0.3s;
+    }
+
+    /* 棺桶の蓋 */
+    .coffin-lid {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2c1a12 0%, #0a0604 100%);
+      border: 3px solid #5a3e2b;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
+      z-index: 2;
+      transform-origin: left center;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow:
+        inset 0 0 15px rgba(255, 255, 255, 0.05),
+        2px 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 十字架の装飾 */
+    .coffin-lid::after {
+      content: '†';
+      font-size: 50px;
+      color: var(--color-gold);
+      opacity: 0.6;
+      text-shadow: 0 0 10px #000;
+    }
+
+    /* 蓋が開いた状態 */
+    .coffin-container.open .coffin-lid {
+      transform: rotateY(-110deg);
+    }
+
+    .coffin-count {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      color: var(--color-gold);
+      letter-spacing: 2px;
+      text-shadow: 0 0 5px #000;
+    }
+
+    /* 棺桶の中のカードスタック */
+    .coffin-inner-cards {
+      position: absolute;
+      width: 60px;
+      height: 90px;
+      background: #000;
+      opacity: 0.8;
+      transform: translateZ(-10px);
+    }
+
+    /* 蘇生アニメ用（6フェニックス） */
+    .resurrection-card {
+      position: absolute;
+      z-index: 1000;
+      pointer-events: none;
+      animation: resurrect-path 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    @keyframes resurrect-path {
+      0% {
+        transform: translate(calc(100vw - 110px), 80px) scale(0.2) rotate(0deg);
+        opacity: 0;
+      }
+
+      30% {
+        opacity: 1;
+        transform: translate(calc(100vw - 110px), 80px) scale(1.2) rotate(20deg);
+      }
+
+      100% {
+        transform: var(--target-pos) scale(1) rotate(0deg);
+        opacity: 0;
+      }
+    }
+
+    .card.to-graveyard {
+      animation: flow-to-gy-random 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards !important;
+    }
+
+    @keyframes flow-to-gy-random {
+      0% {
+        transform: translate(var(--start-x, -50%), var(--start-y, -50%)) rotate(0deg) scale(1.1);
+        opacity: 1;
+      }
+
+      30% {
+        transform: translate(calc(var(--start-x, -50%) + var(--rnd-x, 0px)), calc(var(--start-y, -50%) - 50px)) rotate(var(--rnd-rot, 45deg)) scale(1.2);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(calc(100vw - 120px), 80px) rotate(1080deg) scale(0.1);
+        opacity: 0;
+      }
+    }
+
+
+    /* --- ステータス・UI --- */
+    /* プレイヤー名の配置（YOUは廃止・非表示） */
+    .player-status {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      padding: 4px 12px;
+      border: 1px solid rgba(184, 134, 11, 0.6);
+      border-radius: 12px;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: #fff;
+      letter-spacing: 1px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+      text-transform: uppercase;
+    }
+
+    .pos-bottom .player-status {
+      display: none !important;
+    }
+
+    .pos-top .player-status {
+      top: auto;
+      bottom: -60px;
+    }
+
+    /* アクションパネルの位置を下げて手札と被らないように調整 */
+    .action-panel {
+      position: absolute;
+      bottom: 25px;
+      /* 少し下げた */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 200;
+    }
+
+    /* アクティブ時の拡大を少し控えめにし、中央への侵食を防ぐ */
+    .player-pos.active-turn .player-status {
+      transform: translateX(-50%) scale(1.1);
+    }
+
+    /* --- 選択モードUI --- */
+    /* --- 強化された演出アニメーション --- */
+    @keyframes card-explode {
+      0% {
+        transform: scale(1);
+        filter: brightness(1);
+      }
+
+      50% {
+        transform: scale(1.5);
+        filter: brightness(3) sepia(1) hue-rotate(-50deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(2);
+        filter: brightness(0);
+        opacity: 0;
+      }
+    }
+
+    .exploding-card {
+      animation: card-explode 0.8s forwards ease-out;
+      z-index: 500;
+    }
+
+    .player-pos.pos-bottom .card.selectable {
+      /* 自分のカードをさらに強調 */
+      width: calc(var(--card-width) * 1.15);
+      height: calc(var(--card-height) * 1.15);
+    }
+
+    @keyframes card-fly-back {
+      0% {
+        top: var(--start-top);
+        left: var(--start-left);
+        transform: translate(-50%, -50%) scale(var(--start-scale, 1));
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      100% {
+        top: var(--end-top);
+        left: var(--end-left);
+        transform: translate(-50%, -50%) scale(var(--end-scale, 1));
+        opacity: 1;
+      }
+    }
+
+    /* 配牌アニメーション：中央から各プレイヤーの手元へ */
+    @keyframes deal-fly {
+      0% {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+        opacity: 0;
+      }
+
+      20% {
+        opacity: 1;
+      }
+
+      100% {
+        /* transform は inline style で上書きされるため、ここでは主に top/left/opacity */
+        opacity: 1;
+      }
+    }
+
+    .card.dealing {
+      animation: deal-fly 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+      animation-delay: var(--deal-delay, 0s);
+    }
+
+    .deal-card-back::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border: 2px solid rgba(255, 223, 145, 0.2);
+      border-radius: 8px;
+    }
+
+    @keyframes received-pulse {
+      0% { box-shadow: 0 0 0px #fff; }
+      50% { box-shadow: 0 0 30px #fff; transform: translateY(-20px); }
+      100% { box-shadow: 0 0 0px #fff; }
+    }
+
+    .received-highlight {
+      animation: white-light-pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 25px 10px rgba(255, 255, 255, 0.9) !important;
+      border-color: #fff !important;
+      z-index: 150;
+    }
+
+    @keyframes white-light-pulse {
+      0% { box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.6); }
+      50% { box-shadow: 0 0 35px 15px rgba(255, 255, 255, 1); }
+      100% { box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.6); }
+    }
+
+    .selection-overlay-ui {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 24px;
+      background: rgba(10, 5, 5, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 1), 0 0 20px rgba(184, 134, 11, 0.1);
+      animation: slide-up-centered 0.4s ease-out forwards;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(280px, 40vw, 420px);
+      z-index: 10000;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .selection-guide {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: #ffd700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    .rank-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      /* 3列に変更 */
+      gap: 8px;
+      width: 100%;
+    }
+
+    .rank-select-btn {
+      padding: 8px 5px;
+      background: #111;
+      border: 1px solid #444;
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .rank-select-btn:hover {
+      background: var(--color-blood);
+      border-color: #fff;
+      transform: scale(1.1);
+    }
+
+    .btn-confirm {
+      background: var(--color-blood);
+      color: #fff;
+      border: 2px solid #fff;
+      font-weight: bold;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 0 15px var(--color-blood);
+    }
+
+    .btn-confirm:disabled {
+      background: #333;
+      border-color: #666;
+      box-shadow: none;
+      opacity: 0.5;
+    }
+
+    .selection-cancel-hint {
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+    }
+
+    @keyframes slide-up-centered {
+      from {
+        transform: translate(-50%, calc(-50% + 50px)) scale(0.9);
+        opacity: 0;
+      }
+
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* --- 特殊効果アニメーション要素 --- */
+
+    /* 4シールド：より横長の楕円で中央から遠ざける */
+    /* 4シールド：オーラはさらに小さく控えめに */
+    .shield-aura {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      width: 240px; /* 縮小：320 -> 240 */
+      height: 60px;  /* 縮小：80 -> 60 */
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(30, 80, 140, 0.4) 0%, transparent 80%);
+      border: 1px solid rgba(30, 80, 140, 0.35);
+      z-index: -1;
+      animation: shield-pulse 4s infinite alternate;
+      pointer-events: none;
+      will-change: opacity;
+    }
+
+    .pos-bottom .shield-aura {
+      top: 120%;
+    }
+
+    /* 各プレイヤー位置での調整。width/height は変えず、rotate で角度を合わせる */
+    .pos-left .shield-aura {
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      width: 480px;
+      height: 120px;
+    }
+
+    .pos-right .shield-aura {
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      width: 480px;
+      height: 120px;
+    }
+
+    .pos-top .shield-aura {
+      top: 25% !important;
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    .shield-miss {
+      animation: spark-miss 0.5s ease-out;
+    }
+
+    @keyframes spark-miss {
+      0% {
+        box-shadow: 0 0 50px #fff inset;
+      }
+
+      100% {
+        box-shadow: 0 0 10px rgba(41, 128, 185, 0.1) inset;
+        filter: hue-rotate(90deg);
+      }
+    }
+
+    /* 6フェニックス: 炎 */
+    .phoenix-fire {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 200;
+      top: 0;
+      left: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(231, 76, 60, 0.6) 0%, transparent 50%);
+      mix-blend-mode: screen;
+      animation: fire-rise 1s ease-in-out forwards;
+    }
+
+    @keyframes fire-rise {
+      0% {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-100px);
+      }
+    }
+
+    /* 8切り: ギロチン */
+    .guillotine {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 300;
+      pointer-events: none;
+      box-shadow: 0 0 20px 5px var(--color-blood);
+      animation: g-drop 0.4s cubic-bezier(1, 0, 0.9, 1) forwards;
+    }
+
+    @keyframes g-drop {
+      0% {
+        transform: translate(-50%, -100vh) scaleX(10);
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, 0) scaleX(1);
+        opacity: 0;
+      }
+    }
+
+    /* 9リバース: 回転矢印 */
+    .reverse-arrows {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      pointer-events: none;
+      z-index: 15;
+      border-radius: 50%;
+      border: 4px dashed rgba(241, 196, 15, 0.5);
+      animation: r-spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    @keyframes r-spin {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg) scale(0);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) rotate(-180deg) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* Qボンバー: 爆発 */
+    .bomber-explode {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100vw;
+      height: 100vh;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 250;
+      background: radial-gradient(circle, rgba(255, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%);
+      mix-blend-mode: color-dodge;
+      animation: blast 0.5s ease-out forwards;
+    }
+
+    @keyframes blast {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.1);
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2);
+      }
+    }
+
+    /* K監視: 目 */
+    .evil-eye {
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 40px;
+      border-radius: 50%;
+      background: #000;
+      box-shadow: 0 0 20px #8e44ad;
+      border: 2px solid #8e44ad;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      pointer-events: none;
+      animation: eye-open 0.5s forwards, pulse-eye 2s infinite alternate;
+    }
+
+    .evil-eye::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #ff0 0%, #f00 100%);
+      border-radius: 50%;
+      animation: pupil 2s infinite alternate;
+    }
+
+    @keyframes eye-open {
+      0% {
+        height: 2px;
+        opacity: 0;
+      }
+
+      100% {
+        height: 40px;
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse-eye {
+      0% {
+        box-shadow: 0 0 10px #8e44ad;
+      }
+
+      100% {
+        box-shadow: 0 0 30px #8e44ad, 0 0 10px #fff inset;
+      }
+    }
+
+    @keyframes pupil {
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(0.5);
+      }
+    }
+
+    /* 5 SKIP chains */
+    .skip-chains {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 100;
+      border: 5px dotted rgba(255, 0, 0, 0.6);
+      border-radius: 10px;
+      animation: wrap-chain 1s forwards;
+    }
+
+    .skip-chains::after {
+      content: 'SKIP';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-15deg);
+      color: red;
+      font-size: 40px;
+      font-weight: 900;
+      text-shadow: 0 0 10px #000;
+      letter-spacing: 5px;
+      opacity: 0.8;
+    }
+
+    @keyframes wrap-chain {
+      0% {
+        transform: scale(2);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* 7 PASS blood thread */
+    .pass-thread {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 10%;
+      width: 2px;
+      height: 80vh;
+      background: linear-gradient(to bottom, transparent, var(--color-blood), transparent);
+      box-shadow: 0 0 10px var(--color-blood);
+      z-index: 200;
+      pointer-events: none;
+      animation: thread 0.6s ease-in-out forwards;
+    }
+
+    @keyframes thread {
+      0% {
+        transform: translateX(-50%) scaleY(0);
+      }
+
+      50% {
+        transform: translateX(-50%) scaleY(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateX(-50%) scaleY(0);
+        opacity: 0;
+      }
+    }
+
+
+    /* --- 血文字メッセージオーバレイ --- */
+    .message-overlay {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--color-gold);
+      -webkit-text-stroke: 1px rgba(0, 0, 0, 0.8);
+      text-shadow: 0 5px 10px rgba(0, 0, 0, 1), 0 0 20px var(--color-blood);
+      font-size: 60px;
+      font-weight: bold;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 2px;
+      z-index: 1000;
+      pointer-events: none;
+      text-align: center;
+      white-space: pre-line;
+
+      p {
+        margin: 0;
+        font-size: 24px;
+        font-family: var(--font-main);
+        color: #ddd;
+        -webkit-text-stroke: 0;
+        text-shadow: 0 2px 4px #000;
+        margin-top: 15px;
+        font-style: italic;
+      }
+    }
+
+    .fade-enter {
+      opacity: 0;
+      transform: translate(-50%, -40%) scale(1.5);
+      filter: blur(5px);
+    }
+
+    .fade-enter-active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      filter: blur(0);
+      transition: all 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .fade-exit {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .fade-exit-active {
+      opacity: 0;
+      transform: translate(-50%, -60%) scale(0.9);
+      transition: all 300ms;
+    }
+
+    /* --- アクションボタン --- */
+    .action-panel {
+      position: absolute;
+      bottom: 6vh;
+      /* さらに下部にずらす */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 200;
+      animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .action-btn {
+      padding: 15px 40px;
+      font-size: 20px;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      border: 1px solid var(--color-gold);
+      border-radius: 0;
+      cursor: pointer;
+      color: var(--color-gold);
+      transition: all 0.3s;
+      background: linear-gradient(180deg, #222 0%, #000 100%);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(184, 134, 11, 0.2);
+    }
+
+    .action-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #333 0%, #111 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.9), inset 0 0 15px rgba(184, 134, 11, 0.5);
+      color: #fff;
+      border-color: #fff;
+      text-shadow: 0 0 10px var(--color-gold);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      border-color: #555;
+      color: #555;
+      box-shadow: none;
+    }
+
+    .btn-play {
+      color: #f1c40f;
+      border-color: rgba(241, 196, 15, 0.5);
+    }
+
+    /* --- タイトル画面 (Title Screen) --- */
+    .title-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #1a0505 0%, #000 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 5000;
+      overflow: hidden;
+    }
+
+    /* 扇状カード配置 (Universal Card Fan) */
+    .title-card-fan {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .fan-item {
+      position: absolute;
+      width: 155px;
+      height: 215px;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+      transform-origin: center center;
+      transition: all 1.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+      display: flex;
+      align-items: flex-end;
+      padding: 8px;
+      overflow: visible;
+      will-change: transform, opacity, filter;
+      /* 遠近感のための変数 */
+      --blur: 0px;
+      filter: blur(var(--blur)) brightness(var(--bright)) contrast(1.1);
+    }
+
+    /* 画面全体への散布レイアウト (Deep Field) */
+    .fan-item.deep-field {
+      transform: translate(var(--tx), var(--ty)) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)) scale(var(--base-scale));
+      animation: float-cycle var(--dur) ease-in-out var(--delay) infinite alternate;
+    }
+
+    @keyframes float-cycle {
+      0% {
+        transform: translate(var(--tx), var(--ty)) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(var(--base-scale));
+      }
+
+      100% {
+        transform: translate(calc(var(--tx) + var(--sway-x)), calc(var(--ty) + var(--sway-y))) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(calc(var(--base-scale) * 1.05));
+      }
+    }
+
+    .fan-item .tcg-rank-circle {
+      position: absolute;
+      bottom: -6px;
+      left: -6px;
+      width: 35px;
+      height: 35px;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+      background: rgba(0, 0, 0, 0.85) !important;
+      border: 1px solid var(--color-gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+      /* 奥のカードのサークルは非表示にするなどの調整をJSXで行う */
+      opacity: var(--circle-op, 1);
+    }
+
+    .title-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.85) 100%);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    .title-logo-container {
+      position: relative;
+      z-index: 30;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .title-logo {
+      width: clamp(300px, 65vw, 850px);
+      height: auto;
+      filter: drop-shadow(0 0 30px rgba(0, 0, 0, 1)) drop-shadow(0 0 15px rgba(138, 3, 3, 0.8));
+    }
+
+    .title-sub {
+      font-family: var(--font-main);
+      font-size: clamp(16px, 1.5vw, 24px);
+      color: #999;
+      letter-spacing: 8px;
+      margin-top: 10px;
+      font-style: italic;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px #000;
+    }
+
+    .btn-start-game {
+      position: relative;
+      z-index: 10;
+      padding: 16px 50px;
+      background: linear-gradient(180deg, #8a0303 0%, #4a0000 100%);
+      color: #fff;
+      border: 2px solid var(--color-gold);
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(138, 3, 3, 0.6);
+      transition: all 0.3s;
+      letter-spacing: 2px;
+    }
+
+    .btn-start-game:hover {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 0 50px rgba(138, 3, 3, 0.9), 0 0 20px var(--color-gold);
+      border-color: #fff;
+      filter: brightness(1.2);
+    }
+
+    .btn-start-game::before {
+      content: '†';
+      margin-right: 15px;
+      color: var(--color-gold);
+    }
+
+    .btn-start-game::after {
+      content: '†';
+      margin-left: 15px;
+      color: var(--color-gold);
+    }
+
+    .audio-unmute-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+    .unmute-content {
+      text-align: center;
+      animation: pulse 2s infinite;
+    }
+
+    .unmute-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .unmute-text {
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px #ff0000;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: scale(1.05);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+    }
+    @media (max-width: 768px) {
+      /* Player 0 Hand Cards */
+      .player-pos.pos-bottom .card {
+        width: 65px !important;
+        height: 95px !important;
+      }
+
+      /* Use JS transform exclusively for mobile hand cards to avoid selection jumps */
+      .player-pos.pos-bottom .card,
+      .player-pos.pos-bottom .card:hover,
+      .player-pos.pos-bottom .card:active,
+      .player-pos.pos-bottom .card:focus,
+      .player-pos.pos-bottom .card.selectable:hover {
+        transform: var(--mobile-transform) !important;
+      }
+      .player-pos.pos-bottom .card.mobile-selected {
+        box-shadow: 0 0 25px var(--color-gold), 0 20px 40px rgba(0, 0, 0, 0.9) !important;
+      }
+
+      /* Overlays Scaling for Mobile */
+      .game-over-overlay {
+        transform: translate(-50%, -50%) scale(0.8) !important;
+        width: 90vw !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+      }
+      .exchange-overlay-ui, .selection-overlay-ui {
+        transform: translate(-50%, -50%) scale(0.85) !important;
+        width: 92vw !important;
+        padding: 15px !important;
+      }
+      .selection-guide {
+        font-size: 0.85rem !important;
+        margin-bottom: 10px !important;
+      }
+      .rank-selector {
+        gap: 4px !important;
+      }
+      .rank-select-btn {
+        width: 30px !important;
+        height: 35px !important;
+        font-size: 11px !important;
+      }
+
+      /* Smaller Pass Label */
+      .player-pass-label {
+        font-size: 0.9rem !important;
+      }
+
+      /* CPU Player Positioning */
+      .player-area.player-1,
+      .player-area.player-2,
+      .player-area.player-3 {
+        transform: none !important;
+      }
+      .player-pos.pos-top .card,
+      .player-pos.pos-left .card,
+      .player-pos.pos-right .card {
+        width: 35px !important;
+        height: 50px !important;
+      }
+      .player-pos.pos-left {
+        left: 45px !important;
+        transform: translateY(-50%) rotate(90deg) !important;
+      }
+      .player-pos.pos-right {
+        right: 45px !important;
+        transform: translateY(-50%) rotate(-90deg) !important;
+      }
+      .player-pos.pos-top {
+        top: 5px !important;
+      }
+
+      /* Centered & Elevated Field Layout (RESTORE ROTATION) */
+      .play-area {
+        width: 280px !important;
+        height: 280px !important;
+        top: 45% !important;
+        left: 50% !important;
+        /* Remove !important transform to allow animation rotate */
+      }
+      .bg-reverse-indicator {
+        top: 45% !important;
+        left: 50% !important;
+        /* Remove !important transform to allow animation rotate */
+        width: 32vh !important;
+        height: 32vh !important;
+      }
+
+      /* Corner UI tightening */
+      .coffin-container {
+        top: 5px !important;
+        right: 5px !important;
+        transform: scale(0.3) !important;
+        transform-origin: top right !important;
+      }
+
+      /* Table Cards */
+      .card.on-table {
+        width: 60px !important;
+        height: 85px !important;
+      }
+      .on-table .tcg-rank-circle {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 11px !important;
+        top: 2px !important;
+        left: 2px !important;
+      }
+      .on-table .tcg-name {
+        font-size: 9px !important;
+        height: 12px !important;
+        bottom: 2px !important;
+        white-space: nowrap !important;
+      }
+
+      /* Cut-in Card Popup (Fixed Height & No-Wrap) */
+      .cutin-card-popup {
+        width: auto !important;
+        height: 35vh !important;
+        aspect-ratio: 95 / 135 !important;
+        overflow: hidden !important;
+      }
+      .cutin-card-rank {
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 11px !important;
+        top: 5px !important;
+        left: 5px !important;
+      }
+      /* Cut-in Text MEGA SPECIFICITY SLEDGEHAMMER */
+      html body #root #game-root .cutin-container .cutin-card-popup .cutin-card-text .cutin-card-name {
+        font-size: 6.5px !important;
+        letter-spacing: 0px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        line-height: 1.0 !important;
+        display: block !important;
+      }
+      /* Reduce padding to give more horizontal room */
+      .cutin-card-text {
+        padding: 8px 4px 10px !important;
+      }
+      .cutin-card-desc {
+        font-size: 6.5px !important;
+        line-height: 1.0 !important;
+      }
+      
+      /* Continuous Effects Scaling Down (SLEDGEHAMMER) */
+      .effect-4-shield, .effect-3-blade, .effect-5-chain, .effect-6-fire, .effect-7-gold, .effect-8-cut, .effect-9-gear, .effect-10-rain, .effect-j-reverse, .effect-q-bomb, .effect-k-magic, .effect-joker-mist {
+        width: 100px !important;
+        height: 130px !important;
+        min-width: 100px !important;
+        min-height: 130px !important;
+      }
+      
+      .action-panel {
+        bottom: 15px !important;
+        transform: translateX(-50%) !important;
+        width: 320px !important;
+        gap: 10px !important;
+      }
+      
+      .action-btn {
+        width: 140px !important;
+        font-size: 14px !important;
+        padding: 8px 0 !important;
+      }
+      
+      /* Message Overlay (Yellow Title) Resize for mobile */
+      .message-overlay {
+        font-size: 24px !important;
+        top: 35% !important;
+      }
+      .message-overlay h2 {
+        font-size: 24px !important;
+        margin: 0 !important;
+      }
+      .message-overlay p {
+        font-size: 14px !important;
+        margin-top: 10px !important;
+      }
+      
+      /* Title Screen Overhaul */
+      .title-logo {
+        width: 85vw !important;
+      }
+      .title-sub {
+        font-size: 14px !important;
+        letter-spacing: 4px !important;
+      }
+      .title-button-container {
+        position: absolute !important;
+        bottom: 40px !important;
+        width: 100vw !important;
+      }
+      .btn-start-game {
+        width: 180px !important;
+        padding: 10px 0 !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+      }
+      .btn-start-game::before, .btn-start-game::after {
+        display: none !important;
+      }
+      
+      .title-logo-container {
+        position: absolute !important;
+        top: 15vh !important;
+        margin-bottom: 0 !important;
+      }
+      .title-logo {
+        width: 98vw !important;
+      }
+      .title-sub {
+        font-size: 10px !important;
+        letter-spacing: 2px !important;
+        margin-top: 5px !important;
+      }
+    }
+  </style>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const SUITS = ['♠', '♥', '♦', '♣'];
+    const RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+    const rankToValue = (r) => {
+      if (r === 'A') return 1;
+      if (r === '2') return 2;
+      if (r === 'J') return 11;
+      if (r === 'Q') return 12;
+      if (r === 'K') return 13;
+      if (r === 'Joker') return 0;
+      return parseInt(r) || 0;
+    };
+    const valueToRank = (v) => {
+      if (v === 1) return 'A';
+      if (v === 2) return '2';
+      if (v === 11) return 'J';
+      if (v === 12) return 'Q';
+      if (v === 13) return 'K';
+      return v.toString();
+    };
+    const getEffectiveCount = (cardsToCount) => {
+      if (cardsToCount.length === 2 && cardsToCount.some(c => c.rank === '5')) {
+        const other = cardsToCount.find(c => c.rank !== '5');
+        if (other && ['A', '2', '3', '4', '6', '7', '8'].includes(other.rank)) {
+          return 1;
+        }
+      }
+      return cardsToCount.length;
+    };
+
+    // Death Game Icons
+    const ICONS = {
+      '4': '🛡️', '5': '⛓️', '6': '🔥', '7': '🩸',
+      '8': '🪓', '9': '🌀', '10': '💀', 'J': '⏳',
+      'Q': '💣', 'K': '👁️', 'A': '🎯', 'Joker': '🃏'
+    };
+
+    const RANK_NAMES = {
+      '3': '3', '4': '4シールド', '5': '5スキップ', '6': '6フェニックス', '7': '7渡し',
+      '8': '8切り', '9': '9リバース', '10': '10捨て', 'J': '11バック', 'Q': '12ボンバー',
+      'K': 'キングウォッチ', 'A': 'サービスエース', '2': '2', 'Joker': 'ジョーカー'
+    };
+
+    // ------------------- Sound Manager -------------------
+    class SoundManager {
+      constructor() {
+        this.ctx = null;
+        this.bgm = null;
+        this.bgmType = null;
+        this.bgmVolume = 0.28;
+        this._pendingBGM = null; // queued before first interaction
+      }
+
+      // ---- Context Init ----
+      _ensureCtx() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        return this.ctx;
+      }
+
+      // ---- BGM ----
+      playTitleBGM() { this._playBGM('bgm2.mp3', 'title'); }
+      playGameBGM() { this._playBGM('bgm.mp3', 'game'); }
+
+      _playBGM(file, type) {
+        if (this.bgmType === type && this.bgm) return;
+        this.stopBGM();
+        const audio = new Audio(file);
+        audio.loop = true;
+        audio.volume = this.bgmVolume;
+        this.bgm = audio;
+        this.bgmType = type;
+        // Try immediate play; if blocked, queue for first-interaction
+        const p = audio.play();
+        if (p && typeof p.then === 'function') {
+          p.catch(() => {
+            this._pendingBGM = { audio, type };
+          });
+        }
+      }
+
+      // Called on first user gesture — flush any pending BGM
+      flushPendingBGM() {
+        if (this._pendingBGM) {
+          const { audio, type } = this._pendingBGM;
+          this._pendingBGM = null;
+          this.bgm = audio;
+          this.bgmType = type;
+          audio.play().catch(() => { });
+        }
+        // Also resume AudioContext if it was suspended
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      }
+
+      stopBGM() {
+        if (this.bgm) {
+          this.bgm.pause();
+          this.bgm.currentTime = 0;
+          this.bgm = null;
+          this.bgmType = null;
+        }
+      }
+
+      // ---- Noise helper ----
+      _noise(freq, endFreq, vol, dur, filterType = 'highpass') {
+        const ctx = this._ensureCtx();
+        const now = ctx.currentTime;
+        const sr = ctx.sampleRate;
+        const buf = ctx.createBuffer(1, Math.ceil(sr * dur), sr);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const flt = ctx.createBiquadFilter();
+        flt.type = filterType;
+        flt.frequency.setValueAtTime(freq, now);
+        flt.frequency.exponentialRampToValueAtTime(endFreq, now + dur);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(vol, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+        src.start(); src.stop(now + dur);
+      }
+
+      // ---- Osc helper ----
+      _osc(type, freq, endFreq, vol, dur, endVol) {
+        const ctx = this._ensureCtx();
+        const now = ctx.currentTime;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, now);
+        if (endFreq !== null) o.frequency.exponentialRampToValueAtTime(endFreq, now + dur);
+        g.gain.setValueAtTime(vol, now);
+        g.gain.exponentialRampToValueAtTime(endVol ?? 0.001, now + dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.stop(now + dur);
+        return { osc: o, gainNode: g };
+      }
+
+      // ---- Card Handling: ページを捲るような摩擦音 ----
+      playLightPaperSE() {
+        // 高域ノイズ(4kHz→1kHz)の短いスウィープ
+        this._noise(4000, 800, 0.06, 0.09, 'highpass');
+        // 極薄い低域ノイズを重ねてコシを出す
+        this._noise(800, 200, 0.03, 0.07, 'bandpass');
+      }
+
+      // ---- Heavier shuffle sound ----
+      playPaperSE() {
+        this._noise(3000, 600, 0.12, 0.15, 'highpass');
+        this._noise(600, 200, 0.06, 0.12, 'bandpass');
+      }
+
+      // ---- Crumple (10 Discard) ----
+      playCrumpleSE() {
+        for (let i = 0; i < 10; i++) {
+          const delay = i * 22;
+          setTimeout(() => {
+            this._noise(300 + Math.random() * 600, 80, 0.14, 0.06, 'bandpass');
+          }, delay);
+        }
+      }
+
+      // ---- Explosion wrapper (Q) ----
+      playExplosionSE() { this.playEffectSE('Q'); }
+
+      // ================================================================
+      // ---- playEffectSE — 全14ランク完全書き直し ----
+      // ================================================================
+      playEffectSE(rank) {
+        const ctx = this._ensureCtx();
+        const now = ctx.currentTime;
+
+        switch (rank) {
+          // -------- A : テニスの打球音 --------
+          case 'A': {
+            // 短く鋭いパーカッシブ・ピンポン音
+            this._osc('sine', 900, 120, 0.35, 0.14, 0.001);
+            // 打撃のノイズ(スウィッシュ)
+            this._noise(3000, 800, 0.15, 0.1, 'highpass');
+            break;
+          }
+
+          // -------- 2 : 鋭い剣戟音 --------
+          case '2': {
+            // 主剣撃 (鋭い金属インパクト)
+            this._osc('sawtooth', 1400, 300, 0.3, 0.25, 0.001);
+            // 副音 (共鳴リン)
+            this._osc('sine', 2200, 2200, 0.18, 0.4, 0.001);
+            // 空気を切る音
+            this._noise(5000, 1000, 0.2, 0.15, 'highpass');
+            break;
+          }
+
+          // -------- 3 : 布が擦れる柔らかな音 --------
+          case '3': {
+            this._noise(1200, 400, 0.12, 0.5, 'bandpass');
+            this._noise(600, 200, 0.07, 0.45, 'bandpass');
+            break;
+          }
+
+          // -------- 4 : 重厚な金属の盾の防御音 --------
+          case '4': {
+            // 低域衝撃
+            this._osc('sine', 60, 30, 0.5, 0.6, 0.001);
+            // 金属リン (高域余韻)
+            this._osc('sine', 2800, 2800, 0.2, 0.8, 0.001);
+            // 中域ガンとぶつかる音
+            this._noise(1500, 400, 0.25, 0.3, 'bandpass');
+            break;
+          }
+
+          // -------- 5 : ジャラジャラと鳴り響く鎖の音 --------
+          case '5': {
+            // 不規則な金属鎖 (7回)
+            for (let i = 0; i < 7; i++) {
+              const t = i * 65 + Math.random() * 30;
+              setTimeout(() => {
+                this._noise(4000 + Math.random() * 2000, 800, 0.1, 0.06, 'bandpass');
+              }, t);
+            }
+            break;
+          }
+
+          // -------- 6 : 燃え盛る業火の炎 --------
+          case '6': {
+            // ランブリング・ファイアーノイズ
+            const sr = ctx.sampleRate;
+            const len = Math.ceil(sr * 2.0);
+            const buf = ctx.createBuffer(1, len, sr);
+            const dat = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) dat[i] = Math.random() * 2 - 1;
+            const fireNoise = ctx.createBufferSource();
+            fireNoise.buffer = buf;
+            // ローパス + 揺れLFO
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass'; lp.frequency.value = 350;
+            const lfo = ctx.createOscillator();
+            lfo.frequency.value = 9;
+            const lfoG = ctx.createGain(); lfoG.gain.value = 220;
+            lfo.connect(lfoG); lfoG.connect(lp.frequency);
+            const fGain = ctx.createGain();
+            fGain.gain.setValueAtTime(0.5, now);
+            fGain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+            fireNoise.connect(lp); lp.connect(fGain); fGain.connect(ctx.destination);
+            lfo.start(now); lfo.stop(now + 2.0);
+            fireNoise.start(now); fireNoise.stop(now + 2.0);
+            break;
+          }
+
+          // -------- 7 : カードを捌く「サッ」という音 --------
+          case '7': {
+            this.playPaperSE();
+            break;
+          }
+
+          // -------- 8 : 金属的な響きを伴う鋭い斬撃 --------
+          case '8': {
+            // 斬撃 (sawtooth pitch-drop)
+            this._osc('sawtooth', 1200, 40, 0.4, 0.2, 0.001);
+            // 空気を切るホワイトノイズ
+            this._noise(6000, 800, 0.35, 0.2, 'highpass');
+            // 金属残響 (キィン)
+            this._osc('sine', 3500, 3500, 0.15, 0.55, 0.001);
+            break;
+          }
+
+          // -------- 9 : 正確に刻まれる時計の秒針(チクタク) --------
+          case '9': {
+            // チク(高め)
+            this._osc('sine', 3000, 3000, 0.25, 0.05, 0.001);
+            this._noise(4000, 4000, 0.1, 0.04, 'bandpass');
+            // タク (低め) — 少し遅れ
+            setTimeout(() => {
+              this._osc('sine', 2400, 2400, 0.2, 0.05, 0.001);
+              this._noise(3000, 3000, 0.08, 0.04, 'bandpass');
+            }, 380);
+            break;
+          }
+
+          // -------- 10 : 紙をクシャクシャにする音 --------
+          case '10': {
+            this.playCrumpleSE();
+            break;
+          }
+
+          // -------- J : どよめく群衆の声 --------
+          case 'J': {
+            // 15本のランダム周波数デチューン・オシレータ
+            for (let i = 0; i < 15; i++) {
+              const o = ctx.createOscillator();
+              o.type = 'sine';
+              o.frequency.value = 120 + Math.random() * 320;
+              const g = ctx.createGain();
+              g.gain.setValueAtTime(0.0, now);
+              g.gain.linearRampToValueAtTime(0.04 + Math.random() * 0.02, now + 0.25);
+              g.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+              o.connect(g); g.connect(ctx.destination);
+              o.start(now); o.stop(now + 1.4);
+            }
+            // ざわめきノイズ
+            this._noise(800, 300, 0.08, 1.2, 'bandpass');
+            break;
+          }
+
+          // -------- Q : 画面を揺らす激しい爆発音 --------
+          case 'Q': {
+            // 超低域impact
+            this._osc('square', 80, 8, 0.6, 1.2, 0.001);
+            // 爆風ノイズ (ローパス)
+            this._noise(1200, 20, 0.7, 1.2, 'lowpass');
+            // 高域フラッシュノイズ
+            this._noise(8000, 500, 0.3, 0.2, 'highpass');
+            break;
+          }
+
+          // -------- K : 監視の目が光るような「ビーン」 --------
+          case 'K': {
+            // 上昇するサイン波 (エコー感)
+            this._osc('sine', 400, 1200, 0.3, 0.9, 0.001);
+            // 高周波ビビリ (vibrato)
+            const kO = ctx.createOscillator();
+            kO.type = 'sawtooth';
+            kO.frequency.setValueAtTime(700, now);
+            const vLfo = ctx.createOscillator(); vLfo.type = 'sine'; vLfo.frequency.value = 45;
+            const vG = ctx.createGain(); vG.gain.value = 120;
+            vLfo.connect(vG); vG.connect(kO.frequency);
+            const kG = ctx.createGain();
+            kG.gain.setValueAtTime(0.22, now);
+            kG.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+            kO.connect(kG); kG.connect(ctx.destination);
+            vLfo.start(now); vLfo.stop(now + 0.9);
+            kO.start(now); kO.stop(now + 0.9);
+            break;
+          }
+
+          // -------- Joker : カオス --------
+          case 'Joker': {
+            this._osc('sawtooth', 150, 3000, 0.35, 0.4, 0.001);
+            this._noise(6000, 200, 0.2, 0.4, 'highpass');
+            break;
+          }
+
+          default: {
+            this._osc('sine', 440, 440, 0.2, 0.2, 0.001);
+          }
+        }
+      }
+    }
+
+    const sm = new SoundManager();
+
+    // ------------------- Card Data -------------------
+    const TCG_DATA = {
+      'A': { name: 'サービスＡ', desc: 'このカードで場が流れた時、自身の手元に帰還', url: 'Aimage.webp', icon: '🎯', auraColor: '#2980b9' },
+      '2': { name: '２ナイト', desc: '能力なし', url: '2image.webp', icon: '', auraColor: '#27ae60' },
+      '3': { name: '３コモン', desc: '能力なし', url: '3image.webp', icon: '', auraColor: '#7f8c8d' },
+      '4': { name: '４シールド', desc: 'このターン、他プレイヤーからの攻撃を受けない', url: '4image.webp', icon: '🛡️', auraColor: '#00b4d8' },
+      '5': { name: 'プラス5', desc: '他のカードと合計したランクの効果を発動', url: '5image.webp', icon: '➕', auraColor: '#ff4444' },
+      '6': { name: '６フェニックス', desc: '墓地からランダムにカードを入手', url: '6image.webp', icon: '🔥', auraColor: '#8e44ad' },
+      '7': { name: '７渡し', desc: '次のプレイヤーにカードを譲渡', url: '7image.webp', icon: '🩸', auraColor: '#ffffff' },
+      '8': { name: '８切り', desc: 'この場を強制的に終了', url: '8image.webp', icon: '🪓', auraColor: '#d35400' },
+      '9': { name: '９リバース', desc: '回り順を逆転', url: '9image.webp', icon: '🌀', auraColor: '#f1c40f' },
+      '10': { name: '１０捨て', desc: '任意のカードを墓地に捨てる', url: '10image.webp', icon: '💀', auraColor: '#2c3e50' },
+      'J': { name: 'Ｊバック', desc: 'このターン、カードの強さが逆転', url: 'Jimage.webp', icon: '⏳', auraColor: '#e67e22' },
+      'Q': { name: 'Ｑボンバー', desc: '場にある特定のカードを消滅', url: 'Qimage.webp', icon: '💣', auraColor: '#bdc3c7' },
+      'K': { name: 'Ｋウォッチ', desc: '指定したプレイヤーの手札を監視', url: 'Kimage.webp', icon: '👁️', auraColor: '#f1c40f' },
+      'Joker': { name: 'ジョーカー', desc: '最強のカード。何にでも成り代わる', url: 'joker.webp', icon: '🃏', auraColor: '#fd79a8' }
+    };
+
+    const createDeck = () => {
+      let deck = [];
+      for (let suit of SUITS) {
+        for (let i = 0; i < RANKS.length; i++) {
+          deck.push({ id: `${suit}${RANKS[i]}`, suit, rank: RANKS[i], strength: i });
+        }
+      }
+      deck.push({ id: 'Joker1', suit: 'Joker', rank: 'Joker', strength: 13 });
+      deck.push({ id: 'Joker2', suit: 'Joker', rank: 'Joker', strength: 13 });
+      return deck;
+    };
+
+    const shuffle = (array) => {
+      let deck = [...array];
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      return deck;
+    };
+
+    // Edge animation start points
+    const getPlayerEdgePosition = (playerIndex) => {
+      switch (playerIndex) {
+        case 0: return { top: '150%', left: '50%' };
+        case 1: return { top: '50%', left: '-50%' };
+        case 2: return { top: '-50%', left: '50%' };
+        case 3: return { top: '50%', left: '150%' };
+        default: return { top: '50%', left: '50%' };
+      }
+    };
+
+    // Rank title mapping representing hierarchy
+    const getHierarchyTitle = (finishOrder) => {
+      if (finishOrder === 1) return { title: "大富豪", cls: "rank-daifugo" };
+      if (finishOrder === 2) return { title: "富豪", cls: "" };
+      if (finishOrder === 3) return { title: "貧民", cls: "" };
+      if (finishOrder === 4) return { title: "大貧民", cls: "rank-daihinmin" };
+      return { title: "生贄候補", cls: "" };
+    };
+
+    function App() {
+      const [gameStarted, setGameStarted] = useState(false);
+      const [multiplayerMode, setMultiplayerMode] = useState(null); // 'connecting' | 'lobby' | 'active'
+      const [isHost, setIsHost] = useState(false);
+      const [peer, setPeer] = useState(null);
+      const [conns, setConns] = useState([]); // List of {conn, peerId, name} for Host
+      const [guestConn, setGuestConn] = useState(null); // Connection to Host
+      const [myPlayerIndex, setMyPlayerIndex] = useState(0);
+      const [passphrase, setPassphrase] = useState('');
+      const [remotePlayers, setRemotePlayers] = useState([{ id: 'local', name: 'YOU' }]); // For lobby display
+      const [isDealing, setIsDealing] = useState(false);
+      const [hands, setHands] = useState([[], [], [], []]);
+      const [tableCards, setTableCards] = useState([]);
+      const [turn, setTurn] = useState(0);
+      const [passCount, setPassCount] = useState(0);
+      const [lastPlayPlayer, setLastPlayPlayer] = useState(null);
+      const [selectedCards, setSelectedCards] = useState([]);
+      const [ranksDiscovered, setRanksDiscovered] = useState([]);
+
+      const [graveyard, setGraveyard] = useState([]);
+      const [isShielded, setIsShielded] = useState([false, false, false, false]);
+      const [is11Back, setIs11Back] = useState(false);
+      const [isRevolution, setIsRevolution] = useState(false);
+      const [playDirection, setPlayDirection] = useState(1);
+      const [effectMessage, setEffectMessage] = useState(null);
+      const [watchTarget, setWatchTarget] = useState(null);
+
+      // Temporary Animation triggers
+      const [clearingField, setClearingField] = useState(false);
+      const [phoenixActive, setPhoenixActive] = useState(false);
+      const [guillotineActive, setGuillotineActive] = useState(false);
+      const [reverseActive, setReverseActive] = useState(false);
+      const [bomberActive, setBomberActive] = useState(false);
+      const [passThreadActive, setPassThreadActive] = useState(false);
+      const [skipTarget, setSkipTarget] = useState(null); // CSS Chain effect
+      const [missEffectTarget, setMissEffectTarget] = useState(null); // Shield sparks
+
+      const [animMessage, setAnimMessage] = useState({ data: null, state: 'exit' });
+      // New state for character cut‑in overlay
+      const [cutIn, setCutIn] = useState(null);
+      const [resurrectCard, setResurrectCard] = useState(null);
+      const [discardingToGy, setDiscardingToGy] = useState([]); // cards flying to gy now
+
+      // New selection states for special effects
+      const [selectionMode, setSelectionMode] = useState(null); // '7', '10', 'Q'
+      const [selectionInfo, setSelectionInfo] = useState(null); // { playerIndex, nextP, count }
+      const [isActionLoading, setIsActionLoading] = useState(false);
+      const cpuThinkingRef = React.useRef(false); // refで競合状態を防ぐ
+      const prevTurnRef = React.useRef(0);
+      const [passedPlayers, setPassedPlayers] = useState([]);
+
+      // Performance/Animation states
+      const [explodingCards, setExplodingCards] = useState([]); // { playerIndex, rank }[]
+      const [flyingCards, setFlyingCards] = useState([]); // { from, to, card, type: 'phoenix'|'pass' }[]
+      const [receivedHighlight, setReceivedHighlight] = useState(null); // playerIndex
+      const [highlightedCardIds, setHighlightedCardIds] = useState([]); // Array of card IDs
+      const [gyShuffling, setGyShuffling] = useState(false);
+      const [isAnimating, setIsAnimating] = useState(false); // 全演出完了フラグ
+      const [watchSelecting, setWatchSelecting] = useState(false); // Kウォッチ対象選択モード
+      const [watchTimerTick, setWatchTimerTick] = useState(0); // タイマー描画更新用
+
+      const [isGameOver, setIsGameOver] = useState(false);
+      const [roundResults, setRoundResults] = useState([]); // [p0, p1, p2, p3] ranking for the last round
+      const [exchangePhase, setExchangePhase] = useState(null); // 'selecting' | 'animating' | null
+      const [exchangeDecisions, setExchangeDecisions] = useState({}); // { playerIdx: cardIds[] }
+      const [showExplanation, setShowExplanation] = useState(false);
+      const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
+      useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+      }, []);
+
+
+      useEffect(() => {
+        if (watchTarget) {
+          const interval = setInterval(() => {
+            setWatchTimerTick(t => t + 1);
+          }, 1000);
+          return () => clearInterval(interval);
+        }
+      }, [watchTarget]);
+
+      const [isCoffinOpen, setIsCoffinOpen] = useState(false);
+
+      useEffect(() => {
+        // ターンが実際に移動したかチェック
+        if (turn !== prevTurnRef.current) {
+          if (turn === 0) setIsActionLoading(false);
+          cpuThinkingRef.current = false;
+          prevTurnRef.current = turn;
+        }
+
+        // CPUターンのトリガー
+        if (turn !== myPlayerIndex && !ranksDiscovered.includes(turn) && !selectionMode && !isAnimating && !watchTarget) {
+          // マルチプレイヤー時はホストのみがCPUを動かす
+          if (multiplayerMode === 'active' && !isHost) return;
+          if (cpuThinkingRef.current) return;
+          const timeout = setTimeout(() => {
+            if (cpuThinkingRef.current) return;
+            cpuThinkingRef.current = true;
+            playCpuTurn(turn);
+          }, 600);
+          return () => clearTimeout(timeout);
+        }
+      }, [turn, selectionMode, isAnimating, watchTarget, multiplayerMode, isHost, myPlayerIndex]);
+
+      useEffect(() => {
+        if (effectMessage) {
+          setAnimMessage({ data: effectMessage, state: 'enter' });
+          const tmEnter = setTimeout(() => setAnimMessage(prev => ({ ...prev, state: 'enter-active' })), 50);
+
+          const tmExit = setTimeout(() => {
+            setAnimMessage(prev => ({ ...prev, state: 'exit-active' }));
+            setTimeout(() => setEffectMessage(null), 300);
+          }, 3000);
+          return () => { clearTimeout(tmEnter); clearTimeout(tmExit); };
+        } else {
+          setAnimMessage({ data: null, state: 'exit' });
+        }
+      }, [effectMessage]);
+
+      // Slam animation logic
+      useEffect(() => {
+        const hasAnimatingCards = tableCards.some(tc => tc.isAnimating);
+        if (hasAnimatingCards) {
+          const timer = setTimeout(() => {
+            sm.playPaperSE(); // Use paper sound for field clear
+            setTableCards(prev => prev.map(tc => {
+              if (tc.isAnimating) {
+                return { ...tc, isAnimating: false, isSlammed: true };
+              }
+              return tc;
+            }));
+          }, 50);
+          return () => clearTimeout(timer);
+        }
+      }, [tableCards]);
+
+      // Remove slam effect class after animation finishes so it doesn't replay
+      useEffect(() => {
+        const hasSlammed = tableCards.some(tc => tc.isSlammed);
+        if (hasSlammed) {
+          const timer = setTimeout(() => {
+            setTableCards(prev => prev.map(tc => ({ ...tc, isSlammed: false })));
+          }, 500);
+          return () => clearTimeout(timer);
+        }
+      }, [tableCards]);
+
+      const showMessage = (title, desc) => {
+        setEffectMessage({ title, desc });
+      };
+
+      // --- Multiplayer Logic ---
+      const initMultiplayer = (pass) => {
+        if (!pass) return alert("合言葉を入力してください");
+        setPassphrase(pass);
+        setMultiplayerMode('lobby'); // 待機画面へ即座に移動
+        
+        const hostId = "ultimate-daihugou-" + btoa(pass).replace(/=/g, "");
+        const p = new Peer();
+        setPeer(p);
+
+        p.on('open', (id) => {
+          console.log('Peer open:', id);
+          // Try to connect to host
+          const conn = p.connect(hostId);
+          setGuestConn(conn);
+          
+          const timeout = setTimeout(() => {
+            if (!conn.open) {
+              console.log('Host not found, becoming host...');
+              p.destroy();
+              startAsHost(hostId);
+            }
+          }, 2000); // 待機時間を少し短縮
+
+          conn.on('open', () => {
+            clearTimeout(timeout);
+            setIsHost(false);
+            setMultiplayerMode('lobby');
+            conn.send({ type: 'JOIN', name: 'Player' });
+          });
+
+          conn.on('data', (data) => handleMultiplayerData(data));
+          conn.on('close', () => alert("ホストとの接続切断"));
+        });
+      };
+
+      const startAsHost = (hostId) => {
+        const p = new Peer(hostId);
+        setPeer(p);
+        p.on('open', () => {
+          setIsHost(true);
+          setMultiplayerMode('lobby');
+          setRemotePlayers([{ id: 'local', name: 'YOU (HOST)' }]);
+        });
+        p.on('connection', (conn) => {
+          conn.on('open', () => {
+            if (conns.length >= 3) {
+              conn.send({ type: 'ERROR', message: 'Room full' });
+              conn.close();
+              return;
+            }
+            conn.on('data', (data) => {
+              if (data.type === 'JOIN') {
+                const newPlayer = { conn, peerId: conn.peer, name: data.name + " " + (conns.length + 1) };
+                setConns(prev => [...prev, newPlayer]);
+                setRemotePlayers(prev => [...prev, { id: conn.peer, name: newPlayer.name }]);
+              } else {
+                handleMultiplayerData(data, conn.peer);
+              }
+            });
+            conn.on('close', () => {
+              setConns(prev => prev.filter(c => c.peerId !== conn.peer));
+              setRemotePlayers(prev => prev.filter(p => p.id !== conn.peer));
+            });
+          });
+        });
+        p.on('error', (err) => {
+          if (err.type === 'id-taken') alert("その合言葉は既に使用されています（別の合言葉を試してください）");
+          setMultiplayerMode(null);
+        });
+      };
+
+      const handleMultiplayerData = (data, fromPeerId) => {
+        if (data.type === 'STATE_UPDATE') {
+          // Guest receives state
+          setHands(data.state.hands);
+          setTableCards(data.state.tableCards);
+          setTurn(data.state.turn);
+          setGameStarted(data.state.gameStarted);
+          setMyPlayerIndex(data.playerIndex);
+          setMultiplayerMode('active');
+          setRanksDiscovered(data.state.ranksDiscovered);
+          setIsGameOver(data.state.isGameOver);
+          setRoundResults(data.state.roundResults);
+          setExchangePhase(data.state.exchangePhase);
+          setPassCount(data.state.passCount);
+          setLastPlayPlayer(data.state.lastPlayPlayer);
+          setIs11Back(data.state.is11Back);
+          setIsRevolution(data.state.isRevolution);
+          setPlayDirection(data.state.playDirection);
+          setGraveyard(data.state.graveyard);
+        } else if (data.type === 'ACTION' && isHost) {
+          // Host receives action from guest
+          console.log('Action from', fromPeerId, data);
+          const pIdx = conns.findIndex(c => c.peerId === fromPeerId) + 1;
+          if (turn !== pIdx || isAnimating) return;
+
+          if (data.action === 'PLAY') {
+            if (isValidPlay(data.cards)) {
+              executePlay(pIdx, data.cards);
+            } else {
+              conns[pIdx - 1].conn.send({ type: 'ERROR', message: 'そのカードは場に出せない' });
+            }
+          } else if (data.action === 'PASS') {
+            executePass(pIdx);
+          } else if (data.action === 'COMPLETE_EFFECT') {
+            completeSpecialEffect(data.choice, pIdx);
+          } else if (data.action === 'CONFIRM_EXCHANGE') {
+            setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
+          } else if (data.action === 'RESTART' && isGameOver) {
+            handleRestart();
+          }
+        }
+      };
+
+      const getDisplayIndex = (i) => {
+        if (!gameStarted || multiplayerMode !== 'active') return i;
+        return (i - myPlayerIndex + 4) % 4;
+      };
+
+      const broadcastState = (currentHands, nextTurnValue = null) => {
+        if (!isHost) return;
+        const baseState = {
+          hands: currentHands,
+          tableCards,
+          turn: nextTurnValue !== null ? nextTurnValue : turn,
+          gameStarted: true,
+          ranksDiscovered,
+          isGameOver,
+          roundResults,
+          exchangePhase,
+          passCount,
+          lastPlayPlayer,
+          is11Back,
+          isRevolution,
+          playDirection,
+          graveyard
+        };
+
+        conns.forEach((c, idx) => {
+          const playerIdx = idx + 1;
+          const maskedHands = baseState.hands.map((h, hIdx) => {
+            if (hIdx === playerIdx) return h;
+            return h.map(card => ({ id: card.id, hidden: true })); // Mask content
+          });
+          c.conn.send({
+            type: 'STATE_UPDATE',
+            playerIndex: playerIdx,
+            state: { ...baseState, hands: maskedHands }
+          });
+        });
+        
+        // Update local state (Host is player 0)
+        setHands(currentHands);
+        if (nextTurnValue !== null) setTurn(nextTurnValue);
+      };
+
+      const startMultiplayerGame = () => {
+        const deck = shuffle(createDeck());
+        const newHands = [[], [], [], []];
+        let i = 0;
+        while (deck.length > 0) {
+          newHands[i % 4].push(deck.pop());
+          i++;
+        }
+        const sortedHands = newHands.map(h => sortHand(h));
+        broadcastState(sortedHands, 0);
+        setGameStarted(true);
+        setMultiplayerMode('active');
+        setMyPlayerIndex(0);
+      };
+
+      const triggerTempEffect = (setter, time = 1000) => {
+        setter(true);
+        setTimeout(() => setter(false), time);
+      };
+
+      const triggerMiss = (playerIndex) => {
+        setMissEffectTarget(playerIndex);
+        setTimeout(() => setMissEffectTarget(null), 500);
+      };
+
+      const compareStrength = (targetSt, tableSt) => {
+        // JOKER単体(13)は最強だが、JOKERがなり変わった後の強さは各数字に従う
+        if (targetSt === 13 && tableSt !== 13) return true;
+        if (tableSt === 13 && targetSt !== 13) return false;
+        if (targetSt === 13 && tableSt === 13) return false; // JOKERはJOKERに勝てない
+        
+        const isInverse = isRevolution !== is11Back;
+        return isInverse ? targetSt < tableSt : targetSt > tableSt;
+      };
+
+      const sortHand = (hand, revOverride = null, b11Override = null) => {
+        const rev = revOverride !== null ? revOverride : isRevolution;
+        const b11 = b11Override !== null ? b11Override : is11Back;
+        return [...hand].sort((a, b) => {
+          if (a.strength === 13) return 1;
+          if (b.strength === 13) return -1;
+          const isInverse = rev !== b11;
+          return isInverse ? b.strength - a.strength : a.strength - b.strength;
+        });
+      };
+
+      const getNextPlayer = (current, steps = 1, forceDirection = null, currentRanks = null) => {
+        let count = 0;
+        let next = current;
+        const dir = forceDirection !== null ? forceDirection : playDirection;
+        const ranks = currentRanks || ranksDiscovered;
+        while (count < steps) {
+          next = (next + dir + 4) % 4;
+          if (!ranks.includes(next)) count++;
+        }
+        return next;
+      };
+
+      const executeNextTurn = (currentTurn, currentPassCount, steps = 1, forceDirection = null, currentRanks = null) => {
+        const nextTarget = getNextPlayer(currentTurn, steps, forceDirection, currentRanks);
+        if (nextTarget === turn) {
+          // 同一プレイヤーにターンが回る場合（8切り等）、思考フラグをリセット
+          cpuThinkingRef.current = false;
+          // useEffectを発火させるために一瞬-1にする（必要に応じて）
+          setTurn(-1);
+          setTimeout(() => setTurn(nextTarget), 10);
+        } else {
+          setTurn(nextTarget);
+        }
+      };
+
+      const triggerClearFieldAnim = (callback) => {
+        setIsAnimating(true);
+        setIsCoffinOpen(true); // 棺桶を開く
+        setTimeout(() => {
+          callback();
+          setIsAnimating(false);
+          setTimeout(() => setIsCoffinOpen(false), 800); // 吸い込まれたら閉じる
+        }, 1200);
+      };
+
+      const clearFieldLogic = (newGraveyard = null) => {
+        let currentGy = newGraveyard || [...graveyard];
+        let cardsOnly = tableCards.map(tc => tc.card);
+
+        if (cardsOnly.length > 0) {
+          const isServiceAce = cardsOnly.every(c => c.rank === 'A');
+          if (isServiceAce && lastPlayPlayer !== null && !ranksDiscovered.includes(lastPlayPlayer)) {
+            const h = [...hands];
+            h[lastPlayPlayer] = [...h[lastPlayPlayer], ...cardsOnly];
+            setHands(h);
+            showMessage('SERVICE ACE', `呪われたAが プレイヤー${lastPlayPlayer} の手元へ帰還`);
+          } else {
+            // ここでアニメーション用に discardingToGy をセットする
+            setDiscardingToGy(cardsOnly);
+            setTimeout(() => setDiscardingToGy([]), 800);
+            currentGy = [...currentGy, ...cardsOnly];
+          }
+        }
+        setTableCards([]);
+        setPassedPlayers([]);
+        setIsShielded([false, false, false, false]);
+        setIs11Back(false);
+        setGraveyard(currentGy);
+      };
+
+      const executePass = (playerIndex) => {
+        const activePlayersCount = 4 - ranksDiscovered.length;
+        const newPassCount = passCount + 1;
+
+        // 場に出ているカードがあり、自分以外の全員がパスした場合
+        if (newPassCount >= activePlayersCount - 1 && tableCards.length > 0) {
+          triggerClearFieldAnim(() => {
+            clearFieldLogic();
+            let nextStarter = lastPlayPlayer;
+            // 既に上がっている場合は次のプレイヤーから開始
+            const currentRanks = ranksDiscovered; // 呼び出し時点の最新
+            if (currentRanks.includes(nextStarter)) {
+              nextStarter = getNextPlayer(nextStarter, 1, null, currentRanks);
+            }
+            // 自動的に次の手番を開始
+            setTurn(-1);
+            setTimeout(() => setTurn(nextStarter), 10);
+          });
+        } else {
+          setPassCount(newPassCount);
+          setPassedPlayers(prev => [...new Set([...prev, playerIndex])]);
+
+          // 残り1人かチェック
+          const remaining = [0, 1, 2, 3].filter(p => !ranksDiscovered.includes(p));
+          if (ranksDiscovered.length === 3 && remaining.length === 1) {
+            const lastP = remaining[0];
+            const finalRanks = [...ranksDiscovered, lastP];
+            setRanksDiscovered(finalRanks);
+            setRoundResults(finalRanks);
+            setIsGameOver(true);
+            setTurn(-1);
+            if (sm.playJBackSE) sm.playJBackSE();
+            return;
+          }
+
+          // Hostの場合、ここで同期を行う
+          if (multiplayerMode === 'active' && isHost) {
+            const nextTarget = getNextPlayer(playerIndex, 1, null, ranksDiscovered);
+            broadcastState(hands, nextTarget);
+          }
+
+          executeNextTurn(playerIndex, newPassCount, 1, null, ranksDiscovered);
+        }
+      };
+
+      const isValidPlay = (cardsToPlay) => {
+        if (cardsToPlay.length === 0) return false;
+
+        // Check for Plus 5 combination (5 + one card from {A, 2, 3, 4, 6, 7, 8})
+        if (cardsToPlay.length === 2 && (tableCards.length === 0 || tableCards.length === 1)) {
+          const has5 = cardsToPlay.some(c => c.rank === '5');
+          if (has5) {
+            const other = cardsToPlay.find(c => c.rank !== '5') || cardsToPlay[0];
+            const allowed = ['A', '2', '3', '4', '5', '6', '7', '8'];
+            if (allowed.includes(other.rank)) {
+              // Valid Plus 5! Calculate effective strength
+              let effectiveStrength = 13;
+              if (other.rank === '5' && cardsToPlay[0].rank === '5') {
+                 // 5 + 5 result in rank 10
+                 effectiveStrength = RANKS.indexOf('10');
+              } else {
+                 const total = rankToValue(other.rank) + 5;
+                 const resRank = valueToRank(total);
+                 effectiveStrength = RANKS.indexOf(resRank);
+              }
+              if (tableCards.length === 0) return true;
+              const tableStrength = tableCards[0].card.strength;
+              return compareStrength(effectiveStrength, tableStrength);
+            }
+          }
+        }
+
+        // JOKERのワイルドカード判定
+        const nonJokers = cardsToPlay.filter(c => c.rank !== 'Joker');
+        let effectiveStrength = 13;
+
+        if (nonJokers.length > 0) {
+          const firstRank = nonJokers[0].rank;
+          if (!nonJokers.every(c => c.rank === firstRank)) return false;
+          effectiveStrength = nonJokers[0].strength;
+        }
+
+        const tableEffectiveCount = getEffectiveCount(tableCards.map(tc => tc.card));
+        const playEffectiveCount = getEffectiveCount(cardsToPlay);
+
+        if (tableCards.length === 0) return true;
+        if (playEffectiveCount !== tableEffectiveCount) return false;
+
+        const tableStrength = tableCards[0].card.strength;
+        return compareStrength(effectiveStrength, tableStrength);
+      };
+
+      const evaluateSpecialEffects = (playerIndex, playedCards, currentHands, currentGraveyard) => {
+        let title = ''; let desc = ''; let steps = 1; let pDir = playDirection;
+        let gy = [...currentGraveyard]; let h = [...currentHands];
+        let shieldStates = [...isShielded]; let is11B = is11Back; let isFieldCleared = false;
+        let isRev = isRevolution; 
+        let isAsync = false; // Add this flag
+
+        let nonJokers = playedCards.filter(c => c.rank !== 'Joker');
+        let effectiveRank = nonJokers.length > 0 ? nonJokers[0].rank : 'Joker';
+        
+        // Plus 5 override rank
+        if (playedCards.length === 2 && playedCards.some(c => c.rank === '5')) {
+          const other = playedCards.find(c => c.rank !== '5');
+          if (other && ['A', '2', '3', '4', '6', '7', '8'].includes(other.rank)) {
+             const total = rankToValue(other.rank) + 5;
+             effectiveRank = valueToRank(total);
+          } else if (!other) {
+             // 5+5
+             effectiveRank = '10_NO_EFFECT'; // Mark as no effect per user request
+          }
+        }
+
+        const rank = effectiveRank;
+        const count = playedCards.length; // JOKERを含む合計枚数で能力が変動
+        const tcg = TCG_DATA[rank];
+
+        if (tcg) {
+          title = tcg.name;
+          desc = tcg.desc || '';
+          if (playedCards.some(c => c.rank === 'Joker') && nonJokers.length > 0) {
+            title = `🃏真・${tcg.name}`;
+            desc = `JOKERが ${rank} になり代わり、${count}連鎖の呪いが発動`;
+          }
+        } else if (rank === '10_NO_EFFECT') {
+          title = 'プラス5連鎖';
+          desc = '効果なし（ただの5の2枚出し）';
+        }
+
+        // 革命判定 (同時出しが4枚以上)
+        if (playedCards.length >= 4) {
+          isRev = !isRev;
+          setIsRevolution(isRev);
+          title = "革命 (REVOLUTION)";
+          desc = isRev ? "世界の理が逆転" : "世界の理が元に復帰";
+        }
+
+        if (rank === '4') {
+          shieldStates[playerIndex] = true;
+        }
+
+        if (rank === '6') {
+          if (gy.length > 0) {
+            setIsCoffinOpen(true); // 棺桶から蘇生
+            triggerTempEffect(setPhoenixActive, 1500);
+            const drawCount = Math.min(count, gy.length);
+            let drawn = [];
+            for (let i = 0; i < drawCount; i++) {
+              const rIndex = Math.floor(Math.random() * gy.length);
+              const card = gy.splice(rIndex, 1)[0];
+              drawn.push(card);
+
+              const newFly = { from: 'graveyard', to: playerIndex, card: { ...card, rank: '?' }, type: 'phoenix', id: Math.random() };
+              sm.playPaperSE();
+              setFlyingCards(prev => [...prev, newFly]);
+              setIsAnimating(true);
+              setTimeout(() => {
+                setFlyingCards(prev => prev.filter(f => f.id !== newFly.id));
+                h[playerIndex].push(card);
+                setHands([...h]);
+                setGyShuffling(true);
+                setTimeout(() => {
+                  setGyShuffling(false);
+                  setIsAnimating(false);
+                  if (i === drawCount - 1) setTimeout(() => setIsCoffinOpen(false), 500);
+                  // Removed internal executeNextTurn call
+                }, 1200); // 延長 (800 -> 1200)
+              }, 1800 + i * 400); // 延長 (1200 -> 1800, 300 -> 400)
+            }
+            isAsync = true; // Mark as async
+            title = `${tcg.name} x${count}`;
+            desc = `死者${drawCount}名が冥界より帰還`;
+            steps = 1;
+          } else { title = tcg?.name; desc = '墓地が空のため蘇生失敗'; }
+        }
+        if (rank === '7') {
+          if (h[playerIndex].length > 0) {
+            const nextP = getNextPlayer(playerIndex, 1, pDir);
+            if (shieldStates[nextP]) { triggerMiss(nextP); title = 'MISS'; desc = `呪文の壁が血の契約を拒絶した`; }
+            else {
+              triggerTempEffect(setPassThreadActive, 1000);
+              if (playerIndex === 0) {
+                setSelectionMode('7');
+                setSelectionInfo({ playerIndex, nextP, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
+                steps = 0;
+              } else {
+                const passCount = Math.min(count, h[playerIndex].length);
+                let passed = [];
+                for (let i = 0; i < passCount; i++) {
+                  const cIndex = Math.floor(Math.random() * h[playerIndex].length);
+                  const card = h[playerIndex].splice(cIndex, 1)[0];
+                  passed.push(card);
+
+                  // 7渡し：裏向きで移動させる
+                  const newFly = { from: playerIndex, to: nextP, card: { ...card, rank: '?' }, type: 'pass', id: Math.random() };
+                  setFlyingCards(prev => [...prev, newFly]);
+                  setIsAnimating(true);
+                  setTimeout(() => {
+                    setFlyingCards(prev => prev.filter(f => f.id !== newFly.id));
+                    h[nextP].push(card);
+                    if (nextP === 0) {
+                      setHighlightedCardIds(prev => [...prev, card.id]);
+                      setTimeout(() => setHighlightedCardIds(prev => prev.filter(id => id !== card.id)), 4000);
+                    }
+                    setHands([...h]);
+                    sm.playPaperSE();
+                    setReceivedHighlight(nextP);
+                    setTimeout(() => {
+                      setReceivedHighlight(null);
+                      setIsAnimating(false);
+                      // 7渡しによる次手番への影響を最小限に（async終了後executeNextTurnが走る）
+                    }, 1500);
+                  }, 2000 + i * 500);
+                }
+                isAsync = true; // Mark as async
+                title = `${tcg.name} x${count}`;
+                desc = `契約により${passCount}枚の生贄を譲渡`;
+                steps = 1; // 7の後、次は順当に次の人
+              }
+            }
+          }
+        }
+        if (rank === '8') {
+          isFieldCleared = true; steps = 0;
+          triggerTempEffect(setGuillotineActive, 1200);
+        }
+        if (rank === '9') {
+          pDir = pDir * -1;
+          triggerTempEffect(setReverseActive, 1800);
+        }
+        if (rank === '10') {
+          if (h[playerIndex].length > 0) {
+            setIsAnimating(true);
+            if (playerIndex === 0) {
+              setSelectionMode('10');
+              setSelectionInfo({ playerIndex, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
+              steps = 0;
+            } else {
+              const dropCount = Math.min(count, h[playerIndex].length);
+              let dropped = [];
+              for (let i = 0; i < dropCount; i++) {
+                const cIndex = Math.floor(Math.random() * h[playerIndex].length);
+                const card = h[playerIndex].splice(cIndex, 1)[0];
+                dropped.push(card);
+              }
+              gy.push(...dropped);
+              setIsCoffinOpen(true); // 捨て逃げ
+              setDiscardingToGy(dropped);
+              setIsAnimating(true);
+              isAsync = true; // Mark as async
+              setTimeout(() => {
+                setDiscardingToGy([]);
+                 setGyShuffling(true);
+                setTimeout(() => {
+                  setGyShuffling(false);
+                  setIsAnimating(false);
+                  setTimeout(() => setIsCoffinOpen(false), 800);
+                }, 1200);
+              }, 1800);
+              steps = 1;
+            }
+          }
+        }
+        if (rank === 'J') {
+          is11B = true;
+        }
+        if (rank === 'Q') {
+          const targetRank = RANKS[Math.floor(Math.random() * RANKS.length)];
+          if (playerIndex === 0) {
+            setSelectionMode('Q');
+            setSelectionInfo({ playerIndex, count }); // Qの枚数は爆発の派手さに影響させるなど（現状はロジック共通）
+            steps = 0;
+          } else {
+            triggerTempEffect(setBomberActive, 2000);
+            let targetRanks = [];
+            let rShuffled = [...RANKS].sort(() => Math.random() - 0.5);
+            targetRanks = rShuffled.slice(0, count);
+
+            let bombCount = 0;
+            let tempH = [...h];
+            let affectedPlayers = [];
+
+            targetRanks.forEach(tr => {
+              for (let i = 0; i < 4; i++) {
+                if (shieldStates[i] && i !== playerIndex) { triggerMiss(i); continue; }
+                const drop = h[i].filter(c => c.rank === tr);
+                if (drop.length > 0) {
+                  bombCount += drop.length;
+                  gy.push(...drop);
+                  tempH[i] = tempH[i].filter(c => c.rank !== tr);
+                  if (!affectedPlayers.includes(i)) affectedPlayers.push(i);
+                }
+              }
+            });
+
+            setExplodingCards(affectedPlayers.map(pIdx => ({ playerIndex: pIdx, rank: targetRanks[0] })));
+            setTimeout(() => {
+              setExplodingCards([]);
+              // Removed internal executeNextTurn call
+            }, 2000);
+
+            isAsync = true; // Mark as async
+            h = tempH;
+            title = `${tcg?.name} [${targetRanks.join(',')}] x${count}`;
+            desc = `全領域から${bombCount}枚が灰燼に帰した`;
+          }
+        }
+        if (rank === 'K') {
+          setIsAnimating(true);
+          if (playerIndex === 0) {
+            setWatchSelecting(true);
+            setSelectionInfo({ playerIndex, count });
+            showMessage(tcg.name, "監視対象を選択");
+            steps = 0;
+          } else {
+            const watchDuration = count * 5000;
+            const others = [0, 1, 2, 3].filter(v => v !== playerIndex && !ranksDiscovered.includes(v));
+            let target = others[Math.floor(Math.random() * others.length)];
+            if (shieldStates[target]) { triggerMiss(target); title = 'MISS'; desc = `呪文の壁が邪眼を弾いた`; setIsAnimating(false); }
+            else {
+              setWatchTarget({
+                targetIndex: target,
+                activatorIndex: playerIndex,
+                endTime: Date.now() + watchDuration
+              });
+              title = `${tcg.name} x${count}`; desc = `${watchDuration / 1000}秒間、魂の中身を暴き続ける`;
+              setTimeout(() => {
+                setWatchTarget(null);
+                setIsAnimating(false);
+                // Removed internal executeNextTurn call
+              }, watchDuration);
+            }
+            isAsync = true; // Mark as async
+          }
+        }
+
+        if (title) showMessage(title, desc);
+
+        // Kウォッチ選択モードでない場合のみターンの処理を返す
+        return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: (rank === 'K' && playerIndex === 0) ? 0 : steps, pDir, isAsync };
+      };
+
+      const executePlay = (playerIndex, cards) => {
+        if (playerIndex === 0) setIsActionLoading(true);
+        sm.playPaperSE();
+        // Helper to trigger character cut‑in based on rank
+        const triggerCutIn = (rank, comboData = null) => {
+          let tcg = TCG_DATA[rank];
+          if (!tcg && rank !== '5_SOLO') return;
+
+          let aura = tcg ? (tcg.auraColor || '#b8860b') : '#b8860b';
+          let name = tcg ? tcg.name : '';
+          let desc = tcg ? tcg.desc : '';
+          let url = tcg ? tcg.url : '';
+
+          if (rank === '5_SOLO') {
+            const t5 = TCG_DATA['5'];
+            tcg = t5;
+            name = 'プラス5';
+            desc = '単独での効果なし';
+            url = t5.url;
+            aura = '#f1c40f'; // Neutral Gold
+          }
+
+          sm.playEffectSE(rank === '5_SOLO' ? '5' : (rank === '10_NO_EFFECT' ? '5' : rank));
+          
+          setCutIn({
+            name: name,
+            effect: desc,
+            url: url,
+            rank: (rank === '5_SOLO' ? '5' : (rank === '10_NO_EFFECT' ? '5' : rank)),
+            auraColor: aura,
+            comboData: comboData
+          });
+          
+          // 演出表示時間を動的に変更 (通常1.6s, コンボ時は4.0s)
+          const duration = comboData ? 4000 : 1600;
+          setTimeout(() => setCutIn(null), duration);
+        };
+
+        let newHands = [...hands];
+        newHands[playerIndex] = newHands[playerIndex].filter(c => !cards.find(sc => sc.id === c.id));
+
+        const startEdge = getPlayerEdgePosition(playerIndex);
+        const isPlus5Combo = cards.length === 2 && cards.some(c => c.rank === '5') && cards.some(c => c.rank !== '5');
+
+        let styledTableCards = cards.map((c, idx) => {
+          let tgtLeft, tgtTop;
+          if (isPlus5Combo) {
+             // Side-by-side in center
+             tgtLeft = idx === 0 ? 'calc(50% - 65px)' : 'calc(50% + 65px)';
+             tgtTop = '50%';
+          } else {
+             tgtLeft = `calc(50% + ${Math.random() * 60 - 30}px)`;
+             tgtTop = `calc(50% + ${Math.random() * 60 - 30}px)`;
+          }
+          const tgtTransform = isPlus5Combo ? `translate(-50%, -50%) scale(0.8) rotate(0deg)` : `translate(-50%, -50%) rotate(${Math.random() * 45 - 22}deg)`;
+
+          return {
+            card: c, isAnimating: true, isSlammed: false,
+            initialStyle: { top: startEdge.top, left: startEdge.left, transform: `translate(-50%, -50%) scale(0.5) rotate(0deg)`, marginLeft: 0 },
+            targetStyle: { top: tgtTop, left: tgtLeft, transform: tgtTransform, marginLeft: 0 }
+          };
+        });
+        
+        // Calculate effective rank for visual cut-in
+        const nonJokers = cards.filter(c => c.rank !== 'Joker');
+        let effectiveVisualRank = nonJokers.length > 0 ? nonJokers[0].rank : 'Joker';
+        if (cards.length === 2 && cards.some(c => c.rank === '5')) {
+          const other = cards.find(c => c.rank !== '5');
+          if (other && ['A', '2', '3', '4', '6', '7', '8'].includes(other.rank)) {
+             const total = rankToValue(other.rank) + 5;
+             effectiveVisualRank = valueToRank(total);
+          } else {
+             effectiveVisualRank = '5_SOLO';
+          }
+        } else if (cards.length === 1 && cards[0].rank === '5') {
+          effectiveVisualRank = '5_SOLO';
+        }
+        
+        // --- STAGE 1: Land side-by-side or normally ---
+        if (isPlus5Combo) {
+           const other = cards.find(c => c.rank !== '5');
+           triggerCutIn('5', { otherRank: other.rank, resultRank: effectiveVisualRank }); // Start Cinematic Merger
+        } else {
+           triggerCutIn(effectiveVisualRank); // Standard cards cut-in immediately
+        }
+        
+        setTableCards(styledTableCards);
+
+        // --- STAGE 2 & 3: Plus 5 Merging Animation ---
+        if (isPlus5Combo) {
+          // Stage 2: Slide together
+          setTimeout(() => {
+             setTableCards(prev => prev.map(tc => {
+               // Stage 1でisAnimating:trueだったものをfalseに落としつつtargetを変更することで
+               // 手元に戻るのを防ぎ、現在の位置(targetStyle)から新しい位置へ滑らかに移動させる
+               return {
+                 ...tc,
+                 isAnimating: false,
+                 targetStyle: { ...tc.targetStyle, left: '50%' }
+               };
+             }));
+          }, 500);
+
+          // Stage 3: Merge and Transform
+          setTimeout(() => {
+            const resRank = effectiveVisualRank;
+            // Create a synthetic card for the result
+            const mergedCard = { id: `merged_${Date.now()}`, suit: 'Magic', rank: resRank, strength: RANKS.indexOf(resRank) };
+            const finalPos = { top: '50%', left: '50%', transform: 'translate(-50%, -50%) scale(1.1) rotate(0deg)' };
+            setTableCards([{
+              card: mergedCard, isAnimating: false, isSlammed: true,
+              initialStyle: finalPos, targetStyle: finalPos
+            }]);
+            if (sm.playSlamSE) sm.playSlamSE(); // Trigger merge sound
+            // triggerCutIn は すでに Stage 1 でコンボモードとして呼ばれているので、内部的にタイマーで処理される
+          }, 1000);
+        }
+        // ---------------------------------------------
+
+        let currentGraveyard = [...graveyard];
+        let steps = 1; let isFieldCleared = false;
+
+        const effectRes = evaluateSpecialEffects(playerIndex, cards, newHands, currentGraveyard);
+
+        newHands = effectRes.h; currentGraveyard = effectRes.gy;
+        setIsShielded(effectRes.shieldStates); setIs11Back(effectRes.is11B);
+        setIsRevolution(effectRes.isRev);
+        setPlayDirection(effectRes.pDir); steps = effectRes.steps; isFieldCleared = effectRes.isFieldCleared;
+
+        newHands = newHands.map(h => sortHand(h, effectRes.isRev, effectRes.is11B));
+        setHands(newHands); setGraveyard(currentGraveyard);
+
+        // NOTE: Hand update is broadcasted here for immediate cards removal, 
+        // but the turn update will be broadcasted inside the setTimeout below.
+        if (multiplayerMode === 'active' && isHost) {
+          broadcastState(newHands);
+        }
+
+        // 手札が空になったプレイヤーをランクに登録
+        let updatedRanks = [...ranksDiscovered];
+        newHands.forEach((h, idx) => {
+          if (h.length === 0 && !updatedRanks.includes(idx)) {
+            updatedRanks.push(idx);
+          }
+        });
+        setRanksDiscovered(updatedRanks);
+
+        if (isFieldCleared) {
+          setTimeout(() => {
+            triggerClearFieldAnim(() => {
+              clearFieldLogic([...currentGraveyard, ...cards]);
+              setLastPlayPlayer(playerIndex);
+
+              let nextStarter = playerIndex;
+              if (updatedRanks.includes(nextStarter)) {
+                nextStarter = getNextPlayer(nextStarter, 1, null, updatedRanks);
+              }
+
+              // 同一ターン主の場合はセットするだけではuseEffectが発火しないため、一瞬-1にしてから再代入する
+              setTurn(-1);
+              setTimeout(() => {
+                setTurn(nextStarter);
+              }, 50);
+
+            });
+          }, 1800); // 演出に合わせてフィールドを流す (Merge時間分を考慮して延長)
+          return;
+        } else {
+          setPassCount(0);
+          setLastPlayPlayer(playerIndex);
+        }
+
+        // 場に出た後の演出表示を終えてから、次のプレイヤーのターンに行く
+        const playRank = cards[0].rank;
+        const isEffectSelecting = (playRank === '7' || playRank === '10' || playRank === 'Q' || playRank === 'K');
+
+        // 演出の長さに合わせて待ち時間を調整 (通常1.6s, 合体時は最長4.0s)
+        const totalAnimTime = isPlus5Combo ? 4000 : (effectRes.isAsync ? (playRank === 'Q' ? 2600 : 2200) : 1600);
+
+        if (playerIndex === 0) setIsActionLoading(true);
+
+        setTimeout(() => {
+          const stepsToUse = effectRes.isAsync ? 1 : steps;
+
+          // 残り1人になったかチェック (updatedRanksを使用)
+          const remaining = [0, 1, 2, 3].filter(p => !updatedRanks.includes(p));
+          if (updatedRanks.length >= 3) {
+            let finalRanks = [...updatedRanks];
+            if (remaining.length === 1) {
+              finalRanks.push(remaining[0]);
+            }
+            setRanksDiscovered(finalRanks);
+            setRoundResults(finalRanks);
+            setIsGameOver(true);
+            setTurn(-1);
+            if (sm.playJBackSE) sm.playJBackSE();
+            return;
+          }
+
+          const nextTarget = getNextPlayer(playerIndex, stepsToUse, effectRes.pDir, updatedRanks);
+          if (multiplayerMode === 'active' && isHost) {
+            broadcastState(newHands, nextTarget);
+          }
+          executeNextTurn(playerIndex, 0, stepsToUse, effectRes.pDir, updatedRanks);
+        }, totalAnimTime);
+      };
+
+      const playCpuTurn = () => {
+        let hand = sortHand([...hands[turn]]);
+        if (tableCards.length === 0) { executePlay(turn, [hand[0]]); cpuThinkingRef.current = false; return; }
+        const tableEffectiveCount = getEffectiveCount(tableCards.map(tc => tc.card));
+        const tableStrength = tableCards[0].card.strength;
+
+        const groups = {};
+        hand.forEach(c => {
+          if (!groups[c.strength]) groups[c.strength] = [];
+          groups[c.strength].push(c);
+        });
+
+        const strengthsKeys = Object.keys(groups).map(Number).sort((a, b) => {
+          if (a === 13) return 1; if (b === 13) return -1;
+          return is11Back ? b - a : a - b;
+        });
+
+        let foundPlay = null;
+        for (let s of strengthsKeys) {
+          if (compareStrength(s, tableStrength) && groups[s].length >= tableEffectiveCount) {
+            foundPlay = groups[s].slice(0, tableEffectiveCount); break;
+          }
+        }
+
+        if (foundPlay) {
+          executePlay(turn, foundPlay);
+        } else {
+          // Plus 5 Fallback for CPU
+          const tableEffectiveCount = getEffectiveCount(tableCards.map(tc => tc.card));
+          if (tableEffectiveCount === 1) {
+            const five = hand.find(c => c.rank === '5');
+            if (five) {
+              const allowed = ['A', '2', '3', '4', '6', '7', '8'];
+              const others = hand.filter(c => c.id !== five.id && allowed.includes(c.rank));
+              for (let o of others) {
+                const total = rankToValue(o.rank) + 5;
+                const resRank = valueToRank(total);
+                const s = RANKS.indexOf(resRank);
+                if (compareStrength(s, tableStrength)) {
+                  foundPlay = [five, o];
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (foundPlay) {
+            executePlay(turn, foundPlay);
+          } else {
+            const passWait = tableCards.length === 0 ? 500 : 100;
+            setTimeout(() => executePass(turn), passWait);
+          }
+        }
+        // 思考完了後はreset（次のsetTurn変化に委ねる）
+        // cpuThinkingRef.current = false; // This will be reset by the useEffect when turn changes
+      };
+
+      const completeSpecialEffect = (choice, remotePlayerIdx = null) => {
+        const { playerIndex, nextP, count } = selectionInfo;
+        const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
+        if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
+          guestConn.send({ type: 'ACTION', action: 'COMPLETE_EFFECT', choice });
+          setSelectionMode(null); setSelectionInfo(null); setSelectedCards([]);
+          return;
+        }
+        if (actingIdx === myPlayerIndex) setIsActionLoading(true);
+
+        // Host uses a consistent seed or broadcasts the randomness if needed, but for now we'll just broadcast the final state.
+        let h = [...hands]; let gy = [...graveyard];
+
+        if (selectionMode === '7' || selectionMode === '10') {
+          const chosenCards = choice;
+          if (chosenCards.length !== count) return;
+
+          chosenCards.forEach((c, idx) => {
+            const hIdx = h[playerIndex].findIndex(hc => hc.id === c.id);
+            if (hIdx !== -1) {
+              const card = h[playerIndex].splice(hIdx, 1)[0];
+              if (selectionMode === '7') {
+                const newFly = { from: playerIndex, to: nextP, card: { ...card, rank: '?' }, type: 'pass', id: Math.random() };
+                setFlyingCards(prev => [...prev, newFly]);
+                setIsAnimating(true);
+                setTimeout(() => {
+                  setFlyingCards(prev => prev.filter(f => f.id !== newFly.id));
+                  h[nextP].push(card);
+                  if (nextP === 0) {
+                    setHighlightedCardIds(prev => [...prev, card.id]);
+                    setTimeout(() => setHighlightedCardIds(prev => prev.filter(id => id !== card.id)), 4000);
+                  }
+                  setHands([...h]);
+                  sm.playPaperSE();
+                  setReceivedHighlight(nextP);
+                  setTimeout(() => {
+                    setReceivedHighlight(null);
+                    setIsAnimating(false);
+                  }, 1500); // 延長
+                }, 1800 + idx * 500); // 延長
+              } else {
+                gy.push(card);
+                setDiscardingToGy(prev => [...prev, card]);
+                setIsAnimating(true);
+                setIsCoffinOpen(true); // 棺桶を開く
+                setTimeout(() => {
+                  setDiscardingToGy([]);
+                  setGyShuffling(true);
+                  setTimeout(() => {
+                    setGyShuffling(false);
+                    setIsAnimating(false);
+                    setTimeout(() => setIsCoffinOpen(false), 800);
+                  }, 1200); // 延長 (800 -> 1200)
+                }, 1800 + idx * 200); // 延長 (1200 -> 1800)
+              }
+            }
+          });
+        }
+        if (selectionMode === 'Q') {
+          // Qは複数ランクの配列を受け取れるように
+          const targetRanks = Array.isArray(choice) ? choice : [choice];
+          triggerTempEffect(setBomberActive, 1800);
+          setIsAnimating(true);
+          let totalBombCount = 0; let tempH = [...h];
+          let affectedPlayers = [];
+
+          targetRanks.forEach(targetRank => {
+            for (let i = 0; i < 4; i++) {
+              if (isShielded[i] && i !== playerIndex) { triggerMiss(i); continue; }
+              const drop = h[i].filter(c => targetRank === 'Joker' ? (c.suit === 'Joker' || c.rank === 'Joker') : c.rank === targetRank);
+              if (drop.length > 0) {
+                totalBombCount += drop.length;
+                gy.push(...drop);
+                tempH[i] = tempH[i].filter(c => targetRank === 'Joker' ? !(c.suit === 'Joker' || c.rank === 'Joker') : c.rank !== targetRank);
+                if (!affectedPlayers.includes(i)) affectedPlayers.push(i);
+              }
+            }
+          });
+
+          setExplodingCards(affectedPlayers.map(pIdx => ({ playerIndex: pIdx, rank: targetRanks[0] })));
+          setIsCoffinOpen(true); // 爆発を収納
+          setTimeout(() => {
+            setExplodingCards([]);
+            setGyShuffling(true);
+            setTimeout(() => {
+              setGyShuffling(false);
+              setIsAnimating(false);
+              setTimeout(() => setIsCoffinOpen(false), 800);
+            }, 1200);
+          }, 2500);
+          h = tempH;
+          showMessage(`Ｑボンバー [${targetRanks.join(',')}]`, `全領域から${totalBombCount}枚が消滅`);
+        }
+        setHands(h); setGraveyard(gy); setSelectionMode(null); setSelectionInfo(null); setSelectedCards([]);
+        if (isHost) broadcastState(h);
+        
+        if (!watchSelecting) {
+          // アニメーション完了（約2s）待機してから次へ進む
+          if (actingIdx === myPlayerIndex) setIsActionLoading(true);
+          setTimeout(() => executeNextTurn(actingIdx, 0, 1, playDirection), 2000);
+        }
+      };
+
+      const handlePlay = () => {
+        if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
+        const canPlay = selectedCards.length > 0;
+        if (!canPlay) return;
+        
+        if (multiplayerMode === 'active' && !isHost) {
+          guestConn.send({ type: 'ACTION', action: 'PLAY', cards: selectedCards });
+          setSelectedCards([]);
+          return;
+        }
+
+        setIsActionLoading(true);
+        if (isValidPlay(selectedCards)) {
+          executePlay(myPlayerIndex, selectedCards); setSelectedCards([]);
+          if (isHost) broadcastState(hands);
+        } else {
+          showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
+        }
+      };
+
+      const handlePass = () => {
+        if (turn !== myPlayerIndex || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
+        
+        if (multiplayerMode === 'active' && !isHost) {
+          guestConn.send({ type: 'ACTION', action: 'PASS' });
+          setSelectedCards([]);
+          return;
+        }
+
+        setIsActionLoading(true);
+        executePass(myPlayerIndex); setSelectedCards([]);
+        if (isHost) broadcastState(hands);
+      };
+
+      const toggleRankSelect = (rank) => {
+        const max = selectionInfo?.count || 1;
+        if (selectedCards.includes(rank)) {
+          setSelectedCards(prev => prev.filter(r => r !== rank));
+        } else {
+          if (selectedCards.length < max) {
+            setSelectedCards(prev => [...prev, rank]);
+          } else if (max === 1) {
+            setSelectedCards([rank]);
+          }
+        }
+      };
+
+      const toggleSelect = (card) => {
+        if (selectedCards.find(c => c.id === card.id)) setSelectedCards(selectedCards.filter(c => c.id !== card.id));
+        else setSelectedCards([...selectedCards, card]);
+      };
+
+      // 動的なオーラと色付け
+      // --- ゲーム終了・再開・交換 ロジック ---
+      const startGame = (customHands = null, firstTurn = 0) => {
+        setTableCards([]);
+        setPassCount(0);
+        setLastPlayPlayer(null);
+        setRanksDiscovered([]);
+        setGraveyard([]);
+        setIsShielded([false, false, false, false]);
+        setIs11Back(false);
+        setIsRevolution(false);
+        setPlayDirection(1);
+        setPassedPlayers([]);
+        setIsGameOver(false);
+        setExchangePhase(null);
+        setExchangeDecisions({});
+
+        if (customHands) {
+          setHands(customHands);
+          setTurn(firstTurn);
+        } else {
+          const deck = shuffle(createDeck());
+          const newHands = [[], [], [], []];
+          let i = 0;
+          while (deck.length > 0) {
+            newHands[i % 4].push(deck.pop());
+            i++;
+          }
+          setHands(newHands.map(h => sortHand(h)));
+          setTurn(0);
+        }
+        setIsDealing(true);
+        setTimeout(() => setIsDealing(false), 2000);
+        setGameStarted(true);
+        sm.playGameBGM();
+      };
+
+      const handleRestart = () => {
+        if (multiplayerMode === 'active' && !isHost) {
+          guestConn.send({ type: 'ACTION', action: 'RESTART' });
+          return;
+        }
+
+        // 新しいカードを配る
+        const deck = shuffle(createDeck());
+        const newHands = [[], [], [], []];
+        let i = 0;
+        while (deck.length > 0) {
+          newHands[i % 4].push(deck.pop());
+          i++;
+        }
+        const sortedHands = newHands.map(h => sortHand(h));
+
+        // 交換フェーズへ
+        setHands(sortedHands);
+        setTableCards([]);
+        setPassCount(0);
+        setLastPlayPlayer(null);
+        setRanksDiscovered([]);
+        setGraveyard([]);
+        setIsShielded([false, false, false, false]);
+        setIs11Back(false);
+        setIsRevolution(false);
+        setPlayDirection(1);
+        setPassedPlayers([]);
+        setIsGameOver(false);
+        setExchangePhase('selecting');
+        setSelectedCards([]);
+
+        // NPCの交換カードを即座に決定
+        const decisions = {};
+        [0, 1, 2, 3].forEach(pIdx => {
+          const rankPos = roundResults.indexOf(pIdx) + 1; // 1:大富豪, 2:富豪, 3:貧民, 4:大貧民
+          // マルチプレイ時は、接続プレイヤー以外のスロットをCPUとして扱う
+          const isCpu = pIdx !== 0 && (multiplayerMode === 'active' ? (pIdx > conns.length) : true);
+          if (isCpu) {
+            if (rankPos === 1) decisions[pIdx] = sortedHands[pIdx].slice(0, 2);
+            if (rankPos === 2) decisions[pIdx] = sortedHands[pIdx].slice(0, 1);
+            if (rankPos === 3) decisions[pIdx] = sortedHands[pIdx].slice(-1);
+            if (rankPos === 4) decisions[pIdx] = sortedHands[pIdx].slice(-2);
+          }
+        });
+        setExchangeDecisions(decisions);
+        if (isHost) broadcastState(sortedHands);
+      };
+
+      const confirmExchange = () => {
+        if (exchangePhase !== 'selecting') return;
+
+        if (multiplayerMode === 'active' && !isHost) {
+          const p0Rank = roundResults.indexOf(myPlayerIndex) + 1;
+          let exchangeCards = [];
+          if (p0Rank <= 2) exchangeCards = selectedCards;
+          else if (p0Rank === 3) exchangeCards = hands[myPlayerIndex].slice(-1);
+          else if (p0Rank === 4) exchangeCards = hands[myPlayerIndex].slice(-2);
+          
+          guestConn.send({ type: 'ACTION', action: 'CONFIRM_EXCHANGE', cards: exchangeCards });
+          setExchangePhase('animating'); // Wait for host to execute
+          return;
+        }
+
+        setExchangePhase('animating');
+
+        const h = [...hands];
+        const newFlying = [];
+        const finalDecisions = { ...exchangeDecisions };
+
+        // プレイヤー0の決定
+        const p0Rank = roundResults.indexOf(0) + 1;
+        if (p0Rank === 1 || p0Rank === 2) {
+          finalDecisions[0] = selectedCards;
+        } else if (p0Rank === 3) {
+          finalDecisions[0] = h[0].slice(-1);
+        } else if (p0Rank === 4) {
+          finalDecisions[0] = h[0].slice(-2);
+        }
+
+        // 交換実行
+        const daifugo = roundResults[0];
+        const fugo = roundResults[1];
+        const hinmin = roundResults[2];
+        const daihinmin = roundResults[3];
+
+        const pairs = [
+          { from: daifugo, to: daihinmin, cards: finalDecisions[daifugo] },
+          { from: daihinmin, to: daifugo, cards: finalDecisions[daihinmin] },
+          { from: fugo, to: hinmin, cards: finalDecisions[fugo] },
+          { from: hinmin, to: fugo, cards: finalDecisions[hinmin] }
+        ];
+
+        pairs.forEach(pair => {
+          pair.cards.forEach(c => {
+            const idx = h[pair.from].findIndex(hc => hc.id === c.id);
+            if (idx !== -1) {
+              h[pair.from].splice(idx, 1);
+              newFlying.push({ from: pair.from, to: pair.to, card: c, type: 'pass', id: Math.random() });
+            }
+          });
+        });
+
+        setFlyingCards(newFlying);
+        sm.playPaperSE();
+
+        setTimeout(() => {
+          pairs.forEach(pair => {
+            pair.cards.forEach(c => {
+              h[pair.to].push(c);
+            });
+            h[pair.to] = sortHand(h[pair.to]);
+          });
+          setHands([...h]);
+          setFlyingCards([]);
+          setExchangePhase(null);
+          setSelectedCards([]);
+          // 大貧民から開始
+          setTurn(daihinmin);
+          setIsDealing(true);
+          setTimeout(() => setIsDealing(false), 1000);
+        }, 2000);
+      };
+
+      const getCardClass = (c) => {
+        if (c.hidden) return "card back";
+        let cls = `card ${c.suit === '♥' || c.suit === '♦' ? 'red' : (c.suit === 'Joker' ? 'joker' : '')}`;
+        // Aura effect mapping loosely based on ability
+        if (c.rank === '4') cls += ' aura-shield';
+        if (c.rank === '6' || c.rank === '10' || c.rank === 'Q') cls += ' aura-fire';
+        if (c.rank === '8') cls += ' aura-dark';
+        if (c.rank === 'A' || c.rank === 'K') cls += ' aura-gold';
+        return cls;
+      };
+
+      const renderFanHand = (handContent, playerIdx, isFaceUp = false) => {
+        const total = handContent.length;
+        const isBeingWatchedByMe = watchTarget?.targetIndex === playerIdx && watchTarget?.activatorIndex === myPlayerIndex;
+        // Kウォッチ時は横に広がりすぎないようさらに角度を制限
+        let maxAngle = isBeingWatchedByMe ? Math.min(25, total * 2.5) : Math.min(60, total * 4);
+        if (isMobile && isBeingWatchedByMe) {
+          maxAngle = Math.min(40, total * 4); // スマホ監視時はタイトにしない（視認性優先）
+        }
+        const angleStep = total > 1 ? maxAngle / (total - 1) : 0;
+        const startAngle = -maxAngle / 2;
+
+        const rankIdx = ranksDiscovered.indexOf(playerIdx);
+        const hierarchy = rankIdx !== -1 ? getHierarchyTitle(rankIdx + 1) : null;
+        const isDead = rankIdx !== -1;
+
+        return (
+          <div key={playerIdx}
+            className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== 0 && !isDead ? 'watch-clickable' : ''}`}
+            onClick={() => {
+              if (watchSelecting && playerIdx !== 0 && !isDead) {
+                const watchDuration = (selectionInfo?.count || 1) * 5000;
+                setWatchTarget({
+                  targetIndex: playerIdx,
+                  activatorIndex: 0,
+                  endTime: Date.now() + watchDuration
+                });
+                setWatchSelecting(false);
+                setSelectionMode(null);
+                setSelectionInfo(null);
+                setIsAnimating(true);
+                sm.playEffectSE('kwatch_start.mp3');
+                showMessage('Kウォッチ', `監視を開始 (${watchDuration / 1000}秒)`);
+                setTimeout(() => {
+                  setWatchTarget(null);
+                  setIsAnimating(false);
+                  executeNextTurn(0, 0, 1);
+                }, watchDuration);
+              }
+            }}
+          >
+            {isShielded[playerIdx] && <div className={`shield-aura ${missEffectTarget === playerIdx ? 'shield-miss' : ''}`}></div>}
+            {skipTarget === playerIdx && <div className="skip-chains"></div>}
+            {explodingCards.find(ec => ec.playerIndex === playerIdx) && (
+              <div className="exploding-card" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '200px', height: '200px', background: 'radial-gradient(circle, #f00, transparent)', borderRadius: '50%', zIndex: 600 }}></div>
+            )}
+
+            {/* Kウォッチ確認中表示 */}
+            {watchTarget && watchTarget.activatorIndex !== playerIdx && watchTarget.targetIndex !== playerIdx && (
+              <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.85)', color: '#f8d56a', padding: '4px 12px', borderRadius: '4px', fontFamily: '"Cinzel", serif', fontSize: '0.85rem', letterSpacing: '0.1em', border: '1px solid rgba(184,134,11,0.4)', whiteSpace: 'nowrap', zIndex: 300 }}>
+                確認中...
+              </div>
+            )}
+            {watchTarget && watchTarget.targetIndex === playerIdx && (
+              <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(60,0,0,0.9)', color: '#ff6060', padding: '4px 12px', borderRadius: '4px', fontFamily: '"Cinzel", serif', fontSize: '0.85rem', letterSpacing: '0.1em', border: '1px solid rgba(180,0,0,0.5)', whiteSpace: 'nowrap', zIndex: 300 }}>
+                監視中
+              </div>
+            )}
+            {handContent.map((c, i) => {
+              const rot = startAngle + i * angleStep;
+              const trY = Math.abs(rot) * 0.8;
+              const isSelected = selectedCards.find(sc => sc.id === c.id);
+              const tcg = !c.hidden ? TCG_DATA[c.rank] : null;
+              const aura = tcg?.auraColor || '#b8860b';
+              const dealDelay = isDealing ? `${(i + playerIdx * 10) * 0.04}s` : '0s';
+              let varStyle = {};
+
+              if (isFaceUp && !c.hidden) {
+                const isHighlighted = highlightedCardIds.includes(c.id);
+                let transformStyle = `translateX(calc(-50% + var(--spread-x, 0px))) rotate(${rot}deg) translateY(${trY}px)`;
+                let marginLeftStyle = `${(i - total / 2) * 40}px`;
+                
+                if (isMobile && (playerIdx === 0 || isBeingWatchedByMe)) {
+                  // 監視中または自分の手札：画面幅を広く使って視認性を確保
+                  const maxLocalWidth = (playerIdx === 0 || isBeingWatchedByMe) ? window.innerWidth * 0.95 : (isMobile ? 180 : 300); 
+                  const cardWidth = 65; 
+                  // 監視中は大幅に広げる (cap: 50)
+                  const cap = isBeingWatchedByMe ? 50 : 30;
+                  const spacing = Math.min(cap, (maxLocalWidth - cardWidth) / Math.max(1, total - 1));
+                  const offset = (i - (total - 1) / 2) * spacing;
+                  
+                  let ty = isSelected ? trY - 15 : trY;
+                  transformStyle = `translateX(calc(-50% + ${offset}px)) rotate(${rot}deg) translateY(${ty}px)`;
+                  marginLeftStyle = `0px`;
+                  // Enforce this style on mobile selection to avoid CSS !important overrides
+                  varStyle = { ...varStyle, '--mobile-transform': transformStyle };
+                } else {
+                  // Fallback for non-mobile or unselected
+                  varStyle = { ...varStyle, '--mobile-transform': transformStyle };
+                }
+
+                let zIndexStyle = i + 1;
+                if (isSelected) zIndexStyle += 500;
+
+                return (
+                  <div key={c.id}
+                    className={`${getCardClass(c)} selectable ${isSelected ? (isMobile ? 'mobile-selected' : 'selected') : ''} ${isHighlighted ? 'received-highlight' : ''} ${isDealing ? 'dealing' : ''}`}
+                    style={{
+                      '--rot': `${rot}deg`, '--trY': `${trY}px`,
+                      '--card-aura': aura,
+                      '--deal-delay': dealDelay,
+                      ...varStyle,
+                      transform: transformStyle,
+                      left: `50%`, marginLeft: marginLeftStyle, zIndex: zIndexStyle,
+                      borderColor: aura,
+                      boxShadow: `0 0 10px ${aura}, 0 5px 12px rgba(0,0,0,0.9)`
+                    }}
+                    onClick={() => {
+                      if (isDead) return;
+                      const p0Rank = roundResults ? roundResults.indexOf(0) + 1 : 0;
+                      const canExchangeSelect = exchangePhase === 'selecting' && playerIdx === 0 && (p0Rank === 1 || p0Rank === 2);
+                      if ((turn === playerIdx && !selectionMode && !exchangePhase) || (selectionMode && playerIdx === 0) || canExchangeSelect) {
+                        sm.playLightPaperSE();
+                        toggleSelect(c);
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      if (playerIdx === 0 && !isDead) sm.playLightPaperSE();
+                    }}
+                  >
+                    <div className="card-rank">{c.rank === 'Joker' ? 'J' : c.rank}</div>
+                    <div className="tcg-art" style={{ backgroundImage: tcg?.url ? `url(${tcg.url})` : '', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', width: '100%', height: '100%', borderRadius: '4px' }}></div>
+                    {tcg?.desc && <div className="tcg-tooltip">{tcg.desc}</div>}
+                    {isHighlighted && <div className="highlight-frame"></div>}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={`back-${i}`}
+                    className={`card back ${isDealing ? 'dealing' : ''}`}
+                    style={{
+                      '--deal-delay': dealDelay,
+                      transform: `translateX(-50%) rotate(${rot}deg) translateY(${trY}px)`,
+                      left: `50%`, marginLeft: `${(i - total / 2) * 15}px`, zIndex: i + 1
+                    }}
+                  ></div>
+                );
+              }
+            })}
+
+            {passedPlayers.includes(playerIdx) && (
+              <div className="player-pass-label">PASS</div>
+            )}
+
+            <div className="player-status" style={isMobile && playerIdx !== 0 ? { position: 'absolute', top: '-15px', bottom: 'auto', height: 'auto', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', minWidth: 'max-content', zIndex: 100, fontSize: '10px', padding: '2px 6px' } : {}}>
+              {playerIdx === 0 ? 'YOU' : `CPU ${playerIdx}`}
+              {hierarchy && <span className={`rank-badge ${hierarchy.cls}`}>{hierarchy.title}</span>}
+            </div>
+          </div>
+        );
+      };
+
+      const startDealAnimation = () => {
+        // 1人プレイ用の開始処理
+        startGame();
+      };
+
+      return (
+        <div id="game-root">
+          {(!gameStarted && multiplayerMode !== 'lobby') ? (
+            <div className="title-screen">
+              <div className="title-card-fan">
+                {/* 
+                  ユーザー要望: 
+                  左側: 2を起点として時計回りに20度ずつ角度が変わる螺旋隊列 (Joker除外)
+                  右側: エフェクト削除、揺れのみ、Qを右にずらす、3D角度の強調
+                */}
+                {(() => {
+                  // 重複ゼロ：全14種類のカード（Joker, 2〜A）を1枚ずつのみ使用
+                  const allRanks = ['K', '2', 'J', 'Q', 'A', '10', 'Joker', '3', '4', '5', '6', '7', '8', '9'];
+
+                  // 座標マップ（画面中央からのpxオフセット）
+                  // 画面端に寄り過ぎず、かつ左上・右下などの余白を埋めるバランス配置 (Max offset ~570px)
+                  const posMap = [
+                    { tx: -380, ty: 180, layer: 0 }, { tx: 420, ty: -120, layer: 0 }, // Layer 0 (K と 2)
+                    { tx: -450, ty: -300, layer: 1 }, { tx: 480, ty: 320, layer: 1 }, // Layer 1 (J: 左上)
+                    { tx: -180, ty: 450, layer: 1 }, { tx: 200, ty: -380, layer: 1 },  // Layer 1
+                    { tx: -580, ty: 80, layer: 2 }, { tx: 540, ty: 100, layer: 2 },   // Layer 2
+                    { tx: -320, ty: -460, layer: 2 }, { tx: 300, ty: 460, layer: 2 },  // Layer 2
+                    { tx: -540, ty: -240, layer: 3 }, { tx: 520, ty: 250, layer: 3 },  // Layer 3
+                    { tx: 80, ty: -520, layer: 3 }, { tx: -120, ty: 520, layer: 3 }     // Layer 3
+                  ];
+
+                  return allRanks.map((rank, idx) => {
+                    const tcg = TCG_DATA[rank];
+                    const scaleX = isMobile ? 0.33 : 1.0;
+                    const scaleY = isMobile ? 0.6 : 1.0;
+                    const sizeScale = isMobile ? 0.6 : 1.0;
+                    const cfg = { ...posMap[idx], tx: posMap[idx].tx * scaleX, ty: posMap[idx].ty * scaleY };
+
+                    // レイヤーごとの物理特性 (全ての回転を0degに固定して正対させる)
+                    let baseScale, zIndex, blur, bright, dur, swayX, swayY, circleOp;
+                    if (cfg.layer === 0) { // 最前面
+                      baseScale = 1.35 * sizeScale;
+                      zIndex = 500;
+                      blur = "0px";
+                      bright = 1.0;
+                      dur = "7s";
+                      swayX = "15px"; swayY = "-20px";
+                      circleOp = 1;
+                    } else if (cfg.layer === 1) { // 前方
+                      baseScale = 0.65 * sizeScale;
+                      zIndex = 400;
+                      blur = "0.7px";
+                      bright = 0.8;
+                      dur = "10s";
+                      swayX = "8px"; swayY = "-12px";
+                      circleOp = 0.8;
+                    } else if (cfg.layer === 2) { // 後方
+                      baseScale = 0.42 * sizeScale;
+                      zIndex = 300;
+                      blur = "1.6px";
+                      bright = 0.65;
+                      dur = "14s";
+                      swayX = "5px"; swayY = "-8px";
+                      circleOp = 0;
+                    } else { // 最背面 (最奥)
+                      baseScale = 0.22 * sizeScale;
+                      zIndex = 100;
+                      blur = "3.2px";
+                      bright = 0.5;
+                      dur = "18s";
+                      swayX = "3px"; swayY = "-5px";
+                      circleOp = 0;
+                    }
+
+                    return (
+                      <div key={rank} className="fan-item deep-field"
+                        style={{
+                          backgroundImage: `url(${tcg.url})`,
+                          '--tx': `${cfg.tx}px`,
+                          '--ty': `${cfg.ty}px`,
+                          '--rx': '0deg',
+                          '--ry': '0deg',
+                          '--rz': '0deg',
+                          '--base-scale': baseScale,
+                          '--bright': bright,
+                          '--blur': blur,
+                          '--dur': dur,
+                          '--delay': `-${(idx * 1.5).toFixed(1)}s`,
+                          '--sway-x': swayX,
+                          '--sway-y': swayY,
+                          '--circle-op': circleOp,
+                          zIndex: zIndex
+                        }}>
+                        {circleOp > 0 && (
+                          <div className="tcg-rank-circle" style={{ borderColor: tcg.auraColor }}>
+                            <span>{rank === 'Joker' ? '🃏' : rank}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              <div className="title-overlay"></div>
+
+              <div className="title-logo-container">
+                <img src="logo.webp" alt="アルティメット大富豪" className="title-logo" />
+                <div className="title-sub">DEATH GAME: THE ULTIMATE CARDS</div>
+              </div>
+
+              <div className="title-button-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1001 }}>
+                <button className="btn-start-game" onClick={startDealAnimation}>1人プレイ</button>
+                <button className="btn-start-game" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}
+                  onClick={() => setMultiplayerMode('connecting')}>マルチプレイ</button>
+                <div style={{ marginTop: '5px' }}>
+                  <button className="btn-start-game btn-secondary" onClick={() => setShowExplanation(true)}>カード説明</button>
+                </div>
+              </div>
+
+              {multiplayerMode === 'connecting' && (
+                <div className="selection-overlay-ui">
+                  <div className="selection-guide">合言葉を入力</div>
+                  <input type="text" className="passphrase-input" placeholder="合言葉..." 
+                    value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <button className="action-btn" onClick={() => initMultiplayer(passphrase)}>接続</button>
+                    <button className="action-btn btn-pass" onClick={() => setMultiplayerMode(null)}>戻る</button>
+                  </div>
+                </div>
+              )}
+
+              {showExplanation && (
+                <div className="explanation-overlay">
+                  <div className="explanation-header">
+                    <h2>カード能力一覧</h2>
+                  </div>
+                  <div className="explanation-list">
+                    {['3','4','5','6','7','8','9','10','J','Q','K','A','2','Joker'].map(rank => {
+                      const data = TCG_DATA[rank];
+                      if (!data) return null;
+                      return (
+                        <div key={rank} className="explanation-item">
+                          <div className="explanation-card-view" style={{ backgroundImage: `url(${data.url})` }}></div>
+                          <div className="explanation-text">
+                            <div className="explanation-card-name">{data.name}</div>
+                            <div className="explanation-card-desc">{data.desc}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button className="action-btn btn-pass btn-close-explanation" onClick={() => setShowExplanation(false)}>
+                    閉じる
+                  </button>
+                </div>
+              )}
+
+            </div>
+          ) : (
+            <div className="table-container">
+              {multiplayerMode === 'lobby' && (
+                <div className="selection-overlay-ui" style={{ zIndex: 6000 }}>
+                  <div className="selection-guide">待機中 (合言葉: {passphrase})</div>
+                  <div className="player-lobby-list" style={{ margin: '20px 0', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '200px', overflowY: 'auto', width: '300px' }}>
+                    {remotePlayers.map((p, idx) => (
+                      <div key={idx} style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', borderLeft: '3px solid var(--color-gold)', textAlign: 'left' }}>
+                        {idx === 0 ? "👑 " : "💀 "} {p.name} {p.id === 'local' ? "(あなた)" : ""}
+                      </div>
+                    ))}
+                    {Array.from({ length: 4 - remotePlayers.length }).map((_, i) => (
+                      <div key={`empty-${i}`} style={{ padding: '8px', background: 'rgba(0,0,0,0.3)', color: '#555', borderLeft: '3px solid #333', textAlign: 'left' }}>
+                        待機中 (CPU)
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    {isHost ? (
+                      <button className="action-btn" onClick={startMultiplayerGame}>ゲームを開始</button>
+                    ) : (
+                      <div style={{ color: 'var(--color-gold)', animation: 'pulse-gold 1s infinite alternate' }}>ホストの開始を待機しています</div>
+                    )}
+                    <button className="action-btn btn-pass" onClick={() => { peer?.destroy(); setMultiplayerMode(null); }}>解散</button>
+                  </div>
+                </div>
+              )}
+
+              <div className={`screen-filter ${is11Back ? 'filter-11back' : ''}`}></div>
+
+
+              {/* 強さの逆転と順序逆転の永続的インジケーター表示 */}
+              <div className={`bg-reverse-indicator ${playDirection === 1 ? 'spin-clockwise' : 'spin-counter-clockwise'}`}></div>
+              <div className={`bg-jback-indicator ${is11Back ? 'active' : ''}`}></div>
+              <div className={`bg-revolution-indicator ${isRevolution ? 'active' : ''}`}></div>
+
+              {/* Flying Cards Animation Layer */}
+              {flyingCards.map(fc => {
+                const start = fc.from === 'graveyard' ? { top: '50%', left: '85%' } : fc.from === 'deck' ? { top: '50%', left: '50%' } : getPlayerEdgePosition(fc.from);
+                const end = getPlayerEdgePosition(fc.to);
+                const isDeal = fc.type === 'deal';
+                return (
+                  <div key={fc.id} className={isDeal ? "deal-card-back" : "flying-card-back"} style={{
+                    '--start-top': start.top,
+                    '--start-left': start.left,
+                    '--end-top': end.top,
+                    '--end-left': end.left,
+                    '--start-scale': isDeal ? 1 : 0.5,
+                    '--end-scale': isDeal ? 1 : 0.8,
+                    animation: `card-fly-back 0.8s ${fc.delay || 0}s both cubic-bezier(0.4, 0, 0.2, 1)`
+                  }}>
+                    {/* 絵文字アイコンの廃止 */}
+                  </div>
+                );
+              })}
+
+              {phoenixActive && <div className="phoenix-fire"></div>}
+              {guillotineActive && <div className="guillotine"></div>}
+              {reverseActive && <div className="reverse-arrows"></div>}
+              {bomberActive && <div className="bomber-explode"></div>}
+              {passThreadActive && <div className="pass-thread"></div>}
+              {/* Character cut-in overlay (Dynamic Overhaul) */}
+              {cutIn && (() => {
+                const aura = cutIn.auraColor || '#b8860b';
+                // Convert hex to RGB for rgba usage
+                const hexToRgb = (hex) => {
+                  const r = parseInt(hex.slice(1, 3), 16);
+                  const g = parseInt(hex.slice(3, 5), 16);
+                  const b = parseInt(hex.slice(5, 7), 16);
+                  return `${r},${g},${b}`;
+                };
+                const rgb = hexToRgb(aura);
+                const r = cutIn.rank;
+                return (
+                  <div className="cutin-container" style={{ '--aura': aura, '--aura-dim': `rgba(${rgb},0.35)` }}>
+                    {cutIn.comboData ? (
+                      <div className="cutin-merge-container">
+                        <div className="merge-card-item m-card-5" style={{ backgroundImage: `url(${TCG_DATA['5'].url})` }}></div>
+                        <div className="merge-card-item m-card-other" style={{ backgroundImage: `url(${TCG_DATA[cutIn.comboData.otherRank].url})` }}></div>
+                        <div className="merge-card-item m-card-result" style={{ backgroundImage: `url(${TCG_DATA[cutIn.comboData.resultRank].url})`, borderColor: TCG_DATA[cutIn.comboData.resultRank].auraColor }}></div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* 個別エフェクト描画 */}
+                        {r === 'A' && <div className="effect-a-slash"></div>}
+                        {r === '2' && <div className="effect-2-quake"></div>}
+                        {r === '3' && <div className="effect-3-dust"></div>}
+                        {r === '4' && <div className="effect-4-shield"></div>}
+                        {r === '5' && cutIn.name !== 'プラス5' && cutIn.name !== '🃏真・プラス5' && <div className="effect-5-chain"></div>}
+                        {r === '6' && <div className="effect-6-fire"></div>}
+                        {r === '7' && <div className="effect-7-gold"></div>}
+                        {r === '8' && <div className="effect-8-cut"></div>}
+                        {r === '9' && <div className="effect-9-gear"></div>}
+                        {r === '10' && <div className="effect-10-rain"></div>}
+                        {r === 'J' && <div className="effect-j-reverse"></div>}
+                        {r === 'Q' && <div className="effect-q-bomb"></div>}
+                        {r === 'K' && <div className="effect-k-magic"></div>}
+                        {r === 'Joker' && <div className="effect-joker-mist"></div>}
+                      </>
+                    )}
+
+                    {cutIn.comboData && <div className="merge-flash-glow"></div>}
+
+                    {/* Stage 4: Trigger standard character effects delayed by CSS if combo */}
+                    <div style={{ 
+                      animation: cutIn.comboData ? 'fadeIn 0.5s 3.0s forwards' : 'none', 
+                      opacity: cutIn.comboData ? 0 : 1, 
+                      width: '100%', height: '100%',
+                      display: 'flex', justifyContent: 'center', alignItems: 'center' // Fix for non-combo centering
+                    }}>
+                      {/* 共通：パルスリング x2 */}
+                      <div className="cutin-pulse-ring"></div>
+                      <div className="cutin-pulse-ring"></div>
+
+                      {/* 共通：上下スラッシュ */}
+                      <div className="cutin-slash-top"></div>
+                      <div className="cutin-slash-bottom"></div>
+
+                      {/* カードポップアップ本体 */}
+                      <div className="cutin-card-popup" style={r === '2' ? { animation: 'card-popup-in 0.5s forwards, screen-shake 0.5s ease-in-out' } : (cutIn.comboData ? { animation: 'card-popup-in 0.5s 3.0s forwards' } : {})}>
+                        <div className="cutin-card-art" style={{ backgroundImage: `url(${TCG_DATA[cutIn.comboData ? cutIn.comboData.resultRank : r].url})` }}></div>
+
+                        <div className="cutin-card-rank">
+                          {r === 'Joker' ? '🃏' : (cutIn.comboData ? cutIn.comboData.resultRank : r)}
+                        </div>
+
+                        <div className="cutin-card-text">
+                          <div className="cutin-card-name" style={isMobile ? { fontSize: '6.5px', letterSpacing: '0px', whiteSpace: 'nowrap', width: '100%', textAlign: 'center', lineHeight: 1 } : (r === 'A' || r === 'Joker' ? { textAlign: 'center' } : {})}>
+                             {cutIn.comboData ? TCG_DATA[cutIn.comboData.resultRank].name : cutIn.name}
+                          </div>
+                          {cutIn.effect && <div className="cutin-card-desc">{cutIn.comboData ? TCG_DATA[cutIn.comboData.resultRank].desc : cutIn.effect}</div>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 重複した墓地表示を削除 */}
+              {/* メッセージオーバーレイ */}
+              {animMessage.data && (
+                <div className={`message-overlay ${animMessage.state}`}>
+                  {animMessage.data.title}
+                  {animMessage.data.desc && <p>{animMessage.data.desc}</p>}
+                </div>
+              )}
+
+              {/* ターンと方向表示 */}
+              <div style={{ position: 'absolute', top: isMobile ? '2px' : '30px', left: isMobile ? '2px' : '40px', zIndex: 200, color: '#ccc', fontFamily: "'Cinzel', serif", transform: isMobile ? 'scale(0.45)' : 'none', transformOrigin: 'top left', whiteSpace: 'nowrap' }}>
+                TURN: <span style={{ color: turn === 0 ? 'var(--color-blood)' : '#fff' }}>{turn === 0 ? 'YOU' : turn === -1 ? 'ENDED' : `CPU ${turn}`}</span>
+                {(is11Back || isRevolution) && (
+                  <span className="revolution-label" style={{ marginLeft: '15px', color: '#ff4444', fontWeight: 'bold', textShadow: '0 0 10px rgba(255,0,0,0.8)', fontSize: '0.9em' }}>
+                    {isRevolution ? "REVOLUTION!!" : "J-BACK"}
+                  </span>
+                )}
+                <div>Direction: {playDirection === 1 ? '➡' : '⬅'}</div>
+              </div>
+
+              {/* 新・棺桶型墓地システム */}
+              <div className={`coffin-container ${isCoffinOpen ? 'open' : ''}`}
+                onClick={() => { alert('GRAVEYARD:\n' + graveyard.map(c => c.suit + c.rank).join(', ')) }}>
+                <div className="coffin-body">
+                  <div className="coffin-inner-cards"></div>
+                </div>
+                <div className="coffin-lid"></div>
+                <div className="coffin-count">† {graveyard.length} †</div>
+              </div>
+
+              {resurrectCard && (
+                <div className={`card ${resurrectCard.suit === '♥' || resurrectCard.suit === '♦' ? 'red' : ''} resurrection-card`}
+                  style={{ '--target-pos': resurrectCard.targetPos }}>
+                  <div className="tcg-art" style={{ backgroundImage: TCG_DATA[resurrectCard.rank]?.url ? `url(${TCG_DATA[resurrectCard.rank].url})` : '' }}></div>
+                  <div className="tcg-rank-circle"><span>{resurrectCard.rank}</span></div>
+                </div>
+              )}
+
+              {discardingToGy.map((c, idx) => {
+                /* ズラーっと順番に並んで吸い込まれる演出のため、開始少しだけずらすが、
+                   軌道自体は大きく散らさず、遅延（delay）で「流れる列」を表現する */
+                const delay = idx * 0.12;
+                return (
+                  <div key={`flying-${idx}`} className={`card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''} to-graveyard`}
+                    style={{
+                      position: 'fixed',
+                      left: '50%',
+                      top: '50%',
+                      zIndex: 2000 + idx,
+                      /* 初期位置のオフセットはテーブル上の元の配置を保つ程度にする */
+                      '--start-x': `calc(-50% + ${(idx % 3) * 10 - 10}px)`,
+                      '--start-y': `calc(-50% + ${Math.floor(idx / 3) * 10}px)`,
+                      animationDelay: `${delay}s`
+                    }}>
+                    <div className="tcg-art" style={{ backgroundImage: TCG_DATA[c.rank]?.url ? `url(${TCG_DATA[c.rank].url})` : '' }}></div>
+                    <div className="tcg-rank-circle"><span>{c.rank}</span></div>
+                    <div className="tcg-name">{c.suit + c.rank}</div>
+                  </div>
+                );
+              })}
+
+              {[0, 1, 2, 3].map(pIdx => {
+                const dispIdx = getDisplayIndex(pIdx);
+                const posClass = dispIdx === 0 ? 'pos-bottom' : dispIdx === 1 ? 'pos-left' : dispIdx === 2 ? 'pos-top' : 'pos-right';
+                const isActive = turn === pIdx;
+                const isMe = pIdx === myPlayerIndex;
+
+                return (
+                  <div key={pIdx} className={`player-pos ${posClass} ${isActive ? 'active-turn' : ''}`}>
+                    {(ranksDiscovered.includes(pIdx) || isGameOver) && (
+                      <div className={`player-rank-label ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`}>
+                        {getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).title}
+                      </div>
+                    )}
+                    {renderFanHand(hands[pIdx], pIdx, isMe || isGameOver || (watchTarget?.targetIndex === pIdx && watchTarget?.activatorIndex === myPlayerIndex))}
+                  </div>
+                );
+              })}
+
+              {/* K-Watch Hand View Overlay (Visible only to Player 0) */}
+              {watchTarget && watchTarget.activatorIndex === 0 && (
+                <div className="watch-overlay">
+                  <button className="action-btn" onClick={() => {
+                    setWatchTarget(null);
+                    setIsAnimating(false);
+                    executeNextTurn(0, 0, 1);
+                  }}>やめる</button>
+                </div>
+              )}
+
+              {/* 中央のプレイエリア */}
+              <div className="play-area">
+                {clearingField && <div className="blackhole"></div>}
+
+                {/* フィールド中央のステータス表示 */}
+                {(isRevolution || is11Back) && (
+                  <div className="field-status-label">{isRevolution ? "革命" : "Jバック"}</div>
+                )}
+
+                <div className="table-cards-container">
+                  {tableCards.map((item, idx) => {
+                    const tcg = TCG_DATA[item.card.rank];
+                    const aura = tcg?.auraColor || '#b8860b';
+                    return (
+                      <div key={`${item.card.id}-${idx}`}
+                        className={`${getCardClass(item.card)} on-table ${item.isSlammed ? 'slammed' : ''}`}
+                        style={{
+                          ...(item.isAnimating ? item.initialStyle : item.targetStyle),
+                          zIndex: idx,
+                          '--card-aura': aura,
+                          borderColor: aura,
+                          boxShadow: `0 0 10px ${aura}, 0 5px 12px rgba(0,0,0,0.9)` /* 軽量化したシャドウ */
+                        }}
+                      >
+                        <div className="tcg-art" style={{ backgroundImage: tcg?.url ? `url(${tcg.url})` : '' }}></div>
+                        <div className="tcg-rank-circle" style={{ borderColor: aura, boxShadow: `0 0 8px ${aura}` }}>
+                          <span>{item.card.rank}</span>
+                        </div>
+                        <div className="tcg-name">{tcg?.name || item.card.suit + item.card.rank}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* アクションパネル */}
+              <div className="action-panel">
+                {gameStarted && !selectionMode && !isGameOver && !exchangePhase && (
+                  <>
+                    <button className="action-btn btn-play" 
+                      disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)} 
+                      onClick={handlePlay}>
+                      出す
+                    </button>
+                    <button className="action-btn btn-pass" 
+                      disabled={turn !== myPlayerIndex || isActionLoading} 
+                      onClick={handlePass}>
+                      パス
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* ゲーム終了UI */}
+              {isGameOver && (
+                <div className="game-over-overlay">
+                  <h1 className="cinzel-title">序章 終演</h1>
+                  <div className="final-ranks">
+                    {roundResults.map((pIdx, i) => (
+                      <div key={i} className={`result-row ${pIdx === 0 ? 'highlight-p0' : ''}`}>
+                        <span className="rank-num">{i + 1}位</span>
+                        <span className="rank-title">{getHierarchyTitle(i + 1).title}</span>
+                        <span className="rank-player">{pIdx === 0 ? 'YOU' : `CPU ${pIdx}`}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="result-actions">
+                    <button className="gold-btn" onClick={handleRestart}>再戦</button>
+                    <button className="gold-btn" onClick={() => location.reload()}>タイトルへ</button>
+                  </div>
+                </div>
+              )}
+
+              {/* カード交換UI */}
+              {exchangePhase === 'selecting' && (
+                <div className="exchange-overlay-ui">
+                  <div className="selection-guide">
+                    {(() => {
+                      const p0Rank = roundResults.indexOf(0) + 1;
+                      if (p0Rank === 1) return "大富豪：大貧民へ渡すカードを2枚選択";
+                      if (p0Rank === 2) return "富豪：貧民へ渡すカードを1枚選択";
+                      if (p0Rank === 3) return "貧民：富豪へ最強のカードを献上";
+                      if (p0Rank === 4) return "大貧民：大富豪へ最強のカードを2枚献上";
+                      return "";
+                    })()}
+                  </div>
+                  {(roundResults.indexOf(myPlayerIndex) + 1 <= 2) ? (
+                    <button className="action-btn btn-confirm"
+                      disabled={selectedCards.length !== (roundResults.indexOf(myPlayerIndex) + 1 === 1 ? 2 : 1) || (isHost && Object.keys(exchangeDecisions).length < (multiplayerMode === 'active' ? conns.length : 3))}
+                      onClick={confirmExchange}>
+                      {isHost && Object.keys(exchangeDecisions).length < (multiplayerMode === 'active' ? conns.length : 3) ? "待機中..." : "交換"}
+                    </button>
+                  ) : (
+                    <button className="action-btn btn-confirm" onClick={confirmExchange} disabled={isHost && Object.keys(exchangeDecisions).length < (multiplayerMode === 'active' ? conns.length : 3)}>
+                      {isHost && Object.keys(exchangeDecisions).length < (multiplayerMode === 'active' ? conns.length : 3) ? "待機中..." : "確認"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* QBomberなど選択用UI（action-panelから独立させ、中央固定を有効化） */}
+              {selectionMode && (
+                <div className="selection-overlay-ui">
+                  <div className="selection-guide">
+                    {selectionMode === '7' ? `渡すカード（${selectionInfo?.count}枚）を選択` :
+                      selectionMode === '10' ? `捨てるカード（${selectionInfo?.count}枚）を選択` :
+                        selectionMode === 'Q' ? `爆破する階級（${selectionInfo?.count}種類）を選択` :
+                          "対象のプレイヤーを選択"}
+                  </div>
+                  {selectionMode === 'Q' ? (
+                    <>
+                      <div className="rank-selector">
+                        {[...RANKS, 'Joker'].map(r => (
+                          <button key={r}
+                            className={`rank-select-btn ${selectedCards.includes(r) ? 'selected' : ''}`}
+                            style={selectedCards.includes(r) ? { backgroundColor: 'var(--color-blood)', color: '#fff' } : {}}
+                            onClick={() => {
+                              sm.playLightPaperSE();
+                              toggleRankSelect(r);
+                            }}>{r}</button>
+                        ))}
+                      </div>
+                      <button className="action-btn btn-confirm"
+                        disabled={selectedCards.length !== selectionInfo?.count}
+                        onClick={() => completeSpecialEffect(selectedCards)}>
+                        ボンバー
+                      </button>
+                    </>
+                  ) : selectionMode === 'K' || watchSelecting ? (
+                    <div className="selection-tip">他プレイヤーのエリアを直接タッチして選択してください</div>
+                  ) : (
+                    <button className="action-btn btn-confirm"
+                      disabled={selectedCards.length !== selectionInfo?.count}
+                      onClick={() => {
+                        if (selectionMode === '10') sm.playCrumpleSE();
+                        if (selectionMode === 'Q') sm.playExplosionSE();
+                        if (selectionMode === '7') sm.playPaperSE();
+                        completeSpecialEffect(selectedCards);
+                      }}>
+                      {selectionMode === '7' ? '渡す' : selectionMode === '10' ? '捨てる' : '決定'}
+                    </button>
+                  )}
+                  <div className="selection-cancel-hint">※特殊効果は拒否できない</div>
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+
+    // 最初のユーザー操作でAudioContextを開け、保留中BGMを再生
+    const handleInit = () => {
+      sm.flushPendingBGM();
+    };
+    window.addEventListener('mousedown', handleInit, { once: true });
+    window.addEventListener('touchstart', handleInit, { once: true });
+    window.addEventListener('keydown', handleInit, { once: true });
+
+    // 即時BGM開始試行（ブラウザが許可すればそのまま再生、ブロックされれば最初のクリックで開始）
+    sm.playTitleBGM();
+  </script>
+</body>
+
+</html>
