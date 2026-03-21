@@ -4095,8 +4095,27 @@
       const [highlightedCardIds, setHighlightedCardIds] = useState([]); // Array of card IDs
       const [gyShuffling, setGyShuffling] = useState(false);
       const [isAnimating, setIsAnimating] = useState(false); // 全演出完了フラグ
-      const [watchSelecting, setWatchSelecting] = useState(false); // Kウォッチ対象選択モード
-      const [watchTimerTick, setWatchTimerTick] = useState(0); // タイマー描画更新用
+      const lastTouchedId = React.useRef(null);
+      const handleTouchMove = (e, playerIdx) => {
+        if (!isMobile || playerIdx !== 0 || turn !== 0 || selectionMode || exchangePhase) return;
+        const touch = e.touches[0];
+        const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+        const cardElem = elem?.closest('.card.selectable');
+        if (cardElem) {
+          const cardId = cardElem.getAttribute('data-card-id');
+          if (cardId && cardId !== lastTouchedId.current) {
+            const card = hands[0].find(c => c.id === cardId);
+            if (card) {
+              sm.playLightPaperSE();
+              toggleSelect(card);
+              lastTouchedId.current = cardId;
+            }
+          }
+        }
+      };
+      const handleTouchEnd = () => {
+        lastTouchedId.current = null;
+      };
 
       const [isGameOver, setIsGameOver] = useState(false);
       const [roundResults, setRoundResults] = useState([]); // [p0, p1, p2, p3] ranking for the last round
@@ -5404,33 +5423,10 @@
         const hierarchy = rankIdx !== -1 ? getHierarchyTitle(rankIdx + 1) : null;
         const isDead = rankIdx !== -1;
 
-        // Swipe logic
-        const lastTouchedId = React.useRef(null);
-        const handleTouchMove = (e) => {
-          if (!isMobile || playerIdx !== 0 || turn !== 0 || selectionMode || exchangePhase) return;
-          const touch = e.touches[0];
-          const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-          const cardElem = elem?.closest('.card.selectable');
-          if (cardElem) {
-            const cardId = cardElem.getAttribute('data-card-id');
-            if (cardId && cardId !== lastTouchedId.current) {
-              const card = hands[0].find(c => c.id === cardId);
-              if (card) {
-                sm.playLightPaperSE();
-                toggleSelect(card);
-                lastTouchedId.current = cardId;
-              }
-            }
-          }
-        };
-        const handleTouchEnd = () => {
-          lastTouchedId.current = null;
-        };
-
         return (
           <div key={playerIdx}
             className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== 0 && !isDead ? 'watch-clickable' : ''}`}
-            onTouchMove={handleTouchMove}
+            onTouchMove={(e) => handleTouchMove(e, playerIdx)}
             onTouchEnd={handleTouchEnd}
             onClick={() => {
               if (watchSelecting && playerIdx !== 0 && !isDead) {
