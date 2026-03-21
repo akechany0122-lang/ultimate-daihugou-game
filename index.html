@@ -356,7 +356,7 @@
       }
 
       .player-pos.pos-bottom {
-        bottom: 130px;
+        bottom: 160px;
         transform: translateX(-50%) scale(1.0);
       }
 
@@ -1122,6 +1122,30 @@
       .to-graveyard {
         width: 60px !important;
         height: 85px !important;
+      }
+      .player-pos.pos-bottom .card {
+        width: 85px !important;
+        height: 120px !important;
+      }
+      .btn-exit-to-title {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 10000;
+        background: rgba(40, 0, 0, 0.8);
+        color: #ff4444;
+        border: 1px solid #600;
+        padding: 4px 12px;
+        font-family: 'Cinzel', serif;
+        font-size: 12px;
+        letter-spacing: 1px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .btn-exit-to-title:hover {
+        background: #600;
+        color: #fff;
       }
       .effect-4-shield {
         width: 500vw !important; /* 圧倒的な巨大化 */
@@ -3367,8 +3391,8 @@
     @media (max-width: 768px) {
       /* Player 0 Hand Cards */
       .player-pos.pos-bottom .card {
-        width: 65px !important;
-        height: 95px !important;
+        width: 85px !important;
+        height: 120px !important;
       }
 
       /* Use JS transform exclusively for mobile hand cards to avoid selection jumps */
@@ -5380,9 +5404,34 @@
         const hierarchy = rankIdx !== -1 ? getHierarchyTitle(rankIdx + 1) : null;
         const isDead = rankIdx !== -1;
 
+        // Swipe logic
+        const lastTouchedId = React.useRef(null);
+        const handleTouchMove = (e) => {
+          if (!isMobile || playerIdx !== 0 || turn !== 0 || selectionMode || exchangePhase) return;
+          const touch = e.touches[0];
+          const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+          const cardElem = elem?.closest('.card.selectable');
+          if (cardElem) {
+            const cardId = cardElem.getAttribute('data-card-id');
+            if (cardId && cardId !== lastTouchedId.current) {
+              const card = hands[0].find(c => c.id === cardId);
+              if (card) {
+                sm.playLightPaperSE();
+                toggleSelect(card);
+                lastTouchedId.current = cardId;
+              }
+            }
+          }
+        };
+        const handleTouchEnd = () => {
+          lastTouchedId.current = null;
+        };
+
         return (
           <div key={playerIdx}
             className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== 0 && !isDead ? 'watch-clickable' : ''}`}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onClick={() => {
               if (watchSelecting && playerIdx !== 0 && !isDead) {
                 const watchDuration = (selectionInfo?.count || 1) * 5000;
@@ -5439,7 +5488,7 @@
                 if (isMobile && (playerIdx === 0 || isBeingWatchedByMe)) {
                   // 監視中または自分の手札：画面幅を広く使って視認性を確保
                   const maxLocalWidth = (playerIdx === 0 || isBeingWatchedByMe) ? window.innerWidth * 0.95 : (isMobile ? 180 : 300); 
-                  const cardWidth = 65; 
+                  const cardWidth = (isMobile && playerIdx === 0) ? 85 : 65; 
                   // 監視中は大幅に広げる (cap: 50)
                   const cap = isBeingWatchedByMe ? 50 : 30;
                   const spacing = Math.min(cap, (maxLocalWidth - cardWidth) / Math.max(1, total - 1));
@@ -5460,6 +5509,7 @@
 
                 return (
                   <div key={c.id}
+                    data-card-id={c.id}
                     className={`${getCardClass(c)} selectable ${isSelected ? (isMobile ? 'mobile-selected' : 'selected') : ''} ${isHighlighted ? 'received-highlight' : ''} ${isDealing ? 'dealing' : ''}`}
                     style={{
                       '--rot': `${rot}deg`, '--trY': `${trY}px`,
@@ -5713,17 +5763,6 @@
               {/* Flying Cards Animation Layer */}
               {flyingCards.map(fc => {
                 const start = fc.from === 'graveyard' ? { top: '50%', left: '85%' } : fc.from === 'deck' ? { top: '50%', left: '50%' } : getPlayerEdgePosition(fc.from);
-                const end = getPlayerEdgePosition(fc.to);
-                const isDeal = fc.type === 'deal';
-                return (
-                  <div key={fc.id} className={isDeal ? "deal-card-back" : "flying-card-back"} style={{
-                    '--start-top': start.top,
-                    '--start-left': start.left,
-                    '--end-top': end.top,
-                    '--end-left': end.left,
-                    '--start-scale': isDeal ? 1 : 0.5,
-                    '--end-scale': isDeal ? 1 : 0.8,
-                    animation: `card-fly-back 0.8s ${fc.delay || 0}s both cubic-bezier(0.4, 0, 0.2, 1)`
                   }}>
                     {/* 絵文字アイコンの廃止 */}
                   </div>
