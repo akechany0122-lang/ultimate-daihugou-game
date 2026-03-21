@@ -3527,12 +3527,7 @@
         left: 3px !important;
       }
       .on-table .tcg-name {
-        font-size: 14px !important; /* 縮小 */
-        height: 20px !important;
-        bottom: 10px !important;
-        white-space: nowrap !important;
-        font-weight: bold !important;
-        color: var(--color-gold) !important;
+        display: none !important; /* スマホ版ではカード上のテキストを廃止 */
       }
 
       /* Cut-in Card Popup (Fixed Height & No-Wrap) */
@@ -3549,10 +3544,34 @@
         top: 5px !important;
         left: 5px !important;
       }
-      /* Cut-in Text MEGA SPECIFICITY SLEDGEHAMMER */
-      /* スマホ版のみ場に出た際の説明テキストを廃止 */
+      /* Cut-in Text MEGA SPECIFICITY SLEDGEHAMMER (RESTORED) */
+      html body #root #game-root .cutin-container .cutin-card-popup .cutin-card-text .cutin-card-name {
+        font-size: 36px !important;
+        letter-spacing: 0px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+        line-height: 1.0 !important;
+        display: block !important;
+        color: var(--color-gold) !important;
+        font-weight: 900 !important;
+      }
       .cutin-card-text {
-        display: none !important;
+        padding: 8px 4px 10px !important;
+        display: block !important;
+        visibility: visible !important;
+      }
+      .cutin-card-desc {
+        font-size: 24px !important;
+        line-height: 1.2 !important;
+        color: #fff !important;
+        font-weight: bold !important;
+        text-shadow: 0 2px 10px rgba(0,0,0,1) !important;
+        display: block !important;
+        visibility: visible !important;
       }
       
       /* Continuous Effects Scaling Down (SLEDGEHAMMER) */
