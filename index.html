@@ -2343,7 +2343,14 @@
 
     /* 打撃着地アニメーション (Slam shockwave) */
     .card.on-table {
+      width: 120px; /* 大幅拡大 */
+      height: 165px; /* 大幅拡大 */
       position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -82px 0 0 -60px;
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.9));
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
       z-index: 10;
     }
