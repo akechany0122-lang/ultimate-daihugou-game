@@ -4205,6 +4205,11 @@
       const [highlightedCardIds, setHighlightedCardIds] = useState([]); // Array of card IDs
       const [gyShuffling, setGyShuffling] = useState(false);
       const [isAnimating, setIsAnimating] = useState(false); // 全演出完了フラグ
+      const [abilityLog, setAbilityLog] = useState("");
+      const triggerAbilityLog = (msg) => {
+        setAbilityLog(msg);
+        setTimeout(() => setAbilityLog(""), 3000);
+      };
       const lastTouchedId = React.useRef(null);
       const isSwipingRef = React.useRef(false); // スワイプ中判定
 
@@ -5150,7 +5155,12 @@
           if (multiplayerMode === 'active' && isHost) {
             broadcastState(newHands, nextTarget);
           }
-          executeNextTurn(playerIndex, 0, stepsToUse, effectRes.pDir, updatedRanks);
+          // Ability Log for TCG
+          const tcg = TCG_DATA[effectiveVisualRank];
+          if (tcg && tcg.name) {
+            triggerAbilityLog(`ABILITY: ${tcg.name}`);
+          }
+          executeNextTurn(playerIndex, isFieldCleared ? 0 : stepsToUse, effectRes.pDir, updatedRanks);
         }, totalAnimTime);
       };
 
@@ -5894,6 +5904,7 @@
               <div className={`bg-revolution-indicator ${isRevolution ? 'active' : ''}`}></div>
 
               {/* Flying Cards Animation Layer */}
+          {abilityLog && <div className="ability-log-overlay">{abilityLog}</div>}
               {flyingCards.map(fc => {
                 const start = fc.from === 'graveyard' ? { top: '50%', left: '85%' } : fc.from === 'deck' ? { top: '50%', left: '50%' } : getPlayerEdgePosition(fc.from);
                 const end = getPlayerEdgePosition(fc.to);
