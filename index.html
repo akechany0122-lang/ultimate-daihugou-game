@@ -3636,24 +3636,25 @@
         min-width: 100px !important;
         min-height: 130px !important;
       }
-      .effect-4-shield {
-        width: 90vw !important; /* 少し幅を狭める */
-        height: 46vh !important;
-        border: 15px double rgba(0, 180, 216, 0.7) !important;
-        border-radius: 12px !important;
-        background: rgba(0, 180, 216, 0.05) !important;
-        box-shadow: 0 0 40px #00b4d8 !important;
-        z-index: 1 !important;
+      .player-pos.pos-top {
+        top: 25px !important; /* 全体的に下げる */
+        z-index: 10 !important;
       }
       
       .pos-left .player-status { transform: translateX(-50%) rotate(-90deg) !important; }
       .pos-right .player-status { transform: translateX(-50%) rotate(90deg) !important; }
 
       .hand-count-badge {
-        top: -15px !important; /* 下部 */
+        top: -10px !important; /* 名前より下 */
       }
       .player-status {
-        top: -45px !important; /* 上部 */
+        top: -45px !important; /* 名前が上 */
+      }
+      .pos-left .hand-count-badge, .pos-right .hand-count-badge {
+        top: 15px !important; /* 横CPUはさらに離す */
+      }
+      .pos-left .player-status, .pos-right .player-status {
+        top: -55px !important; /* 横CPUはさらに離す */
       }
       .player-pass-label {
         top: 25px !important; /* 下 */
@@ -4835,6 +4836,7 @@
         }
         if (rank === '9') {
           pDir = pDir * -1;
+          setPDir(pDir); // React状態も即座に更新 (これがないとexecutePlay内の古いpDirを参照する可能性)
           triggerTempEffect(setReverseActive, 1800);
         }
         if (rank === '10') {
