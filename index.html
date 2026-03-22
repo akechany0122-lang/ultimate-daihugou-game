@@ -1173,9 +1173,12 @@
         display: none !important; /* スマホ版では中央の黄色いタイトル（MessageOverlay）を廃止、カットイン演出のみ表示 */
       }
       .effect-4-shield {
-        width: 500vw !important; /* 圧倒的な巨大化 */
-        height: 500vw !important;
-        box-shadow: 0 0 150px #00b4d8; /* 軽量化 */
+        width: 100vw !important; 
+        height: 100vh !important;
+        border: 20px double rgba(0, 180, 216, 0.7) !important; /* 画面端の壁に変更 */
+        border-radius: 0 !important;
+        background: radial-gradient(circle, transparent 30%, rgba(0, 180, 216, 0.1) 100%) !important;
+        box-shadow: inset 0 0 100px #00b4d8 !important;
       }
     }
 
@@ -3498,16 +3501,15 @@
       .play-area {
         width: 280px !important;
         height: 280px !important;
-        top: 45% !important;
+        top: 50% !important; /* サークルに合わせて中央へ */
         left: 50% !important;
         /* Remove !important transform to allow animation rotate */
       }
       .bg-reverse-indicator {
-        top: 45% !important;
+        top: 50% !important; /* 中央に配置 */
         left: 50% !important;
-        /* Remove !important transform to allow animation rotate */
-        width: 32vh !important;
-        height: 32vh !important;
+        width: 38vh !important; /* 少し拡大して収まりを良くする */
+        height: 38vh !important;
       }
 
       /* Corner UI tightening */
@@ -3587,10 +3589,13 @@
         min-height: 130px !important;
       }
       .effect-4-shield {
-        width: 600vw !important; /* 極限まで巨大化 */
-        height: 600vw !important;
-        min-width: 600vw !important;
-        min-height: 600vw !important;
+        width: 100vw !important; 
+        height: 100vh !important;
+        border: 15px double rgba(0, 180, 216, 0.7) !important;
+        border-radius: 0 !important;
+        background: none !important;
+        box-shadow: inset 0 0 80px #00b4d8, 0 0 40px #00b4d8 !important;
+        z-index: 1 !important;
       }
       
       .action-panel {
