@@ -3169,7 +3169,7 @@
       color: var(--color-gold);
       -webkit-text-stroke: 0 !important; /* ふち消去 */
       text-shadow: 0 0 10px rgba(0,0,0,1), 0 0 20px rgba(0,0,0,1), 0 0 30px rgba(0,0,0,1), 0 5px 25px rgba(0,0,0,1);
-      font-size: 92px; /* さらに巨大化 */
+      font-size: 72px; /* 縮小 (92->72) */
       font-weight: 900;
       font-family: 'Cinzel', serif;
       letter-spacing: 2px;
@@ -3180,7 +3180,7 @@
 
       p {
         margin: 0;
-        font-size: 38px; /* さらに拡大 */
+        font-size: 30px; /* 縮小 (38->30) */
         font-family: var(--font-main);
         color: #fff;
         -webkit-text-stroke: 0 !important;
@@ -3636,11 +3636,11 @@
         min-width: 100px !important;
         min-height: 130px !important;
       }
-      .player-pos.pos-left { left: -75px !important; }
-      .player-pos.pos-right { right: -75px !important; }
+      .player-pos.pos-left { left: -30px !important; }
+      .player-pos.pos-right { right: -30px !important; }
 
       .player-pos.pos-top {
-        top: 30px !important; /* さらに少し下げる */
+        top: 30px !important;
         z-index: 10 !important;
       }
       .effect-4-shield {
@@ -4571,8 +4571,9 @@
         return next;
       };
 
-      const executeNextTurn = (currentTurn, currentPassCount, steps = 1, forceDirection = null, currentRanks = null) => {
-        const nextTarget = getNextPlayer(currentTurn, steps, forceDirection, currentRanks);
+      const executeNextTurn = (startIndex, steps = 1, forceDirection = null, excludeRanks = null) => {
+        setIsActionLoading(false); // 次のターンへ行くときに必ず解除
+        const nextTarget = getNextPlayer(startIndex, steps, forceDirection, excludeRanks);
         if (nextTarget === turn) {
           // 同一プレイヤーにターンが回る場合（8切り等）、思考フラグをリセット
           cpuThinkingRef.current = false;
@@ -5179,7 +5180,7 @@
           if (tcg && tcg.name) {
             triggerAbilityLog(`${tcg.name}`);
           }
-          executeNextTurn(playerIndex, isFieldCleared ? 0 : stepsToUse, effectRes.pDir, updatedRanks);
+          executeNextTurn(playerIndex, stepsToUse, effectRes.pDir, updatedRanks);
         }, totalAnimTime);
       };
 
