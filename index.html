@@ -2587,6 +2587,32 @@
       display: none !important;
     }
 
+    /* 手札枚数バッジ */
+    .hand-count-badge {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 5, 5, 0.95);
+      border: 1.5px solid var(--color-gold);
+      color: #fff;
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      box-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 5px var(--color-gold);
+    }
+
+    .pos-left .hand-count-badge { transform: translate(-50%, -50%) rotate(-90deg); }
+    .pos-right .hand-count-badge { transform: translate(-50%, -50%) rotate(90deg); }
+
+
     .pos-top .player-status {
       top: auto;
       bottom: -60px;
@@ -3512,7 +3538,7 @@
       }
       /* 場の中央カード群をサークル内で少し下げる */
       .table-cards-container {
-        transform: translateY(20px) !important;
+        transform: translateY(45px) !important;
       }
 
       /* Corner UI tightening */
@@ -5629,8 +5655,10 @@
               <div className="player-pass-label">PASS</div>
             )}
 
+            <div className="hand-count-badge">{hands[playerIdx].length}</div>
+            
             <div className="player-status" style={isMobile && playerIdx !== 0 ? { position: 'absolute', top: '-15px', bottom: 'auto', height: 'auto', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', minWidth: 'max-content', zIndex: 100, fontSize: '10px', padding: '2px 6px' } : {}}>
-              {playerIdx === 0 ? 'YOU' : `CPU ${playerIdx}`} [{hands[playerIdx].length}]
+              {playerIdx === 0 ? 'YOU' : `CPU ${playerIdx}`}
               {hierarchy && <span className={`rank-badge ${hierarchy.cls}`}>{hierarchy.title}</span>}
             </div>
           </div>
