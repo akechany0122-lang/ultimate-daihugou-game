@@ -3520,13 +3520,13 @@
 
       /* Table Cards */
       .card.on-table {
-        width: 110px !important; /* 適正サイズに縮小 */
-        height: 155px !important; /* 適正サイズに縮小 */
+        width: 100px !important; /* サークル内に収まるよう調整 */
+        height: 140px !important; /* サークル内に収まるよう調整 */
       }
       .on-table .tcg-rank-circle {
-        width: 20px !important;
-        height: 20px !important;
-        font-size: 11px !important;
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 10px !important;
         top: 3px !important;
         left: 3px !important;
       }
@@ -3579,11 +3579,18 @@
       }
       
       /* Continuous Effects Scaling Down (SLEDGEHAMMER) */
-      .effect-4-shield, .effect-3-blade, .effect-5-chain, .effect-6-fire, .effect-7-gold, .effect-8-cut, .effect-9-gear, .effect-10-rain, .effect-j-reverse, .effect-q-bomb, .effect-k-magic, .effect-joker-mist {
+      /* 4シールドは巨大化させるためここから除外 */
+      .effect-3-blade, .effect-5-chain, .effect-6-fire, .effect-7-gold, .effect-8-cut, .effect-9-gear, .effect-10-rain, .effect-j-reverse, .effect-q-bomb, .effect-k-magic, .effect-joker-mist {
         width: 100px !important;
         height: 130px !important;
         min-width: 100px !important;
         min-height: 130px !important;
+      }
+      .effect-4-shield {
+        width: 600vw !important; /* 極限まで巨大化 */
+        height: 600vw !important;
+        min-width: 600vw !important;
+        min-height: 600vw !important;
       }
       
       .action-panel {
