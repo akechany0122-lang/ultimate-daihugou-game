@@ -1171,14 +1171,16 @@
       }
       .message-overlay {
         display: block !important;
-        font-size: 38px !important;
+        font-size: 52px !important; /* 拡大 */
         width: 100vw !important;
         top: 40% !important;
+        -webkit-text-stroke: 0 !important; /* ふち消去 */
       }
       .message-overlay p {
-        font-size: 18px !important;
+        font-size: 24px !important; /* 拡大 */
         color: #fff !important;
         margin-top: 10px !important;
+        -webkit-text-stroke: 0 !important;
       }
       .effect-4-shield {
         width: 90vw !important; /* 少し幅を狭める */
@@ -3174,13 +3176,13 @@
     /* --- 血文字メッセージオーバレイ --- */
     .message-overlay {
       position: fixed;
-      top: 42%; /* 少し下げた */
+      top: 42%;
       left: 50%;
       transform: translate(-50%, -50%);
       color: var(--color-gold);
-      -webkit-text-stroke: 1px rgba(0, 0, 0, 0.8);
-      text-shadow: 0 5px 15px rgba(0, 0, 0, 1), 0 0 25px var(--color-gold);
-      font-size: 64px;
+      -webkit-text-stroke: 0 !important; /* ふち消去 */
+      text-shadow: 0 5px 20px rgba(0, 0, 0, 1), 0 0 30px rgba(var(--color-gold-rgb), 0.5);
+      font-size: 92px; /* さらに巨大化 */
       font-weight: 900;
       font-family: 'Cinzel', serif;
       letter-spacing: 2px;
@@ -3191,12 +3193,12 @@
 
       p {
         margin: 0;
-        font-size: 28px;
+        font-size: 38px; /* さらに拡大 */
         font-family: var(--font-main);
-        color: #fff; /* より純粋な白へ */
-        -webkit-text-stroke: 0;
-        text-shadow: 0 3px 6px #000;
-        margin-top: 20px;
+        color: #fff;
+        -webkit-text-stroke: 0 !important;
+        text-shadow: 0 4px 8px #000;
+        margin-top: 25px;
         font-style: italic;
         font-weight: bold;
       }
