@@ -4915,6 +4915,7 @@
             h = tempH;
             title = `${tcg?.name} [${targetRanks.join(',')}] x${count}`;
             desc = `全領域から${bombCount}枚が灰燼に帰した`;
+            triggerAbilityLog(`Qボンバー: ${targetRanks.join(',')}`);
           }
         }
         if (rank === 'K') {
