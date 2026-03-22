@@ -3636,8 +3636,11 @@
         min-width: 100px !important;
         min-height: 130px !important;
       }
+      .player-pos.pos-left { left: -75px !important; }
+      .player-pos.pos-right { right: -75px !important; }
+
       .player-pos.pos-top {
-        top: 25px !important; /* 全体的に下げる */
+        top: 30px !important; /* さらに少し下げる */
         z-index: 10 !important;
       }
       .effect-4-shield {
@@ -3660,11 +3663,17 @@
         top: -45px !important; /* 名前が上 */
       }
       .pos-left .hand-count-badge, .pos-right .hand-count-badge {
-        top: 15px !important; /* 横CPUはさらに離す */
+        top: 10px !important; /* 名前の真下 */
+        left: 50% !important;
+        transform: translate(-50%, -50%) rotate(var(--rot-fix)) !important;
       }
       .pos-left .player-status, .pos-right .player-status {
-        top: -55px !important; /* 横CPUはさらに離す */
+        top: -25px !important; /* 真上 */
+        left: 50% !important;
+        transform: translateX(-50%) rotate(var(--rot-fix)) !important;
       }
+      .pos-left { --rot-fix: -90deg; }
+      .pos-right { --rot-fix: 90deg; }
       .player-pass-label {
         top: 25px !important; /* 下 */
         left: 50% !important;
@@ -4845,7 +4854,7 @@
         }
         if (rank === '9') {
           pDir = pDir * -1;
-          setPDir(pDir); // React状態も即座に更新 (これがないとexecutePlay内の古いpDirを参照する可能性)
+          setPlayDirection(pDir); // 正しい状態更新関数名
           triggerTempEffect(setReverseActive, 1800);
         }
         if (rank === '10') {
