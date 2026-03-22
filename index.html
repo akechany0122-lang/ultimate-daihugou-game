@@ -1170,7 +1170,15 @@
         padding: 4px 12px !important;
       }
       .message-overlay {
-        display: none !important; /* スマホ版では中央の黄色いタイトル（MessageOverlay）を廃止、カットイン演出のみ表示 */
+        display: block !important;
+        font-size: 38px !important;
+        width: 100vw !important;
+        top: 40% !important;
+      }
+      .message-overlay p {
+        font-size: 18px !important;
+        color: #fff !important;
+        margin-top: 10px !important;
       }
       .effect-4-shield {
         width: 90vw !important; /* 少し幅を狭める */
@@ -3166,14 +3174,14 @@
     /* --- 血文字メッセージオーバレイ --- */
     .message-overlay {
       position: fixed;
-      top: 40%;
+      top: 42%; /* 少し下げた */
       left: 50%;
       transform: translate(-50%, -50%);
       color: var(--color-gold);
       -webkit-text-stroke: 1px rgba(0, 0, 0, 0.8);
-      text-shadow: 0 5px 10px rgba(0, 0, 0, 1), 0 0 20px var(--color-blood);
-      font-size: 60px;
-      font-weight: bold;
+      text-shadow: 0 5px 15px rgba(0, 0, 0, 1), 0 0 25px var(--color-gold);
+      font-size: 64px;
+      font-weight: 900;
       font-family: 'Cinzel', serif;
       letter-spacing: 2px;
       z-index: 1000;
@@ -3183,13 +3191,14 @@
 
       p {
         margin: 0;
-        font-size: 24px;
+        font-size: 28px;
         font-family: var(--font-main);
-        color: #ddd;
+        color: #fff; /* より純粋な白へ */
         -webkit-text-stroke: 0;
-        text-shadow: 0 2px 4px #000;
-        margin-top: 15px;
+        text-shadow: 0 3px 6px #000;
+        margin-top: 20px;
         font-style: italic;
+        font-weight: bold;
       }
     }
 
