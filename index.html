@@ -1173,8 +1173,8 @@
         display: none !important; /* スマホ版では中央の黄色いタイトル（MessageOverlay）を廃止、カットイン演出のみ表示 */
       }
       .effect-4-shield {
-        width: 100vw !important; 
-        height: 46vh !important; /* 横長の長方形 */
+        width: 90vw !important; /* 少し幅を狭める */
+        height: 46vh !important;
         border: 15px double rgba(0, 180, 216, 0.7) !important;
         border-radius: 12px !important;
         background: rgba(0, 180, 216, 0.05) !important;
@@ -3487,11 +3487,11 @@
       }
       .player-pos.pos-left {
         left: 45px !important;
-        transform: translateY(-50%) rotate(90deg) !important;
+        transform: translateY(-58%) rotate(90deg) !important; /* 少し上方に移動 */
       }
       .player-pos.pos-right {
         right: 45px !important;
-        transform: translateY(-50%) rotate(-90deg) !important;
+        transform: translateY(-58%) rotate(-90deg) !important; /* 少し上方に移動 */
       }
       .player-pos.pos-top {
         top: 5px !important;
@@ -3501,14 +3501,13 @@
       .play-area {
         width: 280px !important;
         height: 280px !important;
-        top: 50% !important; /* サークルに合わせて中央へ */
+        top: 42% !important; /* 上方に移動 */
         left: 50% !important;
-        /* Remove !important transform to allow animation rotate */
       }
       .bg-reverse-indicator {
-        top: 50% !important; /* 中央に配置 */
+        top: 42% !important; /* 上方に移動 */
         left: 50% !important;
-        width: 38vh !important; /* 少し拡大して収まりを良くする */
+        width: 38vh !important;
         height: 38vh !important;
       }
 
@@ -3589,8 +3588,8 @@
         min-height: 130px !important;
       }
       .effect-4-shield {
-        width: 100vw !important; 
-        height: 46vh !important; /* 横長の長方形 */
+        width: 90vw !important; /* 少し幅を狭める */
+        height: 46vh !important;
         border: 15px double rgba(0, 180, 216, 0.7) !important;
         border-radius: 12px !important;
         background: rgba(0, 180, 216, 0.05) !important;
@@ -5573,7 +5572,7 @@
                 }
 
                 let zIndexStyle = i + 1;
-                if (isSelected) zIndexStyle += 500;
+                // zIndexStyle += 500; // 前後関係を維持するため選択時のブーストを廃止
 
                 return (
                   <div key={c.id}
