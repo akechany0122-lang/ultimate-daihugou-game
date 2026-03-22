@@ -2631,8 +2631,29 @@
     }
 
     /* アクティブ時の拡大を少し控えめにし、中央への侵食を防ぐ */
-    .player-pos.active-turn .player-status {
-      transform: translateX(-50%) scale(1.1);
+    .pos-left .player-status { transform: translateX(-50%) rotate(-90deg) !important; }
+    .pos-right .player-status { transform: translateX(-50%) rotate(90deg) !important; }
+
+    /* 能力発動ログ表示 */
+    .ability-log-overlay {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      border-left: 4px solid var(--color-gold);
+      color: #fff;
+      padding: 8px 20px;
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      z-index: 10000;
+      animation: log-fade-in 0.3s ease-out forwards;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    @keyframes log-fade-in {
+      0% { opacity: 0; transform: translate(-50%, -40%); }
+      100% { opacity: 1; transform: translate(-50%, -50%); }
     }
 
     /* --- 選択モードUI --- */
@@ -3627,12 +3648,22 @@
         z-index: 1 !important;
       }
       
-      .action-panel {
-        bottom: 15px !important;
-        transform: translateX(-50%) !important;
-        width: 320px !important;
-        gap: 10px !important;
+      .pos-left .player-status { transform: translateX(-50%) rotate(-90deg) !important; }
+      .pos-right .player-status { transform: translateX(-50%) rotate(90deg) !important; }
+
+      .hand-count-badge {
+        top: -45px !important; /* 一番上 */
       }
+      .player-status {
+        top: -15px !important; /* 中央 */
+      }
+      .player-pass-label {
+        top: 25px !important; /* 下 */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+      }
+      .pos-left .player-pass-label { transform: translateX(-50%) rotate(-90deg) !important; }
+      .pos-right .player-pass-label { transform: translateX(-50%) rotate(90deg) !important; }
       
       .action-btn {
         width: 140px !important;
@@ -5538,6 +5569,7 @@
                   endTime: Date.now() + watchDuration
                 });
                 setWatchSelecting(false);
+                triggerAbilityLog(`Q-BOMBER: DELETED ${rank}`);
                 setSelectionMode(null);
                 setSelectionInfo(null);
                 setIsAnimating(true);
