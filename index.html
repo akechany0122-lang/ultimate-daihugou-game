@@ -3636,8 +3636,8 @@
         min-width: 100px !important;
         min-height: 130px !important;
       }
-      .player-pos.pos-left { left: 5px !important; }
-      .player-pos.pos-right { right: 5px !important; }
+      .player-pos.pos-left { left: 16vw !important; } /* 中央寄りへ大幅に移動しつつ見切れを防止 */
+      .player-pos.pos-right { right: 16vw !important; }
 
       .player-pos.pos-top {
         top: 30px !important;
@@ -3663,14 +3663,15 @@
         top: -45px !important; /* 名前が上 */
       }
       .pos-left .hand-count-badge, .pos-right .hand-count-badge {
-        top: 20px !important; /* 名前の下 */
+        top: 0px !important; /* センター付近 */
         left: 50% !important;
         transform: translate(-50%, -50%) rotate(var(--rot-fix)) !important;
       }
       .pos-left .player-status, .pos-right .player-status {
-        top: -30px !important; /* 名前の位置 */
+        top: -45px !important; /* 枚数表示の真上 */
         left: 50% !important;
         transform: translateX(-50%) rotate(var(--rot-fix)) !important;
+        white-space: nowrap !important;
       }
       .pos-left { --rot-fix: -90deg; }
       .pos-right { --rot-fix: 90deg; }
