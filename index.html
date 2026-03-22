@@ -1166,7 +1166,11 @@
         font-weight: bold !important;
       }
       .field-status-label {
-        font-size: 2rem !important;
+        font-size: 1.4rem !important; /* 縮小 */
+        padding: 4px 12px !important;
+      }
+      .message-overlay {
+        display: none !important; /* スマホ版では中央の黄色いタイトル（MessageOverlay）を廃止、カットイン演出のみ表示 */
       }
       .effect-4-shield {
         width: 500vw !important; /* 圧倒的な巨大化 */
@@ -4514,6 +4518,12 @@
             currentGy = [...currentGy, ...cardsOnly];
           }
         }
+        // Plus 5 combo check for clear field logic
+        const isPlus5Combo = tableCards.length === 2 && tableCards.some(tc => tc.card.rank === '5');
+        if (isPlus5Combo) {
+          setIsPlus5Active(true);
+          setTimeout(() => setIsPlus5Active(false), 3000);
+        }
         setTableCards([]);
         setPassedPlayers([]);
         setIsShielded([false, false, false, false]);
@@ -4792,7 +4802,8 @@
           const targetRank = RANKS[Math.floor(Math.random() * RANKS.length)];
           if (playerIndex === 0) {
             setSelectionMode('Q');
-            setSelectionInfo({ playerIndex, count }); // Qの枚数は爆発の派手さに影響させるなど（現状はロジック共通）
+            // Qボンバーは常に「1種類」を選択するように修正（5+3コンボ等で複数選べるバグを回避）
+            setSelectionInfo({ playerIndex, count: 1 });
             steps = 0;
           } else {
             triggerTempEffect(setBomberActive, 2000);
