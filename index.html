@@ -3487,11 +3487,11 @@
       }
       .player-pos.pos-left {
         left: 45px !important;
-        transform: translateY(-58%) rotate(90deg) !important; /* 少し上方に移動 */
+        transform: translateY(-65%) rotate(90deg) !important; /* さらに上方に移動 */
       }
       .player-pos.pos-right {
         right: 45px !important;
-        transform: translateY(-58%) rotate(-90deg) !important; /* 少し上方に移動 */
+        transform: translateY(-65%) rotate(-90deg) !important; /* さらに上方に移動 */
       }
       .player-pos.pos-top {
         top: 5px !important;
@@ -3501,14 +3501,18 @@
       .play-area {
         width: 280px !important;
         height: 280px !important;
-        top: 42% !important; /* 上方に移動 */
+        top: 45.5% !important; /* 42%から少し下げてサークル位置に合わせる */
         left: 50% !important;
       }
       .bg-reverse-indicator {
-        top: 42% !important; /* 上方に移動 */
+        top: 45.5% !important; /* 42%から少し下げる */
         left: 50% !important;
         width: 38vh !important;
         height: 38vh !important;
+      }
+      /* 場の中央カード群をサークル内で少し下げる */
+      .table-cards-container {
+        transform: translateY(20px) !important;
       }
 
       /* Corner UI tightening */
@@ -5626,7 +5630,7 @@
             )}
 
             <div className="player-status" style={isMobile && playerIdx !== 0 ? { position: 'absolute', top: '-15px', bottom: 'auto', height: 'auto', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', minWidth: 'max-content', zIndex: 100, fontSize: '10px', padding: '2px 6px' } : {}}>
-              {playerIdx === 0 ? 'YOU' : `CPU ${playerIdx}`}
+              {playerIdx === 0 ? 'YOU' : `CPU ${playerIdx}`} [{hands[playerIdx].length}]
               {hierarchy && <span className={`rank-badge ${hierarchy.cls}`}>{hierarchy.title}</span>}
             </div>
           </div>
