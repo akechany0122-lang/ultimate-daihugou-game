@@ -3652,10 +3652,10 @@
       .pos-right .player-status { transform: translateX(-50%) rotate(90deg) !important; }
 
       .hand-count-badge {
-        top: -45px !important; /* 一番上 */
+        top: -15px !important; /* 下部 */
       }
       .player-status {
-        top: -15px !important; /* 中央 */
+        top: -45px !important; /* 上部 */
       }
       .player-pass-label {
         top: 25px !important; /* 下 */
@@ -5155,10 +5155,10 @@
           if (multiplayerMode === 'active' && isHost) {
             broadcastState(newHands, nextTarget);
           }
-          // Ability Log for TCG
+          // Ability Log for TCG (Simplified Japanese)
           const tcg = TCG_DATA[effectiveVisualRank];
           if (tcg && tcg.name) {
-            triggerAbilityLog(`ABILITY: ${tcg.name}`);
+            triggerAbilityLog(`${tcg.name}`);
           }
           executeNextTurn(playerIndex, isFieldCleared ? 0 : stepsToUse, effectRes.pDir, updatedRanks);
         }, totalAnimTime);
@@ -5579,7 +5579,7 @@
                   endTime: Date.now() + watchDuration
                 });
                 setWatchSelecting(false);
-                triggerAbilityLog(`Q-BOMBER: DELETED ${rank}`);
+                triggerAbilityLog(`Qボンバー: ${rank}`);
                 setSelectionMode(null);
                 setSelectionInfo(null);
                 setIsAnimating(true);
