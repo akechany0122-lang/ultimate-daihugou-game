@@ -5586,8 +5586,9 @@
       }
 
       // ---- BGM ----
-      playTitleBGM() { this._playBGM('bgm2.mp3', 'title'); }
-      playGameBGM() { this._playBGM('bgm.mp3', 'game'); }
+      playTitleBGM() { this._playBGM('bgm tittle.mp3', 'title'); }
+      playHomeBGM() { this._playBGM('bgm home.mp3', 'home'); }
+      playGameBGM() { this._playBGM('bgm battle.mp3', 'game'); }
 
       _playBGM(file, type) {
         if (this.bgmType === type && this.bgm) return;
@@ -5694,30 +5695,15 @@
 
       // ---- Game Start SE ----
       playStartSE() {
-        const ctx = this._ensureCtx();
-        if (!ctx) return;
+        const audio = new Audio('START.mp3');
+        audio.volume = 0.3; // 小さめ
+        audio.play().catch(e => console.warn(e));
+      }
 
-        // 1. 剣が擦れ合う鋭い金属音（シュィィン！）
-        // 急激に上昇・下降する高周波で刃が滑る音を表現
-        this._osc('square', 800, 6000, 0.2, 0.15);
-        this._osc('triangle', 1200, 8000, 0.2, 0.15);
-
-        // 2. 激突する重い金属音と残響（ガキィィン！）
-        setTimeout(() => {
-          // 重い打撃音 (Impact Thud)
-          this._osc('square', 200, 50, 0.5, 0.2); 
-          this._osc('triangle', 150, 30, 0.8, 0.3);
-
-          // 金属特有の不協和音的な響き (Inharmonic metallic ringing)
-          const metallicFreqs = [1243, 2187, 3452, 4821, 6102];
-          metallicFreqs.forEach((f) => {
-            this._osc('sine', f, null, 0.4, 1.5);
-            this._osc('sine', f * 1.015, null, 0.3, 1.5); // デチューンで金属特有の「うねり」を作る
-          });
-
-          // 火花が散るような高い残響 (Spark ping)
-          this._osc('square', 8000, 2000, 0.1, 0.8);
-        }, 120); // 刃が擦れた直後に激突
+      playReadySE() {
+        const audio = new Audio('READY.mp3');
+        audio.volume = 0.3; // 小さめ
+        audio.play().catch(e => console.warn(e));
       }
 
       // ---- Shield Miss SE ----
@@ -5979,13 +5965,27 @@
       const [titleStage, setTitleStage] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isStartPressed, setIsStartPressed] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [isReadyPressed, setIsReadyPressed] = useState(false);
   const [hoveredMode, setHoveredMode] = useState(null);
+
+  const handleReadyClick = () => {
+    sm.playReadySE();
+    setIsReadyPressed(true);
+    setTimeout(() => {
+      sm.playTitleBGM();
+      setIsReady(true);
+      setIsReadyPressed(false);
+    }, 200);
+  };
+
   const handleStartGameTransition = () => {
     sm.playStartSE();
     setIsStartPressed(true);
     setIsTransitioning(true);
     setTimeout(() => {
       setTitleStage(2);
+      sm.playHomeBGM();
       setIsStartPressed(false);
       setTimeout(() => setIsTransitioning(false), 50); // slight delay to allow render before fading back in
     }, 1500);
@@ -6125,23 +6125,49 @@
         // ドラッグ（マウスボタン押しっぱなし or タッチ中）のみ処理
         if (e.pointerType === 'mouse' && e.buttons === 0) return;
         
-        isSwipingRef.current = true;
-
         // フリック（上方向へのスライド）判定
         const deltaY = touchStartPos.current.y - e.clientY; // 上にスワイプすると正
         const deltaX = Math.abs(e.clientX - touchStartPos.current.x);
 
+        // 少しのブレはスワイプとみなさない（タップ判定を維持するための遊び）
+        if (Math.abs(deltaY) < 10 && deltaX < 10) return;
+        
+        isSwipingRef.current = true;
+
         // Y方向へ50px以上、かつX方向の1.5倍以上の移動で「上フリック」とみなす
         if (deltaY > 50 && deltaY > deltaX * 1.5) {
-          if (selectedCards.length > 0 && !isActionLoading && isValidPlay(selectedCards)) {
-            handlePlay();
-            hasFlickedPlay.current = true; // 1回のフリックで複数回発火しないようにする
+          if (!isActionLoading) {
+            // フリックされたカードを特定
+            const startElem = document.elementFromPoint(touchStartPos.current.x, touchStartPos.current.y);
+            const startCardElem = startElem?.closest('.card.selectable');
+            let flickedCard = null;
+            if (startCardElem) {
+              const cardId = startCardElem.getAttribute('data-card-id');
+              flickedCard = hands[0].find(c => c.id === cardId);
+            }
+
+            let playCandidate = [...selectedCards];
+            
+            // 選択されていないカードをフリックした場合は、候補に追加
+            if (flickedCard && !selectedCards.find(c => c.id === flickedCard.id)) {
+              playCandidate.push(flickedCard);
+            }
+
+            // 出せる条件を満たしているかチェック
+            if (playCandidate.length > 0 && isValidPlay(playCandidate)) {
+              handlePlay(playCandidate);
+              hasFlickedPlay.current = true; // 1回のフリックで複数回発火しないようにする
+            } else if (flickedCard && isValidPlay([flickedCard])) {
+              // 選択中カード＋フリックカードでは出せないが、フリックカード単体なら出せる場合
+              handlePlay([flickedCard]);
+              hasFlickedPlay.current = true;
+            }
           }
           return; // フリックと判定された場合はカード選択処理をスキップ
         }
 
-        // Y方向の移動が大きい場合（フリックの途中）は横スワイプ選択をスキップ
-        if (deltaY > 15 || deltaY < -15 || Math.abs(touchStartPos.current.y - e.clientY) > deltaX) {
+        // Y方向の移動が大きい場合（フリックの途中）、またはX方向への移動が明確でない場合は横スワイプ選択をスキップ
+        if (Math.abs(deltaY) > 15 || deltaX < 15 || Math.abs(deltaY) > deltaX) {
           return;
         }
 
@@ -6386,6 +6412,7 @@
           setIsRevolution(data.state.isRevolution);
           setPlayDirection(data.state.playDirection);
           setGraveyard(data.state.graveyard);
+          if (data.state.remotePlayers) setRemotePlayers(data.state.remotePlayers);
         } else if (data.type === 'ACTION' && isHost) {
           // Host receives action from guest
           console.log('Action from', fromPeerId, data);
@@ -6449,7 +6476,8 @@
           is11Back,
           isRevolution,
           playDirection,
-          graveyard
+          graveyard,
+          remotePlayers
         };
 
         conns.forEach((c, idx) => {
@@ -7431,22 +7459,23 @@
         }
       };
 
-      const handlePlay = () => {
+      const handlePlay = (cardsToPlay = selectedCards) => {
         if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
-        const canPlay = selectedCards.length > 0;
+        const canPlay = cardsToPlay.length > 0;
         if (!canPlay) return;
         
         if (multiplayerMode === 'active' && !isHost) {
-          guestConn.send({ type: 'ACTION', action: 'PLAY', cards: selectedCards });
+          guestConn.send({ type: 'ACTION', action: 'PLAY', cards: cardsToPlay });
           setSelectedCards([]);
           return;
         }
 
         setIsActionLoading(true);
-        if (isValidPlay(selectedCards)) {
-          executePlay(myPlayerIndex, selectedCards); setSelectedCards([]);
+        if (isValidPlay(cardsToPlay)) {
+          executePlay(myPlayerIndex, cardsToPlay); setSelectedCards([]);
           if (isHost) broadcastState(hands);
         } else {
+          setIsActionLoading(false);
           showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
         }
       };
@@ -7504,6 +7533,7 @@
         if (customHands) {
           setHands(customHands);
           setTurn(firstTurn);
+          if (multiplayerMode === 'active' && isHost) broadcastState(customHands, firstTurn);
         } else {
           const deck = shuffle(createDeck());
           const newHands = [[], [], [], []];
@@ -7512,8 +7542,10 @@
             newHands[i % 4].push(deck.pop());
             i++;
           }
-          setHands(newHands.map(h => sortHand(h)));
+          const sortedHands = newHands.map(h => sortHand(h));
+          setHands(sortedHands);
           setTurn(0);
+          if (multiplayerMode === 'active' && isHost) broadcastState(sortedHands, 0);
         }
         setIsDealing(true);
         setTimeout(() => setIsDealing(false), 2000);
@@ -7593,7 +7625,7 @@
         const finalDecisions = { ...exchangeDecisions };
 
         // プレイヤー0の決定
-        const p0Rank = roundResults.indexOf(0) + 1;
+        const p0Rank = roundResults.indexOf(myPlayerIndex) + 1;
         if (p0Rank === 1 || p0Rank === 2) {
           finalDecisions[0] = selectedCards;
         } else if (p0Rank === 3) {
@@ -7693,7 +7725,7 @@
         return (
           <div key={playerIdx}
             data-player-hand={playerIdx}
-            className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== 0 && !isDead && !isShielded[playerIdx] ? 'watch-clickable' : ''} ${watchSelecting && playerIdx !== 0 && !isDead && isShielded[playerIdx] ? 'watch-shielded' : ''}`}
+            className={`player-area player-${playerIdx} ${turn === playerIdx ? 'active-turn' : ''} ${watchSelecting && playerIdx !== myPlayerIndex && !isDead && !isShielded[playerIdx] ? 'watch-clickable' : ''} ${watchSelecting && playerIdx !== myPlayerIndex && !isDead && isShielded[playerIdx] ? 'watch-shielded' : ''}`}
             onPointerDown={handlePointerDown}
             onPointerMove={(e) => handlePointerMove(e, playerIdx)}
             onPointerUp={handlePointerUp}
@@ -7701,7 +7733,7 @@
             style={{ touchAction: 'none' }}
             onClick={() => {
               if (isSwipingRef.current) return; // スワイプ後の誤爆防止
-              if (watchSelecting && playerIdx !== 0 && !isDead) {
+              if (watchSelecting && playerIdx !== myPlayerIndex && !isDead) {
                 // 4シールド所持者はKウォッチ選択不可
                 if (isShielded[playerIdx]) {
                   triggerMiss(playerIdx);
@@ -7710,14 +7742,14 @@
                 if (watchSelectedTargets.includes(playerIdx)) return;
                 
                 const newSelected = [...watchSelectedTargets, playerIdx];
-                const availableTargetsCount = [1, 2, 3].filter(p => !ranksDiscovered.includes(p) && !isShielded[p]).length;
+                const availableTargetsCount = [0, 1, 2, 3].filter(p => p !== myPlayerIndex && !ranksDiscovered.includes(p) && !isShielded[p]).length;
                 const maxTargets = selectionInfo?.count || 1;
 
                 if (newSelected.length >= maxTargets || newSelected.length >= availableTargetsCount) {
                   const watchDuration = 5000;
                   setWatchTarget({
                     targetIndexes: newSelected,
-                    activatorIndex: 0,
+                    activatorIndex: myPlayerIndex,
                     endTime: Date.now() + watchDuration
                   });
                   setWatchSelecting(false);
@@ -7730,7 +7762,7 @@
                   setTimeout(() => {
                     setWatchTarget(null);
                     setIsAnimating(false);
-                    executeNextTurn(0, 1);
+                    executeNextTurn(myPlayerIndex, 1);
                   }, watchDuration);
                 } else {
                   setWatchSelectedTargets(newSelected);
@@ -7800,15 +7832,15 @@
                     }}
                     onClick={() => {
                       if (isDead) return;
-                      const p0Rank = roundResults ? roundResults.indexOf(0) + 1 : 0;
-                      const canExchangeSelect = exchangePhase === 'selecting' && playerIdx === 0 && (p0Rank === 1 || p0Rank === 2);
-                      if ((turn === playerIdx && !selectionMode && !exchangePhase) || (selectionMode && playerIdx === 0) || canExchangeSelect) {
+                      const p0Rank = roundResults ? roundResults.indexOf(myPlayerIndex) + 1 : 0;
+                      const canExchangeSelect = exchangePhase === 'selecting' && playerIdx === myPlayerIndex && (p0Rank === 1 || p0Rank === 2);
+                      if ((turn === playerIdx && !selectionMode && !exchangePhase) || (selectionMode && playerIdx === myPlayerIndex) || canExchangeSelect) {
                         sm.playLightPaperSE();
                         toggleSelect(c);
                       }
                     }}
                     onMouseEnter={() => {
-                      if (playerIdx === 0 && !isDead) sm.playLightPaperSE();
+                      if (playerIdx === myPlayerIndex && !isDead) sm.playLightPaperSE();
                     }}
                   >
                     <div className="card-rank">{c.rank === 'Joker' ? 'J' : c.rank}</div>
@@ -8124,9 +8156,17 @@
 
                 {/* Stage 1: 初期状態 */}
                 {titleStage === 1 && (
-                  <div className={`touch-start-container animate-fade-in ${isStartPressed ? 'start-pressed' : ''}`} onClick={handleStartGameTransition}>
-                    <div className="touch-start-text" style={{color: '#E6C875', textShadow: '0 2px 15px rgba(212,175,55,0.6)'}}>START GAME</div>
-                  </div>
+                  <>
+                    {!isReady ? (
+                      <div className={`touch-start-container animate-fade-in ${isReadyPressed ? 'start-pressed' : ''}`} onClick={handleReadyClick}>
+                        <div className="touch-start-text" style={{color: '#E6C875', textShadow: '0 2px 15px rgba(212,175,55,0.6)'}}>READY</div>
+                      </div>
+                    ) : (
+                      <div className={`touch-start-container animate-fade-in ${isStartPressed ? 'start-pressed' : ''}`} onClick={handleStartGameTransition}>
+                        <div className="touch-start-text" style={{color: '#E6C875', textShadow: '0 2px 15px rgba(212,175,55,0.6)'}}>START GAME</div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -8188,7 +8228,7 @@
                   </div>
 
                   <div className="mode-aux-buttons left-aligned animate-fade-in">
-                    <button className="btn-back" onClick={() => setTitleStage(1)}>
+                    <button className="btn-back" onClick={() => { setTitleStage(1); sm.playTitleBGM(); }}>
                       <span>◀ 戻る</span>
                     </button>
                   </div>
@@ -8262,7 +8302,7 @@
     </div>
   </div>
   <div className="mode-aux-buttons left-aligned animate-fade-in">
-    <button className="btn-back" onClick={() => setMultiplayerMode(null)}>
+    <button className="btn-back" onClick={() => { setMultiplayerMode(null); sm.playHomeBGM(); }}>
       <span>◀ 戻る</span>
     </button>
   </div>
@@ -8297,7 +8337,7 @@
                   </div>
                 </div>
                 <div className="mode-aux-buttons left-aligned animate-fade-in">
-                  <button className="btn-back" onClick={() => setMultiplayerMode(null)}>
+                  <button className="btn-back" onClick={() => { setMultiplayerMode(null); sm.playHomeBGM(); }}>
                     <span>◀ 戻る</span>
                   </button>
                 </div>
@@ -8330,9 +8370,9 @@
                 <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(0))})` }}></div>
                 <div className="player-status">
                   YOU
-                  {ranksDiscovered.includes(0) && (
-                    <span className={`rank-badge ${getHierarchyTitle(ranksDiscovered.indexOf(0) + 1).cls}`}>
-                      {getHierarchyTitle(ranksDiscovered.indexOf(0) + 1).title}
+                  {ranksDiscovered.includes(myPlayerIndex) && (
+                    <span className={`rank-badge ${getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls}`}>
+                      {getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).title}
                     </span>
                   )}
                 </div>
@@ -8362,7 +8402,7 @@
                     ) : (
                       <div style={{ color: 'var(--color-gold)', animation: 'pulse-gold 1s infinite alternate', display: 'flex', alignItems: 'center' }}>ホストの開始を待機しています...</div>
                     )}
-                    <button className="action-btn btn-pass mystic-btn" onClick={() => { peer?.destroy(); setMultiplayerMode(null); }}>
+                    <button className="action-btn btn-pass mystic-btn" onClick={() => { peer?.destroy(); setMultiplayerMode(null); sm.playHomeBGM(); }}>
                       <span className="mystic-btn-text">解散</span>
                     </button>
                   </div>
@@ -8551,13 +8591,13 @@
               {animMessage.data && (
                 <div className={`message-overlay ${animMessage.state}`}>
                   {animMessage.data.title}
-                  {animMessage.data.desc && <p>{animMessage.data.desc}</p>}
+                      {animMessage.data.desc && <p>{animMessage.data.desc}</p>}
                 </div>
               )}
 
               {/* ターンと方向表示 */}
               <div style={{ position: 'absolute', top: isMobile ? '2px' : '30px', left: isMobile ? '2px' : '40px', zIndex: 200, color: '#ccc', fontFamily: "'Cinzel', serif", transform: isMobile ? 'scale(0.45)' : 'none', transformOrigin: 'top left', whiteSpace: 'nowrap' }}>
-                TURN: <span style={{ color: turn === 0 ? 'var(--color-blood)' : '#fff' }}>{turn === 0 ? 'YOU' : turn === -1 ? 'ENDED' : `CPU ${turn}`}</span>
+                TURN: <span style={{ color: turn === myPlayerIndex ? 'var(--color-blood)' : '#fff' }}>{turn === myPlayerIndex ? 'YOU' : turn === -1 ? 'ENDED' : `CPU ${turn}`}</span>
                 {(is11Back || isRevolution) && (
                   <span className="revolution-label" style={{ marginLeft: '15px', color: '#ff4444', fontWeight: 'bold', textShadow: '0 0 10px rgba(255,0,0,0.8)', fontSize: '0.9em' }}>
                     {isRevolution ? "REVOLUTION!!" : "J-BACK"}
@@ -9141,26 +9181,7 @@
     // 即時BGM開始試行（ブラウザが許可すればそのまま再生、ブロックされれば最初のクリックで開始）
     sm.playTitleBGM();
 
-    setTimeout(() => {
-      console.log("=== AUTO CLICK TEST START ===");
-      const startBtn = document.querySelector('.touch-start-container');
-      if (startBtn) {
-        console.log("Clicking START button...");
-        startBtn.click();
-        
-        setTimeout(() => {
-          const modeCards = document.querySelectorAll('.mode-card');
-          if (modeCards && modeCards.length > 0) {
-            console.log("Clicking Single Play card...");
-            modeCards[0].click();
-          } else {
-            console.error("Single Play card not found!");
-          }
-        }, 1000);
-      } else {
-        console.error("START button not found!");
-      }
-    }, 2500);
+
   </script>
 </body>
 
