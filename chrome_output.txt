@@ -1,0 +1,48 @@
+Trying to load the allocator multiple times. This is *not* supported.
+[27050:1692165:0626/234125.467633:ERROR:google_apis/gcm/engine/registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+1403968 bytes written to file play_screenshot_4.png
+[27050:1692183:0626/234125.791860:ERROR:base/process/process_mac.cc:53] task_policy_set TASK_CATEGORY_POLICY: (os/kern) invalid argument (4)
+[27050:1692183:0626/234125.791997:ERROR:base/process/process_mac.cc:98] task_policy_set TASK_SUPPRESSION_POLICY: (os/kern) invalid argument (4)
+[27090:1692874:0626/234141.244515:VERBOSE1:chrome/updater/updater.cc:374] Version: 150.0.7863.0, opt, ARM_64, command line: /Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake-all --enable-logging --vmodule=*/components/update_client/*=2,*/chrome/enterprise_companion/*=2,*/chrome/updater/*=2
+[27090:1692874:0626/234141.244708:VERBOSE1:chrome/updater/updater.cc:377] OS version: 26.4.1, arch: arm64, System uptime (seconds): 146629, parent pid: 27050
+[27090:1692874:0626/234141.246812:VERBOSE1:chrome/updater/updater.cc:382] Available disk space in install directory (/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater): 3535093760B (3.292GiB) / 245107195904B (228.274GiB)
+[27090:1692874:0626/234141.246826:VERBOSE1:chrome/updater/updater.cc:386] Available disk space in temporary directory (/var/folders/y7/29b8wrz50_771qk7dn9phblc0000gn/T/): 3535093760B (3.292GiB) / 245107195904B (228.274GiB)
+[27090:1692874:0626/234141.246884:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS START event to the history log
+[27092:1692878:0626/234141.254573:VERBOSE1:chrome/updater/updater.cc:374] Version: 150.0.7863.0, opt, ARM_64, command line: /Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --crash-handler --database=/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/Crashpad --url=https://clients2.google.com/cr/report --annotation=prod=Update4 --annotation=ver=150.0.7863.0 --handshake-fd=6 --enable-logging --vmodule=*/components/update_client/*=2,*/chrome/enterprise_companion/*=2,*/chrome/updater/*=2
+[27092:1692878:0626/234141.254722:VERBOSE1:chrome/updater/updater.cc:377] OS version: 26.4.1, arch: arm64, System uptime (seconds): 146629, parent pid: 1
+[27092:1692878:0626/234141.256621:VERBOSE1:chrome/updater/updater.cc:382] Available disk space in install directory (/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater): 3535089664B (3.292GiB) / 245107195904B (228.274GiB)
+[27092:1692878:0626/234141.256634:VERBOSE1:chrome/updater/updater.cc:386] Available disk space in temporary directory (/var/folders/y7/29b8wrz50_771qk7dn9phblc0000gn/T/): 3535089664B (3.292GiB) / 245107195904B (228.274GiB)
+[27092:1692878:0626/234141.256712:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS START event to the history log
+[27090:1692874:0626/234141.257078:VERBOSE1:chrome/updater/crash_reporter.cc:124] Crash handler launched and ready.
+[27090:1692874:0626/234141.257713:VERBOSE1:chrome/updater/crash_client.cc:108] Found 0 completed crash reports
+[27090:1692874:0626/234141.257791:VERBOSE1:chrome/updater/crash_client.cc:132] Found 0 pending crash reports
+[27090:1692874:0626/234141.257850:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/yuyaaketa/Library/Application Support/Google/RLZ/Crashpad/settings.dat: No such file or directory (2)
+[27090:1692874:0626/234141.257887:VERBOSE1:chrome/updater/updater.cc:105] Crash reporting initialized.
+[27090:1692886:0626/234141.258152:VERBOSE1:chrome/updater/app/app_wakeall.cc:58] Launching `/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake`
+[27093:1692890:0626/234141.265037:VERBOSE1:chrome/updater/updater.cc:374] Version: 150.0.7863.0, opt, ARM_64, command line: /Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake --enable-logging --vmodule=*/components/update_client/*=2,*/chrome/enterprise_companion/*=2,*/chrome/updater/*=2
+[27093:1692890:0626/234141.265237:VERBOSE1:chrome/updater/updater.cc:377] OS version: 26.4.1, arch: arm64, System uptime (seconds): 146629, parent pid: 27090
+[27093:1692890:0626/234141.267301:VERBOSE1:chrome/updater/updater.cc:382] Available disk space in install directory (/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater): 3535081472B (3.292GiB) / 245107195904B (228.274GiB)
+[27093:1692890:0626/234141.267333:VERBOSE1:chrome/updater/updater.cc:386] Available disk space in temporary directory (/var/folders/y7/29b8wrz50_771qk7dn9phblc0000gn/T/): 3535081472B (3.292GiB) / 245107195904B (228.274GiB)
+[27093:1692890:0626/234141.267393:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS START event to the history log
+[27095:1692894:0626/234141.274730:VERBOSE1:chrome/updater/updater.cc:374] Version: 150.0.7863.0, opt, ARM_64, command line: /Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --crash-handler --database=/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/Crashpad --url=https://clients2.google.com/cr/report --annotation=prod=Update4 --annotation=ver=150.0.7863.0 --handshake-fd=6 --enable-logging --vmodule=*/components/update_client/*=2,*/chrome/enterprise_companion/*=2,*/chrome/updater/*=2
+[27095:1692894:0626/234141.274886:VERBOSE1:chrome/updater/updater.cc:377] OS version: 26.4.1, arch: arm64, System uptime (seconds): 146629, parent pid: 1
+[27095:1692894:0626/234141.276839:VERBOSE1:chrome/updater/updater.cc:382] Available disk space in install directory (/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater): 3535065088B (3.292GiB) / 245107195904B (228.274GiB)
+[27095:1692894:0626/234141.276853:VERBOSE1:chrome/updater/updater.cc:386] Available disk space in temporary directory (/var/folders/y7/29b8wrz50_771qk7dn9phblc0000gn/T/): 3535065088B (3.292GiB) / 245107195904B (228.274GiB)
+[27095:1692894:0626/234141.276927:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS START event to the history log
+[27093:1692890:0626/234141.277357:VERBOSE1:chrome/updater/crash_reporter.cc:124] Crash handler launched and ready.
+[27093:1692890:0626/234141.278026:VERBOSE1:chrome/updater/crash_client.cc:108] Found 0 completed crash reports
+[27093:1692890:0626/234141.278101:VERBOSE1:chrome/updater/crash_client.cc:132] Found 0 pending crash reports
+[27093:1692890:0626/234141.278156:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /Users/yuyaaketa/Library/Application Support/Google/RLZ/Crashpad/settings.dat: No such file or directory (2)
+[27093:1692890:0626/234141.278192:VERBOSE1:chrome/updater/updater.cc:105] Crash reporting initialized.
+[27093:1692890:0626/234141.278396:VERBOSE1:chrome/updater/ipc/update_service_internal_proxy_mojo.cc:61] Run
+[27093:1692890:0626/234159.690018:VERBOSE1:chrome/updater/app/app.cc:52] Shutdown: 0
+[27093:1692890:0626/234159.690883:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS END event to the history log
+[27093:1692890:0626/234159.690944:VERBOSE1:chrome/updater/updater.cc:419] UpdaterMain (--wake) returned 0.
+[27090:1692886:0626/234159.922637:VERBOSE1:chrome/updater/app/app_wakeall.cc:68] `/Users/yuyaaketa/Library/Application Support/Google/GoogleUpdater/150.0.7863.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake` exited 0
+[27090:1692874:0626/234159.922923:VERBOSE1:chrome/updater/app/app.cc:52] Shutdown: 0
+[27090:1692874:0626/234159.923503:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS END event to the history log
+[27090:1692874:0626/234159.923607:VERBOSE1:chrome/updater/updater.cc:419] UpdaterMain (--wake-all) returned 0.
+[27095:1692894:0626/234209.695920:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS END event to the history log
+[27095:1692894:0626/234209.695945:VERBOSE1:chrome/updater/updater.cc:419] UpdaterMain (--crash-handler) returned 0.
+[27092:1692878:0626/234209.697100:VERBOSE2:chrome/updater/event_history.cc:265] Emitted a UPDATER_PROCESS END event to the history log
+[27092:1692878:0626/234209.697124:VERBOSE1:chrome/updater/updater.cc:419] UpdaterMain (--crash-handler) returned 0.

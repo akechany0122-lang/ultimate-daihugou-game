@@ -1,0 +1,152 @@
+              {/* Stage 2: 1人プレイ / みんなでプレイ のモード選択カード (横並び) */}
+              {titleStage === 2 && (
+                <>
+                  <div className="mode-select-container">
+                    {/* 1人でプレイ */}
+                    <div className="mode-card" onClick={startDealAnimation}>
+                      <div className="mode-card-icon">
+                        <svg viewBox="0 0 100 100" width="100%" height="100%">
+                          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255, 215, 0, 0.15)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 215, 0, 0.08)" strokeWidth="1"/>
+                          <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon1)" opacity="0.85"/>
+                          <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon1)" opacity="0.85"/>
+                          <g transform="rotate(-15 42 53)">
+                            <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                            <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" strokeWidth="1"/>
+                          </g>
+                          <g>
+                            <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                            <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
+                          </g>
+                          <g transform="rotate(15 58 53)">
+                            <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                            <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
+                          </g>
+                          <defs>
+                            <linearGradient id="goldGradientIcon1" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#fff1b8"/>
+                              <stop offset="20%" stopColor="#ffe07a"/>
+                              <stop offset="45%" stopColor="#d4af37"/>
+                              <stop offset="60%" stopColor="#aa7c11"/>
+                              <stop offset="80%" stopColor="#ffd257"/>
+                              <stop offset="100%" stopColor="#634505"/>
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      </div>
+                      <div className="mode-card-text-container">
+                        <div className="mode-card-title">1人でプレイ</div>
+                        <div className="mode-card-desc">AIと対戦するソロモード。ルールを覚えたり練習するのに最適です。</div>
+                      </div>
+                    </div>
+
+                    {/* みんなでプレイ */}
+                    <div className="mode-card" onClick={() => setMultiplayerMode('connecting')}>
+                      <div className="mode-card-icon">
+                        <svg viewBox="0 0 100 100" width="100%" height="100%">
+                          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255, 215, 0, 0.15)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 215, 0, 0.08)" strokeWidth="1"/>
+                          
+                          {/* 4つの「1人プレイと同じシルエット＆カード」を完全に中心（50,50）に対称配置 */}
+                          {/* 左上 */}
+                          <g transform="translate(16, 16) scale(0.4)">
+                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <g transform="rotate(-15 42 53)">
+                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g>
+                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g transform="rotate(15 58 53)">
+                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                          </g>
+
+                          {/* 右上 */}
+                          <g transform="translate(44, 16) scale(0.4)">
+                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <g transform="rotate(-15 42 53)">
+                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g>
+                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g transform="rotate(15 58 53)">
+                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                          </g>
+
+                          {/* 左下 */}
+                          <g transform="translate(16, 44) scale(0.4)">
+                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <g transform="rotate(-15 42 53)">
+                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g>
+                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g transform="rotate(15 58 53)">
+                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                          </g>
+
+                          {/* 右下 */}
+                          <g transform="translate(44, 44) scale(0.4)">
+                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
+                            <g transform="rotate(-15 42 53)">
+                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g>
+                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                            <g transform="rotate(15 58 53)">
+                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
+                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
+                            </g>
+                          </g>
+
+                          <defs>
+                            <linearGradient id="goldGradientIcon2" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#fff1b8"/>
+                              <stop offset="20%" stopColor="#ffe07a"/>
+                              <stop offset="45%" stopColor="#d4af37"/>
+                              <stop offset="60%" stopColor="#aa7c11"/>
+                              <stop offset="80%" stopColor="#ffd257"/>
+                              <stop offset="100%" stopColor="#634505"/>
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      </div>
+                      <div className="mode-card-text-container">
+                        <div className="mode-card-title">みんなでプレイ</div>
+                        <div className="mode-card-desc">他プレイヤーと対戦するマルチプレイ。部屋作成やレート戦が可能です。</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 補助ボタン */}
+                  <div className="mode-aux-buttons">
+                    <button className="btn-start-game btn-aux mystic-btn" onClick={() => setShowExplanation(true)}>
+                      <span className="mystic-btn-text">カード説明</span>
+                    </button>
+                    <button className="btn-start-game btn-aux mystic-btn" onClick={() => setTitleStage(1)}>
+                      <span className="mystic-btn-text">タイトルへ戻る</span>
+                    </button>
+                  </div>
+                </>
+              )}

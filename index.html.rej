@@ -1,0 +1,467 @@
+diff a/index.html b/index.html	(rejected hunks)
+@@ -3740,13 +4189,464 @@
+         margin-top: 5px !important;
+       }
+     }
++
++    /* --- タイトル画面 新UI スタイル --- */
++    .title-main-group {
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      z-index: 30;
++      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .title-main-group.stage-1 {
++      transform: translateY(-20px); /* ロゴを少し上部に移動した状態 */
++    }
++    .title-main-group.stage-2 {
++      transform: translateY(-185px) scale(0.58); /* タッチ後：小さくしてさらに上部に移動 */
++    }
++
++    .touch-start-container {
++      background: transparent;
++      border: none;
++      backdrop-filter: none;
++      -webkit-backdrop-filter: none;
++      box-shadow: none;
++      padding: 10px 40px;
++      cursor: pointer;
++      z-index: 1002;
++      transition: all 0.3s ease;
++      text-align: center;
++      margin-top: 15px; /* ロゴの下部に配置 */
++      user-select: none;
++      animation: touch-pulse 2s infinite ease-in-out;
++    }
++    .touch-start-container:hover {
++      filter: brightness(1.25);
++    }
++    .touch-start-text {
++      font-family: var(--font-casino);
++      font-size: 2.2rem;
++      font-weight: 900;
++      /* 高級メタリックゴールドのグラデーションテクスチャ */
++      background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++      -webkit-background-clip: text;
++      -webkit-text-fill-color: transparent;
++      /* ドロップシャドウを複数重ねて立体感と高級感を出す */
++      filter: 
++        drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++        drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
++      letter-spacing: 8px;
++      display: inline-block;
++    }
++    @keyframes touch-pulse {
++      0%, 100% { 
++        opacity: 0.75; 
++        transform: scale(0.97); 
++      }
++      50% { 
++        opacity: 1; 
++        transform: scale(1.03);
++      }
++    }
++
++    /* モード選択画面 (Stage 2) */
++    .mode-select-container {
++      display: flex;
++      gap: 30px;
++      justify-content: center;
++      align-items: center;
++      z-index: 1002;
++      position: absolute;
++      bottom: 12%;
++      left: 50%;
++      transform: translateX(-50%);
++      width: 90%;
++      max-width: 780px;
++      box-sizing: border-box;
++    }
++    .mode-card {
++      flex: 1;
++      background: linear-gradient(135deg, #18181a 0%, #08080a 100%);
++      border: 3px solid #2a2218;
++      border-radius: 16px;
++      padding: 30px 20px;
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      justify-content: center;
++      cursor: pointer;
++      position: relative;
++      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++      box-shadow: 
++        inset 0 0 20px rgba(0, 0, 0, 0.95),
++        inset 0 2px 5px rgba(255, 255, 255, 0.04),
++        0 10px 25px rgba(0, 0, 0, 0.85);
++      min-height: 270px;
++      text-decoration: none;
++      box-sizing: border-box;
++      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
++    }
++    .mode-card::before {
++      content: '';
++      position: absolute;
++      top: 3px; left: 3px; right: 3px; bottom: 3px;
++      border-radius: 12px;
++      border: 1.5px solid rgba(255, 215, 0, 0.08);
++      pointer-events: none;
++      transition: all 0.4s;
++    }
++    .mode-card:hover {
++      transform: translateY(-8px);
++      border-color: #ffd700;
++      box-shadow: 
++        0 0 35px rgba(255, 215, 0, 0.45),
++        inset 0 0 25px rgba(255, 215, 0, 0.2),
++        0 15px 35px rgba(0, 0, 0, 0.9);
++      filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.65));
++    }
++    .mode-card:hover::before {
++      border-color: rgba(255, 215, 0, 0.25);
++    }
++    .mode-card-icon {
++      width: 120px;
++      height: 120px;
++      margin-bottom: 18px;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .mode-card:hover .mode-card-icon {
++      transform: scale(1.12);
++    }
++    .mode-card-title {
++      font-family: var(--font-casino);
++      font-size: 1.45rem;
++      font-weight: bold;
++      color: #ffd700;
++      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 215, 0, 0.4);
++      letter-spacing: 2px;
++      text-align: center;
++    }
++    .mode-card-desc {
++      font-size: 0.85rem;
++      color: #ffe57f; /* 説明文も金色ベースに統一 */
++      margin-top: 8px;
++      text-align: center;
++      line-height: 1.4;
++      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
++      max-width: 220px;
++    }
++    
++    /* 補助ボタンエリア */
++    .mode-aux-buttons {
++      position: absolute;
++      bottom: 2.5%;
++      left: 50%;
++      transform: translateX(-50%);
++      display: flex;
++      gap: 25px;
++      z-index: 1002;
++    }
++    .btn-aux {
++      min-width: 140px;
++    }
++
++    /* モバイルレスポンシブ */
++    @media (max-width: 768px) {
++      .title-main-group.stage-1 {
++        transform: translateY(-10px);
++      }
++      .title-main-group.stage-2 {
++        transform: translateY(-115px) scale(0.52);
++      }
++      .touch-start-container {
++        padding: 10px 30px;
++        margin-top: 10px;
++      }
++      .touch-start-text {
++        font-size: 1.5rem;
++        letter-spacing: 5px;
++        background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++        -webkit-background-clip: text;
++        -webkit-text-fill-color: transparent;
++        filter: 
++          drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++          drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
++        display: inline-block;
++      }
++      .mode-select-container {
++        flex-direction: column;
++        gap: 15px;
++        bottom: 11%;
++        max-height: 70vh;
++        overflow-y: auto;
++        padding: 10px;
++      }
++      .mode-card {
++        min-height: 140px;
++        padding: 15px;
++        width: 100%;
++        flex-direction: row;
++        gap: 20px;
++        justify-content: flex-start;
++      }
++      .mode-card-icon {
++        width: 70px;
++        height: 70px;
++        margin-bottom: 0;
++      }
++      .mode-card-title {
++        font-size: 1.2rem;
++        text-align: left;
++      }
++      .mode-card-desc {
++        text-align: left;
++        margin-top: 4px;
++        font-size: 0.75rem;
++      }
++      .mode-card-text-container {
++        display: flex;
++        flex-direction: column;
++        justify-content: center;
++      }
++      .mode-aux-buttons {
++        bottom: 1.5%;
++        gap: 12px;
++        width: 90%;
++        justify-content: center;
++      }
++      .btn-aux {
++        min-width: 110px;
++        font-size: 0.8rem;
++        padding: 8px 16px;
++      }
++    }
++
++    /* --- アバター肖像画スタイル --- */
++    .player-avatar-icon {
++      position: absolute;
++      width: 80px;
++      height: 80px;
++      border-radius: 50%;
++      border: 4px solid #1a1a1c; /* 重厚なダークメタル外枠 */
++      outline: 1.5px solid #3a3a3d; /* インナーメタルフレーム */
++      outline-offset: -1px;
++      /* 周囲に黄色のふんわりした枠（グロウ）を追加 */
++      box-shadow: 0 0 18px rgba(255, 215, 0, 0.6), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
++      background-size: cover;
++      background-position: center;
++      z-index: 550;
++      background-color: #111;
++    }
++
++    /* --- ターン表示パネル (Turn Info Plaque) --- */
++    .turn-info-plaque {
++      position: absolute;
++      top: 30px;
++      left: 40px;
++      z-index: 200;
++      padding: 14px 24px;
++      /* 磨かれた黒曜石の質感 */
++      background: linear-gradient(135deg, #1c1c1e 0%, #0f0f10 50%, #070708 100%);
++      border: 4px solid #141416; /* 重厚なダークメタル外枠 */
++      outline: 1px solid #333; /* インナーフレーム */
++      outline-offset: -3px;
++      border-radius: 4px;
++      box-shadow: 
++        0 0 20px rgba(255, 215, 0, 0.55), /* 黄色のふんわりした枠 */
++        0 15px 30px rgba(0, 0, 0, 0.85),
++        inset 0 3px 4px rgba(255, 255, 255, 0.1),
++        inset 0 -4px 8px rgba(0, 0, 0, 0.9),
++        inset 0 0 15px rgba(0, 0, 0, 0.85);
++      font-family: 'Cinzel', 'Shippori Mincho', serif;
++      color: #fcc672; /* アンティークアンバー */
++      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
++      /* 風化したプレートのエッジ */
++      clip-path: polygon(
++        0% 3px, 5px 0%, 95% 0%, 100% 3px, 
++        99% 30%, 100% 60%, 99% 97%, 96% 100%, 
++        4% 99%, 0% 96%, 1% 40%
++      );
++      transform-origin: top left;
++      transition: transform 0.3s;
++      white-space: nowrap;
++    }
++
++    /* ルーン文字の透かし効果 */
++    .turn-info-plaque::before {
++      content: '';
++      position: absolute;
++      top: 0; left: 0; right: 0; bottom: 0;
++      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><text x="10" y="26" fill="rgba(255,159,28,0.06)" font-family="Cinzel" font-size="9" letter-spacing="4">᚛᚛ᛟ᚜᚜</text></svg>') no-repeat center center;
++      background-size: cover;
++      pointer-events: none;
++    }
++
++    .turn-row {
++      font-size: 1.1rem;
++      font-weight: 700;
++      letter-spacing: 1px;
++      display: flex;
++      align-items: center;
++      gap: 10px;
++    }
++
++    .turn-player {
++      font-weight: 800;
++      color: #ebd3ad;
++    }
++
++    /* 自分のターンの時のアンバーゴールドの輝き */
++    .turn-player.active-you {
++      color: #ffe082 !important;
++      text-shadow: 
++        0 0 10px #ffb300, 
++        0 0 20px #ffb300, 
++        0 0 35px rgba(255, 179, 0, 0.5),
++        1px 1px 2px rgba(0, 0, 0, 0.9) !important;
++      font-weight: 900;
++    }
++
++    /* --- 神秘的な魔法ボタン (Mystic Magical Button) --- */
++    .mystic-btn {
++      position: relative;
++      /* 磨かれた黒曜石に斜めのガラス/宝石光沢を合成 */
++      background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.03) 49%, transparent 50%, transparent 100%), linear-gradient(135deg, #2b2b2e 0%, #17171a 45%, #0e0e10 50%, #080809 100%) !important;
++      border: 4px solid #1a1a1c !important; /* 重厚なダークメタル外枠 */
++      outline: 1px solid #3a3a3d; /* インナーメタルフレーム */
++      outline-offset: -3px;
++      /* 宝石カット（八角形形状） */
++      clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
++      /* 黄色のふんわりした枠と影（clip-path制限を回避するためfilterで描画） */
++      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.65)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9)) !important;
++      color: #e09f3e !important; /* 琥珀ゴールド */
++      font-family: 'Shippori Mincho', 'Cinzel', serif !important;
++      font-weight: 800 !important;
++      /* 彫り込み文字とアンバーグロー効果 */
++      text-shadow: 
++        -1px -1px 1px rgba(0, 0, 0, 0.8),
++        1px 1px 1px rgba(255, 255, 255, 0.1),
++        0 0 8px #ff9f1c, 
++        0 0 18px rgba(255, 159, 28, 0.6) !important;
++      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
++      overflow: hidden;
++      cursor: pointer;
++      display: inline-flex;
++      justify-content: center;
++      align-items: center;
++      box-sizing: border-box;
++    }
++
++    /* ボタン表面のルーン文字彫刻効果 */
++    .mystic-btn::before {
++      content: '';
++      position: absolute;
++      top: 0; left: 0; right: 0; bottom: 0;
++      /* 琥珀ゴールドの文字 */
++      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50"><text x="12" y="32" fill="rgba(255, 159, 28, 0.08)" font-family="Cinzel" font-size="11" letter-spacing="7">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇ</text></svg>');
++      background-size: cover;
++      pointer-events: none;
++      mix-blend-mode: screen;
++      transition: opacity 0.3s;
++      z-index: 1;
++    }
++
++    /* 埋め込まれた宝石 (左側) */
++    .mystic-btn::after {
++      content: '';
++      position: absolute;
++      left: 12px;
++      top: 50%;
++      transform: translateY(-50%);
++      width: 8px;
++      height: 8px;
++      /* アンバー琥珀の宝石 */
++      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
++      border-radius: 50%;
++      box-shadow: 
++        0 0 8px #ffb300,
++        0 0 2px #000;
++      transition: all 0.3s;
++      z-index: 2;
++    }
++
++    /* ボタン内のテキスト領域と右側の宝石 */
++    .mystic-btn-text {
++      position: relative;
++      z-index: 2;
++      padding: 0 15px; /* 左右に宝石用のパディングを確保 */
++      letter-spacing: 4px;
++    }
++    
++    .mystic-btn-text::after {
++      content: '';
++      position: absolute;
++      right: -15px;
++      top: 50%;
++      transform: translateY(-50%);
++      width: 8px;
++      height: 8px;
++      /* アンバー琥珀の宝石 */
++      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
++      border-radius: 50%;
++      box-shadow: 
++        0 0 8px #ffb300,
++        0 0 2px #000;
++      transition: all 0.3s;
++    }
++
++    /* アクティブな輝き（利用可能時） */
++    .mystic-btn:not(:disabled) {
++      border-color: #1a1a1c !important;
++      box-shadow: 
++        inset 0 2px 3px rgba(255, 255, 255, 0.15),
++        inset 0 -3px 6px rgba(0, 0, 0, 0.8),
++        inset 0 0 10px rgba(0, 0, 0, 0.9) !important;
++      filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.75)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9)) !important;
++    }
++
++    /* 自分のターンなどアクティブ時のオーラ（パルス効果） */
++    .mystic-btn-active-glow:not(:disabled) {
++      animation: pass-aura-glow 2s infinite alternate;
++    }
++
++    .mystic-btn:not(:disabled):hover {
++      filter: brightness(1.2) drop-shadow(0 0 18px rgba(255, 215, 0, 0.95)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9)) !important;
++      transform: translateY(-1px) !important;
++    }
++
++    .mystic-btn:not(:disabled):active {
++      transform: translateY(1px) !important;
++      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) !important;
++      box-shadow: 
++        inset 0 2px 5px rgba(0, 0, 0, 0.9),
++        inset 0 0 15px rgba(0, 0, 0, 0.9) !important;
++    }
++
++    @keyframes pass-aura-glow {
++      0% {
++        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.55)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
++        border-color: #1a1a1c;
++      }
++      100% {
++        filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.85)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
++        border-color: #3a3a3d;
++      }
++    }
+   </style>
+   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
++  <script src="https://unpkg.com/@babel/standalone@7.12.12/babel.min.js" crossorigin></script>
+ </head>
+ 
+ <body>
++  <script>
++    window.onerror = function(message, source, lineno, colno, error) {
++      alert("Runtime Error:\n" + message + "\nLine: " + lineno + "\nSource: " + source + "\nStack: " + (error ? error.stack : "N/A"));
++      return false;
++    };
++  </script>
+   <div id="root"></div>
+ 
+   <script type="text/babel">

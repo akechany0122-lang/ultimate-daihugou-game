@@ -1,0 +1,2195 @@
+diff --git a/index.html b/index.html
+index bc83e7f..1d5ccb5 100644
+--- a/index.html
++++ b/index.html
+@@ -102,76 +102,85 @@
+       }
+     }
+ 
+-    /* 9リバース: 点線円全体が回転するインジケーター */
++    /* 9リバース: 複雑で発光する同心円状のルーン魔法陣インジケーター */
+     .bg-reverse-indicator {
+       position: absolute;
+       top: 50%;
+       left: 50%;
+       width: 38vh;
+       height: 38vh;
+-      border: 3px dashed rgba(255, 255, 255, 0.18);
+-      border-radius: 50%;
+-      transform-origin: center;
++      transform: translate(-50%, -50%);
++      transform-origin: center center;
+       pointer-events: none;
+       z-index: 0;
+-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.03);
+       background: transparent;
+     }
+ 
+-    .bg-reverse-indicator.spin-clockwise {
+-      animation: spin-clockwise-indicator 10s linear infinite;
++    /* レイヤー1: メインのルーン魔法陣 (本体) */
++    .bg-reverse-indicator::before {
++      content: '';
++      position: absolute;
++      top: 0;
++      left: 0;
++      width: 100%;
++      height: 100%;
++      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g stroke="rgba(215,175,115,0.45)" fill="none" stroke-width="1.2" filter="url(%23glow)"><circle cx="250" cy="250" r="240" stroke-width="1.8"/><circle cx="250" cy="250" r="232" stroke-width="1"/><circle cx="250" cy="250" r="192" stroke-width="1.2"/><circle cx="250" cy="250" r="184" stroke-width="1.5"/><circle cx="250" cy="250" r="140" stroke-width="1"/><circle cx="250" cy="250" r="75" stroke-width="1.2"/><circle cx="250" cy="250" r="35" stroke-dasharray="2,2"/><polygon points="250,66 409.3,342 90.7,342" stroke-width="1.2"/><polygon points="250,434 409.3,158 90.7,158" stroke-width="1.2"/><line x1="250" y1="15" x2="250" y2="485" stroke-width="0.6" stroke-dasharray="20,10"/><line x1="15" y1="250" x2="485" y2="250" stroke-width="0.6" stroke-dasharray="20,10"/><line x1="90.7" y1="158" x2="409.3" y2="342" stroke-width="0.6"/><line x1="90.7" y1="342" x2="409.3" y2="158" stroke-width="0.6"/><path id="runePath" d="M 250, 40 A 210,210 0 1,1 249.9,40" fill="none" stroke="none" /><text font-family="monospace" font-size="20" fill="rgba(215,175,115,0.45)" letter-spacing="6.8" font-weight="bold"><textPath href="%23runePath">ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫</textPath></text></g></svg>');
++      background-size: 100% 100%;
++      opacity: 0.45;
++      transform-origin: center center;
++    }
++
++    /* レイヤー2: モーションブラー・残像粒子トレイル (少しずらして回転) */
++    .bg-reverse-indicator::after {
++      content: '';
++      position: absolute;
++      top: 0;
++      left: 0;
++      width: 100%;
++      height: 100%;
++      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><g stroke="rgba(215,175,115,0.2)" fill="none" stroke-width="1"><circle cx="250" cy="250" r="232" stroke-width="1"/><circle cx="250" cy="250" r="184" stroke-width="1"/><circle cx="250" cy="250" r="140" stroke-width="1"/><polygon points="250,66 409.3,342 90.7,342" stroke-width="0.8"/><polygon points="250,434 409.3,158 90.7,158" stroke-width="0.8"/></g></svg>');
++      background-size: 100% 100%;
++      filter: blur(2px);
++      opacity: 0.22;
++      transform-origin: center center;
++    }
++
++    /* 回転アニメーションの速度指定 (時計回り) */
++    .bg-reverse-indicator.spin-clockwise::before {
++      animation: spin-clockwise-indicator 20s linear infinite;
++    }
++    .bg-reverse-indicator.spin-clockwise::after {
++      animation: spin-clockwise-indicator 20s linear infinite;
++      animation-delay: -0.2s; /* わずかに遅れた残像トレイル効果 */
+     }
+ 
+-    .bg-reverse-indicator.spin-counter-clockwise {
+-      animation: spin-counter-clockwise-indicator 10s linear infinite;
++    /* 回転アニメーションの速度指定 (反時計回り) */
++    .bg-reverse-indicator.spin-counter-clockwise::before {
++      animation: spin-counter-clockwise-indicator 20s linear infinite;
++    }
++    .bg-reverse-indicator.spin-counter-clockwise::after {
++      animation: spin-counter-clockwise-indicator 20s linear infinite;
++      animation-delay: -0.2s; /* わずかに遅れた残像トレイル効果 */
+     }
+ 
+     @keyframes spin-clockwise-indicator {
+       from {
+-        transform: translate(-50%, -50%) rotate(0deg);
++        transform: rotate(0deg);
+       }
+-
+       to {
+-        transform: translate(-50%, -50%) rotate(360deg);
++        transform: rotate(360deg);
+       }
+     }
+ 
+     @keyframes spin-counter-clockwise-indicator {
+       from {
+-        transform: translate(-50%, -50%) rotate(0deg);
++        transform: rotate(0deg);
+       }
+-
+       to {
+-        transform: translate(-50%, -50%) rotate(-360deg);
++        transform: rotate(-360deg);
+       }
+     }
+ 
+-    /* 回転するマーカー点 */
+-    .bg-reverse-indicator::before {
+-      content: '';
+-      position: absolute;
+-      top: -6px;
+-      left: 50%;
+-      width: 10px;
+-      height: 10px;
+-      background: rgba(255, 255, 255, 0.7);
+-      border-radius: 50%;
+-      transform: translateX(-50%);
+-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+-    }
+-
+-    .bg-reverse-indicator::after {
+-      content: '';
+-      position: absolute;
+-      top: 50%;
+-      left: 50%;
+-      width: 6px;
+-      height: 6px;
+-      background: rgba(255, 255, 255, 0.2);
+-      border-radius: 50%;
+-      transform: translate(-50%, -50%);
+-    }
+-
+     .btn-start-game {
+       background: rgba(0, 0, 0, 0.7);
+       color: var(--color-blood);
+@@ -235,7 +244,7 @@
+ 
+     .explanation-header h2 {
+       font-family: 'Cinzel', serif;
+-      color: var(--color-gold);
++      color: #e5c197; /* アンティークゴールド */
+       letter-spacing: 4px;
+       margin-bottom: 10px;
+     }
+@@ -356,15 +365,17 @@
+       }
+ 
+       .player-pos.pos-bottom {
+-        bottom: 160px;
++        bottom: 75px !important;
++        height: 130px !important;
+         transform: translateX(-50%) scale(1.0);
++        z-index: 300 !important;
+       }
+ 
+-      .coffin-container {
++      .altar-container {
+         position: fixed;
+         top: 10px;
+         right: 10px;
+-        transform: scale(0.35);
++        transform: scale(0.5);
+         transform-origin: top right;
+         margin: 0;
+         z-index: 1000;
+@@ -575,7 +586,8 @@
+       gap: 12px;
+       color: #fff;
+       will-change: transform, opacity;
+-      transform-origin: center;
++      transform: translateX(-50%) rotate(180deg);
++      transform-origin: center center;
+     }
+ 
+     @media (max-width: 768px) {
+@@ -646,7 +658,10 @@
+       position: relative;
+       width: 100vw;
+       height: 100vh;
+-      perspective: 1200px;
++      background-image: url('game_bg.png');
++      background-size: cover;
++      background-position: center;
++      background-repeat: no-repeat;
+     }
+ 
+     .player-pos {
+@@ -656,6 +671,8 @@
+       align-items: center;
+       transition: all 0.3s ease;
+       z-index: 50;
++      transform-style: preserve-3d;
++      overflow: visible !important;
+     }
+ 
+     .card-rank {
+@@ -685,35 +702,43 @@
+     }
+ 
+     .pos-top {
+-      top: 15px;
+-      /* 画面上端ギリギリへ移動 */
++      top: 150px;
+       left: 50%;
+-      transform: translateX(-50%);
++      transform: translateX(-50%) rotate(180deg) scale(0.85);
+     }
+ 
+     .pos-left {
+-      left: 24vw;
+-      /* 画面左端からさらに中央へ大きく寄せる */
++      left: 270px;
+       top: 50%;
+-      transform: translateY(-50%) rotate(90deg);
++      transform: translateY(-50%) rotate(90deg) scale(0.85);
+       transform-origin: center;
+     }
+ 
+     .pos-right {
+-      right: 24vw;
+-      /* 画面右端からさらに中央へ大きく寄せる */
++      left: auto;
++      right: 270px;
+       top: 50%;
+-      transform: translateY(-50%) rotate(-90deg);
++      transform: translateY(-50%) rotate(-90deg) scale(0.85);
+       transform-origin: center;
+     }
+ 
++    .pos-top .card,
++    .pos-left .card,
++    .pos-right .card {
++      top: 0;
++    }
++
+     .pos-bottom {
+-      bottom: 35vh;
+-      /* 以前の見やすい位置に復元 */
++      bottom: 90px;
+       left: 50%;
+-      transform: translateX(-50%);
+       width: 100%;
++      height: 180px;
+       transform: translateX(-50%) scale(1.15);
++      z-index: 300 !important;
++    }
++
++    .player-pos.pos-bottom .card {
++      bottom: 0;
+     }
+ 
+     /* --- 現在のターンの禍々しいハイライト --- */
+@@ -764,13 +789,12 @@
+     .action-panel {
+       position: absolute;
+       left: 50%;
+-      bottom: 22vh;
+-      /* 手札位置 (35vh) に連動して、以前の見やすい位置に復元 */
++      bottom: 15px;
+       transform: translateX(-50%);
+       display: flex;
+       flex-direction: row;
+       gap: 20px;
+-      z-index: 200;
++      z-index: 400 !important;
+       align-items: center;
+       justify-content: center;
+       width: auto;
+@@ -803,7 +827,6 @@
+ 
+     .rank-daifugo {
+       color: #f1c40f;
+-      text-shadow: 0 0 10px #f1c40f;
+     }
+ 
+     .rank-daihinmin {
+@@ -996,14 +1019,14 @@
+     /* 交換UI */
+     .exchange-overlay-ui {
+       position: absolute;
+-      top: 50%;
++      top: 40%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       padding: 30px;
+       background: rgba(0, 0, 0, 0.85);
+       border: 2px solid var(--color-gold);
+       border-radius: 8px;
+-      z-index: 4000;
++      z-index: 10000;
+       text-align: center;
+       width: 400px;
+       box-shadow: 0 0 40px rgba(0, 0, 0, 1);
+@@ -1113,7 +1136,18 @@
+       animation: fadeIn 0.3s ease-out;
+     }
+ 
++    /* デスクトップ用退場ボタンの位置調整 (ターン表示UI left:40px, top:30px と揃える) */
++    .btn-exit-to-title {
++      position: absolute;
++      top: 135px;
++      left: 40px;
++      z-index: 10000;
++    }
++
+     @media (max-width: 768px) {
++      .action-panel {
++        bottom: 10px !important;
++      }
+       .field-status-label {
+         font-size: 10px;
+         top: -15px;
+@@ -1127,11 +1161,17 @@
+         width: 85px !important;
+         height: 120px !important;
+         box-shadow: 0 4px 10px rgba(0,0,0,0.8) !important; /* 軽量化 */
++        bottom: 0 !important;
++      }
++      .turn-info-plaque {
++        top: 15px !important;
++        left: 15px !important;
++        padding: 8px 16px !important;
+       }
+       .btn-exit-to-title {
+         position: fixed;
+-        top: 55px; /* テキストの下に配置 */
+-        left: 10px;
++        top: 75px !important; /* モバイル版位置調整 */
++        left: 15px !important; /* ターン表示左端と揃える */
+         z-index: 10000;
+         background: rgba(60, 0, 0, 0.9);
+         color: #fff;
+@@ -2251,7 +2291,9 @@
+       filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+     }
+ 
+-
++    /* 左右のプレイヤー名の重なりを防ぐため、画面上での垂直位置（コンテナのleftプロパティ）をずらす */
++    .pos-left .player-status { top: -20px !important; left: calc(50% - 45px) !important; transform: translateX(-50%) rotate(-90deg) !important; }
++    .pos-right .player-status { top: -20px !important; left: calc(50% + 45px) !important; transform: translateX(-50%) rotate(90deg) !important; }
+ 
+     /* 能力特有のオーラ (インラインスタイル等で動的に付与できるようCSSは準備しておく) */
+     .aura-shield {
+@@ -2289,6 +2331,10 @@
+       border-color: var(--color-gold);
+     }
+ 
++    .player-area {
++      transform-style: preserve-3d;
++    }
++
+     /* Hover Spread Effect */
+     .player-area:hover .card.selectable {
+       --spread-x: -20px;
+@@ -2300,21 +2346,13 @@
+ 
+     /* CPUの手札（呪われた裏面） */
+     .card.back {
+-      background: #2b0a0a;
+-      border: 2px solid #5a1a1a;
++      background: #3e1212;
++      border: 2px solid var(--color-gold);
+       color: #777;
+-      box-shadow: inset 0 0 15px #000, 0 5px 15px rgba(0, 0, 0, 0.8);
++      box-shadow: inset 0 0 15px #000, 0 0 12px rgba(184, 134, 11, 0.7), 0 5px 15px rgba(0, 0, 0, 0.9);
+     }
+ 
+-    .card.back::after {
+-      /* Skull and Scythes SVG via content */
+-      content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="50" height="50"><path fill="%23333" d="M50,15 C35,15 25,30 25,45 C25,55 30,65 35,70 L35,85 L65,85 L65,70 C70,65 75,55 75,45 C75,30 65,15 50,15 Z M40,45 A5,5 0 1,1 40,55 A5,5 0 1,1 40,45 M60,45 A5,5 0 1,1 60,55 A5,5 0 1,1 60,45 M50,65 L45,75 L55,75 Z"/><line x1="10" y1="90" x2="90" y2="10" stroke="%23333" stroke-width="4"/><line x1="90" y1="90" x2="10" y2="10" stroke="%23333" stroke-width="4"/></svg>');
+-      position: absolute;
+-      top: 50%;
+-      left: 50%;
+-      transform: translate(-50%, -50%);
+-      opacity: 0.8;
+-    }
++
+ 
+     .hand-container {
+       position: relative;
+@@ -2333,15 +2371,13 @@
+       transform: translate(-50%, -50%);
+       width: 480px;
+       height: 380px;
+-      /* ブラックホール演出を削除し、赤いサークルの縁のみに簡略化 */
+       border-radius: 50%;
+-      border: 3px solid rgba(138, 3, 3, 0.6);
+-      box-shadow: 0 0 20px rgba(138, 3, 3, 0.4);
++      border: none;
++      box-shadow: none;
+       display: flex;
+       justify-content: center;
+       align-items: center;
+-      z-index: 10;
+-      animation: altar-pulse 6s infinite alternate;
++      z-index: 150;
+       background: transparent;
+     }
+ 
+@@ -2357,10 +2393,16 @@
+       }
+     }
+ 
++    .player-area {
++      overflow: visible !important;
++    }
++
+     .table-cards-container {
+       position: relative;
+       width: 100%;
+       height: 100%;
++      transform-style: preserve-3d;
++      transform-style: preserve-3d;
+     }
+ 
+     /* 打撃着地アニメーション (Slam shockwave) */
+@@ -2375,6 +2417,107 @@
+       filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.9));
+       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+       z-index: 10;
++    }    /* --- 石造りの棺桶墓地 (Stone Coffin Graveyard) --- */
++    .altar-container.coffin-container {
++      position: absolute;
++      top: 40px;
++      right: 235px;
++      width: 120px;
++      height: 120px;
++      z-index: 200;
++      cursor: pointer;
++      border: none;
++      border-radius: 50%;
++      background: rgba(0, 0, 0, 0.15); /* ルーン円の内側が少し暗くなる */
++      box-shadow: 
++        inset 0 0 15px rgba(0, 0, 0, 0.8),
++        0 0 8px rgba(215, 175, 115, 0.12); /* ほのかな発光の漏れ出し */
++      overflow: visible;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++    }
++
++    /* 右上：独立して発光するルーンサークル魔法陣 */
++    .altar-container.coffin-container::before {
++      content: '';
++      position: absolute;
++      top: -10px;
++      left: -10px;
++      right: -10px;
++      bottom: -10px;
++      border: none !important;
++      pointer-events: none;
++      z-index: 1; /* カードの下、背景の上 */
++      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><filter id="glow-coffin" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs><g stroke="rgba(215, 175, 115, 0.5)" fill="none" stroke-width="1.2" filter="url(%23glow-coffin)"><circle cx="100" cy="100" r="95" stroke-width="1.5"/><circle cx="100" cy="100" r="90" stroke-width="1"/><circle cx="100" cy="100" r="76" stroke-width="1.2"/><circle cx="100" cy="100" r="72" stroke-width="1.5"/><circle cx="100" cy="100" r="56" stroke-width="1"/><circle cx="100" cy="100" r="30" stroke-width="1.2"/><polygon points="100,28 162.4,136 37.6,136" stroke-width="1"/><polygon points="100,172 162.4,64 37.6,64" stroke-width="1"/><line x1="100" y1="28" x2="100" y2="172" stroke-width="0.5"/><line x1="37.6" y1="64" x2="162.4" y2="136" stroke-width="0.5"/><line x1="37.6" y1="136" x2="162.4" y2="64" stroke-width="0.5"/><path id="coffinRunePath" d="M 100, 18 A 82,82 0 1,1 99.9,18" fill="none" stroke="none" /><text font-family="monospace" font-size="10" fill="rgba(215, 175, 115, 0.5)" font-weight="bold"><textPath href="%23coffinRunePath" textLength="515" lengthAdjust="spacing">ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫ᚠᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ᛫</textPath></text></g></svg>');
++      background-size: 100% 100%;
++      opacity: 0.55;
++    }
++
++    /* 内部の不気味な焦げ痕と魔力明滅 */
++    .coffin-glow {
++      position: absolute;
++      width: 80px;
++      height: 120px;
++      background: radial-gradient(circle, rgba(0, 0, 0, 0.5) 0%, transparent 80%);
++      border-radius: 50%;
++      pointer-events: none;
++    }
++
++    /* 墓地内のカードプレビュー (薄暗く見える裏面) */
++    .coffin-card-stack-preview {
++      position: absolute;
++      width: 100%;
++      height: 100%;
++      pointer-events: none;
++      opacity: 0.85;
++      z-index: 10;
++    }
++
++    .coffin-buried-card {
++      position: absolute !important;
++      left: 50% !important;
++      top: 50% !important;
++      width: 75px !important;
++      height: 105px !important;
++      margin: 0 !important;
++      padding: 0 !important;
++      border-radius: 4px !important;
++      pointer-events: none;
++      background: #3e1212 !important; /* カード裏面の赤黒 */
++      border: 1.5px solid rgba(184, 134, 11, 0.45) !important;
++      box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.9) !important;
++      transform-origin: center center !important;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++    }
++
++    @keyframes altar-glow-pulse {
++      0% {
++        opacity: 0.4;
++        transform: scale(0.9);
++      }
++      100% {
++        opacity: 0.8;
++        transform: scale(1.1);
++      }
++    }
++
++    .altar-count {
++      position: absolute;
++      bottom: -35px;
++      left: 50%;
++      transform: translateX(-50%);
++      font-family: 'Cinzel', serif;
++      font-size: 14px;
++      color: #ebd3ad;
++      letter-spacing: 2px;
++      text-shadow: 
++        0 2px 4px rgba(0, 0, 0, 0.9),
++        0 0 8px rgba(210, 90, 50, 0.6);
++      white-space: nowrap;
++      z-index: 15;
+     }
+ 
+     .card.slammed::after {
+@@ -2438,89 +2581,79 @@
+       }
+     }
+ 
+-    /* --- 棺桶型墓地 (Coffin Graveyard) --- */
+-    .coffin-container {
++    /* --- 石造りの祭壇 (Stone Altar Graveyard) --- */
++    .altar-container {
+       position: absolute;
+       top: 40px;
+       right: 40px;
+-      width: 100px;
+-      height: 160px;
++      width: 120px;
++      height: 80px;
+       z-index: 200;
+       perspective: 800px;
++      transform-style: preserve-3d;
++      transform: rotateX(55deg); /* 背景のパースに合わせる */
+       cursor: pointer;
++      transform-style: preserve-3d;
++      /* 背景のテーブルの傾き 50deg に沿わせ、右上端に置くためのパース・角度調整 */
++      transform: rotateX(55deg) rotateZ(-15deg);
++      transition: all 0.3s ease;
+     }
+ 
+-    /* 棺桶の本体 (箱部) */
+-    .coffin-body {
++    .altar-base {
+       position: absolute;
+       width: 100%;
+       height: 100%;
+-      background: #1a0f0a;
+-      border: 3px solid #3d2b1f;
+-      box-shadow:
+-        0 10px 30px rgba(0, 0, 0, 0.8),
+-        inset 0 0 20px rgba(0, 0, 0, 0.9);
+-      clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
++      background: radial-gradient(ellipse at center, #2e2e2e 0%, #121212 100%);
++      border: 3px solid #4a4a4a;
++      border-radius: 6px;
++      box-shadow: 
++        0 6px 12px rgba(0, 0, 0, 0.85),
++        inset 0 0 10px rgba(0, 0, 0, 0.95),
++        0 0 15px rgba(0, 243, 255, 0.15);
+       display: flex;
+       justify-content: center;
+       align-items: center;
+-      transform-style: preserve-3d;
+       transition: all 0.3s;
+     }
+ 
+-    /* 棺桶の蓋 */
+-    .coffin-lid {
++    .altar-glow {
+       position: absolute;
+-      width: 100%;
+-      height: 100%;
+-      background: linear-gradient(135deg, #2c1a12 0%, #0a0604 100%);
+-      border: 3px solid #5a3e2b;
+-      clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%);
+-      z-index: 2;
+-      transform-origin: left center;
+-      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+-      display: flex;
+-      justify-content: center;
+-      align-items: center;
+-      box-shadow:
+-        inset 0 0 15px rgba(255, 255, 255, 0.05),
+-        2px 0 10px rgba(0, 0, 0, 0.5);
++      width: 70%;
++      height: 70%;
++      background: radial-gradient(circle, rgba(0, 243, 255, 0.25) 0%, transparent 70%);
++      border-radius: 50%;
++      transition: all 0.5s ease;
+     }
+ 
+-    /* 十字架の装飾 */
+-    .coffin-lid::after {
+-      content: '†';
+-      font-size: 50px;
+-      color: var(--color-gold);
+-      opacity: 0.6;
+-      text-shadow: 0 0 10px #000;
++    .altar-container.active .altar-glow {
++      background: radial-gradient(circle, rgba(0, 243, 255, 0.7) 0%, transparent 80%);
++      animation: altar-glow-pulse 1s infinite alternate;
+     }
+ 
+-    /* 蓋が開いた状態 */
+-    .coffin-container.open .coffin-lid {
+-      transform: rotateY(-110deg);
++    @keyframes altar-glow-pulse {
++      0% {
++        transform: scale(0.95);
++        opacity: 0.8;
++        box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
++      }
++      100% {
++        transform: scale(1.05);
++        opacity: 1;
++        box-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
++      }
+     }
+ 
+-    .coffin-count {
++    .altar-count {
+       position: absolute;
+-      bottom: -25px;
++      bottom: -22px;
+       left: 50%;
+       transform: translateX(-50%);
+       font-family: 'Cinzel', serif;
+-      font-size: 14px;
++      font-size: 13px;
+       color: var(--color-gold);
+       letter-spacing: 2px;
+-      text-shadow: 0 0 5px #000;
+-    }
+-
+-    /* 棺桶の中のカードスタック */
+-    .coffin-inner-cards {
+-      position: absolute;
+-      width: 60px;
+-      height: 90px;
+-      background: #000;
+-      opacity: 0.8;
+-      transform: translateZ(-10px);
++      text-shadow: 0 2px 4px #000;
++      white-space: nowrap;
+     }
+ 
+     /* 蘇生アニメ用（6フェニックス） */
+@@ -2533,13 +2666,13 @@
+ 
+     @keyframes resurrect-path {
+       0% {
+-        transform: translate(calc(100vw - 110px), 80px) scale(0.2) rotate(0deg);
++        transform: translate(var(--altar-x), var(--altar-y)) scale(0.2) rotate(0deg);
+         opacity: 0;
+       }
+ 
+       30% {
+         opacity: 1;
+-        transform: translate(calc(100vw - 110px), 80px) scale(1.2) rotate(20deg);
++        transform: translate(var(--altar-x), var(--altar-y)) scale(1.2) rotate(20deg);
+       }
+ 
+       100% {
+@@ -2564,11 +2697,18 @@
+       }
+ 
+       100% {
+-        transform: translate(calc(100vw - 120px), 80px) rotate(1080deg) scale(0.1);
++        transform: translate(var(--altar-x), var(--altar-y)) rotate(1080deg) scale(0.1);
+         opacity: 0;
+       }
+     }
+-
++    .flying-card-back::after, .deal-card-back::after {
++      content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="50" height="50"><path fill="%23333" d="M50,15 C35,15 25,30 25,45 C25,55 30,65 35,70 L35,85 L65,85 L65,70 C70,65 75,55 75,45 C75,30 65,15 50,15 Z M40,45 A5,5 0 1,1 40,55 A5,5 0 1,1 40,45 M60,45 A5,5 0 1,1 60,55 A5,5 0 1,1 60,45 M50,65 L45,75 L55,75 Z"/><line x1="10" y1="90" x2="90" y2="10" stroke="%23333" stroke-width="4"/><line x1="90" y1="90" x2="10" y2="10" stroke="%23333" stroke-width="4"/></svg>');
++      position: absolute;
++      top: 50%;
++      left: 50%;
++      transform: translate(-50%, -50%);
++      opacity: 0.8;
++    }
+ 
+     /* --- ステータス・UI --- */
+     /* プレイヤー名の配置（YOUは廃止・非表示） */
+@@ -2577,19 +2717,19 @@
+       top: -40px;
+       left: 50%;
+       transform: translateX(-50%);
+-      background: rgba(0, 0, 0, 0.85);
+-      padding: 4px 12px;
+-      border: 1px solid rgba(184, 134, 11, 0.6);
++      background: rgba(15, 10, 5, 0.92);
++      padding: 6px 16px;
++      border: 1px solid #d4af37; /* ゴールド */
+       border-radius: 12px;
+       font-family: 'Cinzel', serif;
+       font-weight: 700;
+-      font-size: 11px;
+-      color: #fff;
++      font-size: 14px;
++      color: #ebd3ad;
+       letter-spacing: 1px;
+       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+       white-space: nowrap;
+       z-index: 100;
+-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
++      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), inset 0 0 6px rgba(212, 175, 55, 0.3);
+       text-transform: uppercase;
+     }
+ 
+@@ -2603,20 +2743,20 @@
+       top: 0;
+       left: 50%;
+       transform: translate(-50%, -50%);
+-      background: rgba(10, 5, 5, 0.95);
+-      border: 1.5px solid var(--color-gold);
++      background: rgba(15, 10, 5, 0.95);
++      border: 1.5px solid #d4af37; /* ゴールド */
+       color: #fff;
+       font-family: 'Cinzel', serif;
+-      font-size: 14px;
++      font-size: 18px;
+       font-weight: bold;
+-      width: 28px;
+-      height: 28px;
++      width: 38px;
++      height: 38px;
+       border-radius: 50%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       z-index: 500;
+-      box-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 5px var(--color-gold);
++      box-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 5px #d4af37;
+     }
+ 
+     .pos-left .hand-count-badge { transform: translate(-50%, -50%) rotate(-90deg); }
+@@ -2631,13 +2771,12 @@
+     /* アクションパネルの位置を下げて手札と被らないように調整 */
+     .action-panel {
+       position: absolute;
+-      bottom: 25px;
+-      /* 少し下げた */
++      bottom: 15px;
+       left: 50%;
+       transform: translateX(-50%);
+       display: flex;
+       gap: 20px;
+-      z-index: 200;
++      z-index: 400 !important;
+     }
+ 
+     /* アクティブ時の拡大を少し控えめにし、中央への侵食を防ぐ */
+@@ -2770,7 +2909,7 @@
+       box-shadow: 0 10px 50px rgba(0, 0, 0, 1), 0 0 20px rgba(184, 134, 11, 0.1);
+       animation: slide-up-centered 0.4s ease-out forwards;
+       position: fixed;
+-      top: 50%;
++      top: 40%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       width: clamp(280px, 40vw, 420px);
+@@ -2810,7 +2949,13 @@
+     .rank-select-btn:hover {
+       background: var(--color-blood);
+       border-color: #fff;
+-      transform: scale(1.1);
++      transform: translateX(-50%) rotate(-90deg) !important;
++    }
++    .pos-right .hand-count-badge {
++      bottom: -145px !important;
++      top: auto !important;
++      left: 50% !important;
++      transform: translate(-50%, 0) rotate(-90deg) !important;
+     }
+ 
+     .btn-confirm {
+@@ -3173,7 +3318,7 @@
+       font-weight: 900;
+       font-family: 'Cinzel', serif;
+       letter-spacing: 2px;
+-      z-index: 1000;
++      z-index: 99999;
+       pointer-events: none;
+       text-align: center;
+       white-space: pre-line;
+@@ -3218,13 +3363,12 @@
+     /* --- アクションボタン --- */
+     .action-panel {
+       position: absolute;
+-      bottom: 6vh;
+-      /* さらに下部にずらす */
++      bottom: 15px;
+       left: 50%;
+       transform: translateX(-50%);
+       display: flex;
+       gap: 20px;
+-      z-index: 200;
++      z-index: 400 !important;
+       animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+     }
+ 
+@@ -3468,12 +3612,244 @@
+         transform: scale(1);
+         opacity: 0.8;
+       }
++      
++      /* モバイルでの位置調整と縮小 */
++      .title-main-group.stage-1 {
++        transform: translateY(-10px);
++      }
++      .title-main-group.stage-2 {
++        transform: translateY(-115px) scale(0.52);
++      }
++      .touch-start-container {
++        padding: 10px 30px;
++        margin-top: 10px;
++      }
++      .touch-start-text {
++        font-size: 1.5rem;
++        letter-spacing: 5px;
++        background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++        -webkit-background-clip: text;
++        -webkit-text-fill-color: transparent;
++        filter: 
++          drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++          drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
++        display: inline-block;
++      }
++      .mode-select-container {
++        flex-direction: column;
++        gap: 15px;
++        bottom: 11%;
++        max-height: 70vh;
++        overflow-y: auto;
++        padding: 10px;
++      }
++      .mode-card {
++        min-height: 140px;
++        padding: 15px;
++        width: 100%;
++        flex-direction: row;
++        gap: 20px;
++        justify-content: flex-start;
++      }
++      .mode-card-icon {
++        width: 70px;
++        height: 70px;
++        margin-bottom: 0;
++      }
++      .mode-card-title {
++        font-size: 1.2rem;
++        text-align: left;
++      }
++      .mode-card-desc {
++        text-align: left;
++        margin-top: 4px;
++        font-size: 0.75rem;
++      }
++      .mode-card-text-container {
++        display: flex;
++        flex-direction: column;
++        justify-content: center;
++      }
++      .mode-aux-buttons {
++        bottom: 1.5%;
++        gap: 12px;
++        width: 90%;
++        justify-content: center;
++      }
++      .btn-aux {
++        min-width: 110px;
++        font-size: 0.8rem;
++        padding: 8px 16px;
++      }
++    }
++
++    /* --- タイトル画面 新UI スタイル --- */
++    .title-main-group {
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      z-index: 30;
++      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .title-main-group.stage-1 {
++      transform: translateY(-20px); /* ロゴを少し上部に移動した状態 */
++    }
++    .title-main-group.stage-2 {
++      transform: translateY(-185px) scale(0.58); /* タッチ後：小さくしてさらに上部に移動 */
++    }
++
++    .touch-start-container {
++      background: transparent;
++      border: none;
++      backdrop-filter: none;
++      -webkit-backdrop-filter: none;
++      box-shadow: none;
++      padding: 10px 40px;
++      cursor: pointer;
++      z-index: 1002;
++      transition: all 0.3s ease;
++      text-align: center;
++      margin-top: 15px; /* ロゴの下部に配置 */
++      user-select: none;
++      animation: touch-pulse 2s infinite ease-in-out;
++    }
++    .touch-start-container:hover {
++      filter: brightness(1.25);
++    }
++    .touch-start-text {
++      font-family: var(--font-casino);
++      font-size: 2.2rem;
++      font-weight: 900;
++      /* 高級メタリックゴールドのグラデーションテクスチャ */
++      background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++      -webkit-background-clip: text;
++      -webkit-text-fill-color: transparent;
++      /* ドロップシャドウを複数重ねて立体感と高級感を出す */
++      filter: 
++        drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++        drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
++      letter-spacing: 8px;
++      display: inline-block;
++    }
++    @keyframes touch-pulse {
++      0%, 100% { 
++        opacity: 0.75; 
++        transform: scale(0.97); 
++      }
++      50% { 
++        opacity: 1; 
++        transform: scale(1.03);
++      }
++    }
++
++    /* モード選択画面 (Stage 2) */
++    .mode-select-container {
++      display: flex;
++      gap: 30px;
++      justify-content: center;
++      align-items: center;
++      z-index: 1002;
++      position: absolute;
++      bottom: 12%;
++      left: 50%;
++      transform: translateX(-50%);
++      width: 90%;
++      max-width: 780px;
++      box-sizing: border-box;
++    }
++    .mode-card {
++      flex: 1;
++      background: linear-gradient(135deg, #18181a 0%, #08080a 100%);
++      border: 3px solid #2a2218;
++      border-radius: 16px;
++      padding: 30px 20px;
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      justify-content: center;
++      cursor: pointer;
++      position: relative;
++      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++      box-shadow: 
++        inset 0 0 20px rgba(0, 0, 0, 0.95),
++        inset 0 2px 5px rgba(255, 255, 255, 0.04),
++        0 10px 25px rgba(0, 0, 0, 0.85);
++      min-height: 270px;
++      text-decoration: none;
++      box-sizing: border-box;
++      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
++    }
++    .mode-card::before {
++      content: '';
++      position: absolute;
++      top: 3px; left: 3px; right: 3px; bottom: 3px;
++      border-radius: 12px;
++      border: 1.5px solid rgba(255, 215, 0, 0.08);
++      pointer-events: none;
++      transition: all 0.4s;
++    }
++    .mode-card:hover {
++      transform: translateY(-8px);
++      border-color: #ffd700;
++      box-shadow: 
++        0 0 35px rgba(255, 215, 0, 0.45),
++        inset 0 0 25px rgba(255, 215, 0, 0.2),
++        0 15px 35px rgba(0, 0, 0, 0.9);
++      filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.65));
++    }
++    .mode-card:hover::before {
++      border-color: rgba(255, 215, 0, 0.25);
++    }
++    .mode-card-icon {
++      width: 120px;
++      height: 120px;
++      margin-bottom: 18px;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .mode-card:hover .mode-card-icon {
++      transform: scale(1.12);
++    }
++    .mode-card-title {
++      font-family: var(--font-casino);
++      font-size: 1.45rem;
++      font-weight: bold;
++      color: #ffd700;
++      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 215, 0, 0.4);
++      letter-spacing: 2px;
++      text-align: center;
++    }
++    .mode-card-desc {
++      font-size: 0.85rem;
++      color: #ffe57f; /* 説明文も金色ベースに統一 */
++      margin-top: 8px;
++      text-align: center;
++      line-height: 1.4;
++      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
++      max-width: 220px;
++    }
++    
++    /* 補助ボタンエリア */
++    .mode-aux-buttons {
++      position: absolute;
++      bottom: 2.5%;
++      left: 50%;
++      transform: translateX(-50%);
++      display: flex;
++      gap: 25px;
++      z-index: 1002;
++    }
++    .btn-aux {
++      min-width: 140px;
+     }
+     @media (max-width: 768px) {
+       /* Player 0 Hand Cards */
+       .player-pos.pos-bottom .card {
+         width: 85px !important;
+         height: 120px !important;
++        bottom: 0 !important;
+       }
+ 
+       /* Use JS transform exclusively for mobile hand cards to avoid selection jumps */
+@@ -3529,17 +3905,28 @@
+       .player-pos.pos-right .card {
+         width: 35px !important;
+         height: 50px !important;
++        top: 0 !important;
+       }
+       .player-pos.pos-left {
+-        left: 45px !important;
+-        transform: translateY(-65%) rotate(90deg) !important; /* さらに上方に移動 */
++        left: 165px !important;
++        right: auto !important;
++        top: 50% !important;
++        transform: translateY(-50%) rotate(90deg) scale(0.75) !important;
++        overflow: visible !important;
+       }
+       .player-pos.pos-right {
+-        right: 45px !important;
+-        transform: translateY(-65%) rotate(-90deg) !important; /* さらに上方に移動 */
++        left: auto !important;
++        right: 165px !important;
++        top: 50% !important;
++        transform: translateY(-50%) rotate(-90deg) scale(0.75) !important;
++        overflow: visible !important;
+       }
+       .player-pos.pos-top {
+-        top: 5px !important;
++        left: 50vw !important;
++        top: 90px !important;
++        transform: translateX(-50%) rotate(180deg) scale(0.75) !important;
++        overflow: visible !important;
++        z-index: 10 !important;
+       }
+ 
+       /* Centered & Elevated Field Layout (RESTORE ROTATION) */
+@@ -3548,6 +3935,10 @@
+         height: 280px !important;
+         top: 45.5% !important; /* 42%から少し下げてサークル位置に合わせる */
+         left: 50% !important;
++        transform: translate(-50%, -50%) !important;
++        z-index: 150 !important;
++        border: none !important;
++        box-shadow: none !important;
+       }
+       .bg-reverse-indicator {
+         top: 45.5% !important; /* 42%から少し下げる */
+@@ -3561,10 +3952,10 @@
+       }
+ 
+       /* Corner UI tightening */
+-      .coffin-container {
++      .altar-container {
+         top: 5px !important;
+         right: 5px !important;
+-        transform: scale(0.3) !important;
++        transform: scale(0.4) rotateX(55deg) rotateZ(-15deg) !important;
+         transform-origin: top right !important;
+       }
+ 
+@@ -3636,13 +4027,7 @@
+         min-width: 100px !important;
+         min-height: 130px !important;
+       }
+-      .player-pos.pos-left { left: 16vw !important; } /* 中央寄りへ大幅に移動しつつ見切れを防止 */
+-      .player-pos.pos-right { right: 16vw !important; }
+ 
+-      .player-pos.pos-top {
+-        top: 30px !important;
+-        z-index: 10 !important;
+-      }
+       .effect-4-shield {
+         width: 90vw !important; /* 少し幅を狭める */
+         height: 46vh !important;
+@@ -3653,28 +4038,87 @@
+         z-index: 1 !important;
+       }
+       
+-      .pos-left .player-status { transform: translateX(-50%) rotate(-90deg) !important; }
+-      .pos-right .player-status { transform: translateX(-50%) rotate(90deg) !important; }
++      .player-avatar-icon {
++        width: 60px !important;
++        height: 60px !important;
++      }
++      .pos-bottom .player-avatar-icon {
++        position: absolute !important;
++        left: -80px !important;
++        bottom: 25px !important;
++        width: 65px !important;
++        height: 65px !important;
++        transform: none !important;
++      }
++      .pos-bottom .player-status {
++        position: absolute !important;
++        left: -80px !important;
++        bottom: -10px !important;
++        width: 65px !important;
++        font-size: 10px !important;
++        text-align: center !important;
++        transform: none !important;
++        top: auto !important;
++      }
++      
++      .pos-top .player-avatar-icon {
++        bottom: -70px !important;
++        top: auto !important;
++        left: 50% !important;
++        transform: translateX(-50%) rotate(180deg) !important;
++      }
++      .pos-top .player-status {
++        bottom: -105px !important;
++        top: auto !important;
++        left: 50% !important;
++        transform: translateX(-50%) rotate(180deg) !important;
++      }
++      .pos-top .hand-count-badge {
++        bottom: -30px !important;
++        top: auto !important;
++        left: calc(50% + 50px) !important;
++        transform: translate(-50%, -50%) rotate(180deg) !important;
++      }
+ 
+-      .hand-count-badge {
+-        top: -10px !important; /* 名前より下 */
++      .pos-left .player-avatar-icon {
++        bottom: -70px !important;
++        top: auto !important;
++        left: 50% !important;
++        transform: translateX(-50%) rotate(-90deg) !important;
++      }
++      .pos-left .player-status {
++        bottom: -105px !important;
++        top: auto !important;
++        left: 50% !important;
++        transform: translateX(-50%) rotate(-90deg) !important;
++        white-space: nowrap !important;
+       }
+-      .player-status {
+-        top: -45px !important; /* 名前が上 */
++      .pos-left .hand-count-badge {
++        bottom: -30px !important;
++        top: auto !important;
++        left: calc(50% - 50px) !important;
++        transform: translate(-50%, -50%) rotate(-90deg) !important;
+       }
+-      .pos-left .hand-count-badge, .pos-right .hand-count-badge {
+-        top: 0px !important; /* センター付近 */
++
++      .pos-right .player-avatar-icon {
++        bottom: -70px !important;
++        top: auto !important;
+         left: 50% !important;
+-        transform: translate(-50%, -50%) rotate(var(--rot-fix)) !important;
++        transform: translateX(-50%) rotate(90deg) !important;
+       }
+-      .pos-left .player-status, .pos-right .player-status {
+-        top: -45px !important; /* 枚数表示の真上 */
++      .pos-right .player-status {
++        bottom: -105px !important;
++        top: auto !important;
+         left: 50% !important;
+-        transform: translateX(-50%) rotate(var(--rot-fix)) !important;
++        transform: translateX(-50%) rotate(90deg) !important;
+         white-space: nowrap !important;
+       }
+-      .pos-left { --rot-fix: -90deg; }
+-      .pos-right { --rot-fix: 90deg; }
++      .pos-right .hand-count-badge {
++        bottom: -30px !important;
++        top: auto !important;
++        left: calc(50% + 50px) !important;
++        transform: translate(-50%, -50%) rotate(90deg) !important;
++      }
+       .player-pass-label {
+         top: 25px !important; /* 下 */
+         left: 50% !important;
+@@ -3683,6 +4127,10 @@
+       .pos-left .player-pass-label { transform: translateX(-50%) rotate(-90deg) !important; }
+       .pos-right .player-pass-label { transform: translateX(-50%) rotate(90deg) !important; }
+       
++      .action-panel {
++        bottom: 10px !important;
++      }
++      
+       .action-btn {
+         width: 140px !important;
+         font-size: 14px !important;
+@@ -3723,7 +4171,8 @@
+         margin-bottom: 8px !important;
+       }
+       .btn-start-game::before, .btn-start-game::after {
+-        display: none !important;
++        transform: translateX(-50%) rotate(180deg) !important;
++        transform-origin: center center !important;
+       }
+       
+       .title-logo-container {
+@@ -3740,13 +4189,464 @@
+         margin-top: 5px !important;
+       }
+     }
++
++    /* --- タイトル画面 新UI スタイル --- */
++    .title-main-group {
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      z-index: 30;
++      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .title-main-group.stage-1 {
++      transform: translateY(-20px); /* ロゴを少し上部に移動した状態 */
++    }
++    .title-main-group.stage-2 {
++      transform: translateY(-185px) scale(0.58); /* タッチ後：小さくしてさらに上部に移動 */
++    }
++
++    .touch-start-container {
++      background: transparent;
++      border: none;
++      backdrop-filter: none;
++      -webkit-backdrop-filter: none;
++      box-shadow: none;
++      padding: 10px 40px;
++      cursor: pointer;
++      z-index: 1002;
++      transition: all 0.3s ease;
++      text-align: center;
++      margin-top: 15px; /* ロゴの下部に配置 */
++      user-select: none;
++      animation: touch-pulse 2s infinite ease-in-out;
++    }
++    .touch-start-container:hover {
++      filter: brightness(1.25);
++    }
++    .touch-start-text {
++      font-family: var(--font-casino);
++      font-size: 2.2rem;
++      font-weight: 900;
++      /* 高級メタリックゴールドのグラデーションテクスチャ */
++      background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++      -webkit-background-clip: text;
++      -webkit-text-fill-color: transparent;
++      /* ドロップシャドウを複数重ねて立体感と高級感を出す */
++      filter: 
++        drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++        drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
++      letter-spacing: 8px;
++      display: inline-block;
++    }
++    @keyframes touch-pulse {
++      0%, 100% { 
++        opacity: 0.75; 
++        transform: scale(0.97); 
++      }
++      50% { 
++        opacity: 1; 
++        transform: scale(1.03);
++      }
++    }
++
++    /* モード選択画面 (Stage 2) */
++    .mode-select-container {
++      display: flex;
++      gap: 30px;
++      justify-content: center;
++      align-items: center;
++      z-index: 1002;
++      position: absolute;
++      bottom: 12%;
++      left: 50%;
++      transform: translateX(-50%);
++      width: 90%;
++      max-width: 780px;
++      box-sizing: border-box;
++    }
++    .mode-card {
++      flex: 1;
++      background: linear-gradient(135deg, #18181a 0%, #08080a 100%);
++      border: 3px solid #2a2218;
++      border-radius: 16px;
++      padding: 30px 20px;
++      display: flex;
++      flex-direction: column;
++      align-items: center;
++      justify-content: center;
++      cursor: pointer;
++      position: relative;
++      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++      box-shadow: 
++        inset 0 0 20px rgba(0, 0, 0, 0.95),
++        inset 0 2px 5px rgba(255, 255, 255, 0.04),
++        0 10px 25px rgba(0, 0, 0, 0.85);
++      min-height: 270px;
++      text-decoration: none;
++      box-sizing: border-box;
++      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
++    }
++    .mode-card::before {
++      content: '';
++      position: absolute;
++      top: 3px; left: 3px; right: 3px; bottom: 3px;
++      border-radius: 12px;
++      border: 1.5px solid rgba(255, 215, 0, 0.08);
++      pointer-events: none;
++      transition: all 0.4s;
++    }
++    .mode-card:hover {
++      transform: translateY(-8px);
++      border-color: #ffd700;
++      box-shadow: 
++        0 0 35px rgba(255, 215, 0, 0.45),
++        inset 0 0 25px rgba(255, 215, 0, 0.2),
++        0 15px 35px rgba(0, 0, 0, 0.9);
++      filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.65));
++    }
++    .mode-card:hover::before {
++      border-color: rgba(255, 215, 0, 0.25);
++    }
++    .mode-card-icon {
++      width: 120px;
++      height: 120px;
++      margin-bottom: 18px;
++      display: flex;
++      justify-content: center;
++      align-items: center;
++      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
++    }
++    .mode-card:hover .mode-card-icon {
++      transform: scale(1.12);
++    }
++    .mode-card-title {
++      font-family: var(--font-casino);
++      font-size: 1.45rem;
++      font-weight: bold;
++      color: #ffd700;
++      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 215, 0, 0.4);
++      letter-spacing: 2px;
++      text-align: center;
++    }
++    .mode-card-desc {
++      font-size: 0.85rem;
++      color: #ffe57f; /* 説明文も金色ベースに統一 */
++      margin-top: 8px;
++      text-align: center;
++      line-height: 1.4;
++      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
++      max-width: 220px;
++    }
++    
++    /* 補助ボタンエリア */
++    .mode-aux-buttons {
++      position: absolute;
++      bottom: 2.5%;
++      left: 50%;
++      transform: translateX(-50%);
++      display: flex;
++      gap: 25px;
++      z-index: 1002;
++    }
++    .btn-aux {
++      min-width: 140px;
++    }
++
++    /* モバイルレスポンシブ */
++    @media (max-width: 768px) {
++      .title-main-group.stage-1 {
++        transform: translateY(-10px);
++      }
++      .title-main-group.stage-2 {
++        transform: translateY(-115px) scale(0.52);
++      }
++      .touch-start-container {
++        padding: 10px 30px;
++        margin-top: 10px;
++      }
++      .touch-start-text {
++        font-size: 1.5rem;
++        letter-spacing: 5px;
++        background: linear-gradient(to bottom, #fff1b8 0%, #ffe07a 20%, #d4af37 45%, #aa7c11 60%, #ffd257 80%, #634505 100%);
++        -webkit-background-clip: text;
++        -webkit-text-fill-color: transparent;
++        filter: 
++          drop-shadow(0 2px 3px rgba(0, 0, 0, 0.95)) 
++          drop-shadow(0 0 6px rgba(212, 175, 55, 0.5));
++        display: inline-block;
++      }
++      .mode-select-container {
++        flex-direction: column;
++        gap: 15px;
++        bottom: 11%;
++        max-height: 70vh;
++        overflow-y: auto;
++        padding: 10px;
++      }
++      .mode-card {
++        min-height: 140px;
++        padding: 15px;
++        width: 100%;
++        flex-direction: row;
++        gap: 20px;
++        justify-content: flex-start;
++      }
++      .mode-card-icon {
++        width: 70px;
++        height: 70px;
++        margin-bottom: 0;
++      }
++      .mode-card-title {
++        font-size: 1.2rem;
++        text-align: left;
++      }
++      .mode-card-desc {
++        text-align: left;
++        margin-top: 4px;
++        font-size: 0.75rem;
++      }
++      .mode-card-text-container {
++        display: flex;
++        flex-direction: column;
++        justify-content: center;
++      }
++      .mode-aux-buttons {
++        bottom: 1.5%;
++        gap: 12px;
++        width: 90%;
++        justify-content: center;
++      }
++      .btn-aux {
++        min-width: 110px;
++        font-size: 0.8rem;
++        padding: 8px 16px;
++      }
++    }
++
++    /* --- アバター肖像画スタイル --- */
++    .player-avatar-icon {
++      position: absolute;
++      width: 80px;
++      height: 80px;
++      border-radius: 50%;
++      border: 4px solid #1a1a1c; /* 重厚なダークメタル外枠 */
++      outline: 1.5px solid #3a3a3d; /* インナーメタルフレーム */
++      outline-offset: -1px;
++      /* 周囲に黄色のふんわりした枠（グロウ）を追加 */
++      box-shadow: 0 0 18px rgba(255, 215, 0, 0.6), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
++      background-size: cover;
++      background-position: center;
++      z-index: 550;
++      background-color: #111;
++    }
++
++    /* --- ターン表示パネル (Turn Info Plaque) --- */
++    .turn-info-plaque {
++      position: absolute;
++      top: 30px;
++      left: 40px;
++      z-index: 200;
++      padding: 14px 24px;
++      /* 磨かれた黒曜石の質感 */
++      background: linear-gradient(135deg, #1c1c1e 0%, #0f0f10 50%, #070708 100%);
++      border: 4px solid #141416; /* 重厚なダークメタル外枠 */
++      outline: 1px solid #333; /* インナーフレーム */
++      outline-offset: -3px;
++      border-radius: 4px;
++      box-shadow: 
++        0 0 20px rgba(255, 215, 0, 0.55), /* 黄色のふんわりした枠 */
++        0 15px 30px rgba(0, 0, 0, 0.85),
++        inset 0 3px 4px rgba(255, 255, 255, 0.1),
++        inset 0 -4px 8px rgba(0, 0, 0, 0.9),
++        inset 0 0 15px rgba(0, 0, 0, 0.85);
++      font-family: 'Cinzel', 'Shippori Mincho', serif;
++      color: #fcc672; /* アンティークアンバー */
++      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
++      /* 風化したプレートのエッジ */
++      clip-path: polygon(
++        0% 3px, 5px 0%, 95% 0%, 100% 3px, 
++        99% 30%, 100% 60%, 99% 97%, 96% 100%, 
++        4% 99%, 0% 96%, 1% 40%
++      );
++      transform-origin: top left;
++      transition: transform 0.3s;
++      white-space: nowrap;
++    }
++
++    /* ルーン文字の透かし効果 */
++    .turn-info-plaque::before {
++      content: '';
++      position: absolute;
++      top: 0; left: 0; right: 0; bottom: 0;
++      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><text x="10" y="26" fill="rgba(255,159,28,0.06)" font-family="Cinzel" font-size="9" letter-spacing="4">᚛᚛ᛟ᚜᚜</text></svg>') no-repeat center center;
++      background-size: cover;
++      pointer-events: none;
++    }
++
++    .turn-row {
++      font-size: 1.1rem;
++      font-weight: 700;
++      letter-spacing: 1px;
++      display: flex;
++      align-items: center;
++      gap: 10px;
++    }
++
++    .turn-player {
++      font-weight: 800;
++      color: #ebd3ad;
++    }
++
++    /* 自分のターンの時のアンバーゴールドの輝き */
++    .turn-player.active-you {
++      color: #ffe082 !important;
++      text-shadow: 
++        0 0 10px #ffb300, 
++        0 0 20px #ffb300, 
++        0 0 35px rgba(255, 179, 0, 0.5),
++        1px 1px 2px rgba(0, 0, 0, 0.9) !important;
++      font-weight: 900;
++    }
++
++    /* --- 神秘的な魔法ボタン (Mystic Magical Button) --- */
++    .mystic-btn {
++      position: relative;
++      /* 磨かれた黒曜石に斜めのガラス/宝石光沢を合成 */
++      background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.03) 49%, transparent 50%, transparent 100%), linear-gradient(135deg, #2b2b2e 0%, #17171a 45%, #0e0e10 50%, #080809 100%) !important;
++      border: 4px solid #1a1a1c !important; /* 重厚なダークメタル外枠 */
++      outline: 1px solid #3a3a3d; /* インナーメタルフレーム */
++      outline-offset: -3px;
++      /* 宝石カット（八角形形状） */
++      clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
++      /* 黄色のふんわりした枠と影（clip-path制限を回避するためfilterで描画） */
++      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.65)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9)) !important;
++      color: #e09f3e !important; /* 琥珀ゴールド */
++      font-family: 'Shippori Mincho', 'Cinzel', serif !important;
++      font-weight: 800 !important;
++      /* 彫り込み文字とアンバーグロー効果 */
++      text-shadow: 
++        -1px -1px 1px rgba(0, 0, 0, 0.8),
++        1px 1px 1px rgba(255, 255, 255, 0.1),
++        0 0 8px #ff9f1c, 
++        0 0 18px rgba(255, 159, 28, 0.6) !important;
++      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
++      overflow: hidden;
++      cursor: pointer;
++      display: inline-flex;
++      justify-content: center;
++      align-items: center;
++      box-sizing: border-box;
++    }
++
++    /* ボタン表面のルーン文字彫刻効果 */
++    .mystic-btn::before {
++      content: '';
++      position: absolute;
++      top: 0; left: 0; right: 0; bottom: 0;
++      /* 琥珀ゴールドの文字 */
++      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50"><text x="12" y="32" fill="rgba(255, 159, 28, 0.08)" font-family="Cinzel" font-size="11" letter-spacing="7">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇ</text></svg>');
++      background-size: cover;
++      pointer-events: none;
++      mix-blend-mode: screen;
++      transition: opacity 0.3s;
++      z-index: 1;
++    }
++
++    /* 埋め込まれた宝石 (左側) */
++    .mystic-btn::after {
++      content: '';
++      position: absolute;
++      left: 12px;
++      top: 50%;
++      transform: translateY(-50%);
++      width: 8px;
++      height: 8px;
++      /* アンバー琥珀の宝石 */
++      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
++      border-radius: 50%;
++      box-shadow: 
++        0 0 8px #ffb300,
++        0 0 2px #000;
++      transition: all 0.3s;
++      z-index: 2;
++    }
++
++    /* ボタン内のテキスト領域と右側の宝石 */
++    .mystic-btn-text {
++      position: relative;
++      z-index: 2;
++      padding: 0 15px; /* 左右に宝石用のパディングを確保 */
++      letter-spacing: 4px;
++    }
++    
++    .mystic-btn-text::after {
++      content: '';
++      position: absolute;
++      right: -15px;
++      top: 50%;
++      transform: translateY(-50%);
++      width: 8px;
++      height: 8px;
++      /* アンバー琥珀の宝石 */
++      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
++      border-radius: 50%;
++      box-shadow: 
++        0 0 8px #ffb300,
++        0 0 2px #000;
++      transition: all 0.3s;
++    }
++
++    /* アクティブな輝き（利用可能時） */
++    .mystic-btn:not(:disabled) {
++      border-color: #1a1a1c !important;
++      box-shadow: 
++        inset 0 2px 3px rgba(255, 255, 255, 0.15),
++        inset 0 -3px 6px rgba(0, 0, 0, 0.8),
++        inset 0 0 10px rgba(0, 0, 0, 0.9) !important;
++      filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.75)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9)) !important;
++    }
++
++    /* 自分のターンなどアクティブ時のオーラ（パルス効果） */
++    .mystic-btn-active-glow:not(:disabled) {
++      animation: pass-aura-glow 2s infinite alternate;
++    }
++
++    .mystic-btn:not(:disabled):hover {
++      filter: brightness(1.2) drop-shadow(0 0 18px rgba(255, 215, 0, 0.95)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9)) !important;
++      transform: translateY(-1px) !important;
++    }
++
++    .mystic-btn:not(:disabled):active {
++      transform: translateY(1px) !important;
++      filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9)) !important;
++      box-shadow: 
++        inset 0 2px 5px rgba(0, 0, 0, 0.9),
++        inset 0 0 15px rgba(0, 0, 0, 0.9) !important;
++    }
++
++    @keyframes pass-aura-glow {
++      0% {
++        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.55)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
++        border-color: #1a1a1c;
++      }
++      100% {
++        filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.85)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
++        border-color: #3a3a3d;
++      }
++    }
+   </style>
+   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
++  <script src="https://unpkg.com/@babel/standalone@7.12.12/babel.min.js" crossorigin></script>
+ </head>
+ 
+ <body>
++  <script>
++    window.onerror = function(message, source, lineno, colno, error) {
++      alert("Runtime Error:\n" + message + "\nLine: " + lineno + "\nSource: " + source + "\nStack: " + (error ? error.stack : "N/A"));
++      return false;
++    };
++  </script>
+   <div id="root"></div>
+ 
+   <script type="text/babel">
+@@ -4147,11 +5047,14 @@
+ 
+     // Edge animation start points
+     const getPlayerEdgePosition = (playerIndex) => {
++      const isMobile = window.innerWidth <= 768;
++      const horizontalOffset = isMobile ? '165px' : '270px';
++      const verticalOffsetTop = isMobile ? '90px' : '150px';
+       switch (playerIndex) {
+-        case 0: return { top: '150%', left: '50%' };
+-        case 1: return { top: '50%', left: '-50%' };
+-        case 2: return { top: '-50%', left: '50%' };
+-        case 3: return { top: '50%', left: '150%' };
++        case 0: return { top: '100%', left: '50%' };
++        case 1: return { top: '50%', left: horizontalOffset };
++        case 2: return { top: verticalOffsetTop, left: '50%' };
++        case 3: return { top: '50%', left: `calc(100% - ${horizontalOffset})` };
+         default: return { top: '50%', left: '50%' };
+       }
+     };
+@@ -4167,6 +5070,7 @@
+ 
+     function App() {
+       const [gameStarted, setGameStarted] = useState(false);
++      const [titleStage, setTitleStage] = useState(1); // 1: START, 2: 1人/マルチのモード選択
+       const [multiplayerMode, setMultiplayerMode] = useState(null); // 'connecting' | 'lobby' | 'active'
+       const [isHost, setIsHost] = useState(false);
+       const [peer, setPeer] = useState(null);
+@@ -4276,6 +5180,11 @@
+         return () => window.removeEventListener('resize', handleResize);
+       }, []);
+ 
++      const updateProfileAvatar = (avatarKey) => {
++        localStorage.setItem('local_avatar', avatarKey);
++        setMyProfile(prev => prev ? { ...prev, avatar: avatarKey } : null);
++      };
++
+ 
+       useEffect(() => {
+         if (watchTarget) {
+@@ -4286,7 +5195,7 @@
+         }
+       }, [watchTarget]);
+ 
+-      const [isCoffinOpen, setIsCoffinOpen] = useState(false);
++      const [isAltarActive, setIsAltarActive] = useState(false);
+ 
+       useEffect(() => {
+         // ターンが実際に移動したかチェック
+@@ -4588,11 +5497,11 @@
+ 
+       const triggerClearFieldAnim = (callback) => {
+         setIsAnimating(true);
+-        setIsCoffinOpen(true); // 棺桶を開く
++        setIsAltarActive(true); // 祭壇を活性化
+         setTimeout(() => {
+           callback();
+           setIsAnimating(false);
+-          setTimeout(() => setIsCoffinOpen(false), 800); // 吸い込まれたら閉じる
++          setTimeout(() => setIsAltarActive(false), 800); // 吸い込まれたら閉じる
+         }, 1200);
+       };
+ 
+@@ -4771,7 +5680,7 @@
+ 
+         if (rank === '6') {
+           if (gy.length > 0) {
+-            setIsCoffinOpen(true); // 棺桶から蘇生
++            setIsAltarActive(true); // 祭壇から蘇生
+             triggerTempEffect(setPhoenixActive, 1500);
+             const drawCount = Math.min(count, gy.length);
+             let drawn = [];
+@@ -4792,7 +5701,7 @@
+                 setTimeout(() => {
+                   setGyShuffling(false);
+                   setIsAnimating(false);
+-                  if (i === drawCount - 1) setTimeout(() => setIsCoffinOpen(false), 500);
++                  if (i === drawCount - 1) setTimeout(() => setIsAltarActive(false), 500);
+                   // Removed internal executeNextTurn call
+                 }, 1200); // 延長 (800 -> 1200)
+               }, 1800 + i * 400); // 延長 (1200 -> 1800, 300 -> 400)
+@@ -4875,7 +5784,7 @@
+                 dropped.push(card);
+               }
+               gy.push(...dropped);
+-              setIsCoffinOpen(true); // 捨て逃げ
++              setIsAltarActive(true); // 捨て逃げ
+               setDiscardingToGy(dropped);
+               setIsAnimating(true);
+               isAsync = true; // Mark as async
+@@ -4885,7 +5794,7 @@
+                 setTimeout(() => {
+                   setGyShuffling(false);
+                   setIsAnimating(false);
+-                  setTimeout(() => setIsCoffinOpen(false), 800);
++                  setTimeout(() => setIsAltarActive(false), 800);
+                 }, 1200);
+               }, 1800);
+               steps = 1;
+@@ -5286,14 +6195,14 @@
+                 gy.push(card);
+                 setDiscardingToGy(prev => [...prev, card]);
+                 setIsAnimating(true);
+-                setIsCoffinOpen(true); // 棺桶を開く
++                setIsAltarActive(true); // 祭壇を活性化
+                 setTimeout(() => {
+                   setDiscardingToGy([]);
+                   setGyShuffling(true);
+                   setTimeout(() => {
+                     setGyShuffling(false);
+                     setIsAnimating(false);
+-                    setTimeout(() => setIsCoffinOpen(false), 800);
++                    setTimeout(() => setIsAltarActive(false), 800);
+                   }, 1200); // 延長 (800 -> 1200)
+                 }, 1800 + idx * 200); // 延長 (1200 -> 1800)
+               }
+@@ -5322,14 +6231,14 @@
+           });
+ 
+           setExplodingCards(affectedPlayers.map(pIdx => ({ playerIndex: pIdx, rank: targetRanks[0] })));
+-          setIsCoffinOpen(true); // 爆発を収納
++          setIsAltarActive(true); // 爆発を収納
+           setTimeout(() => {
+             setExplodingCards([]);
+             setGyShuffling(true);
+             setTimeout(() => {
+               setGyShuffling(false);
+               setIsAnimating(false);
+-              setTimeout(() => setIsCoffinOpen(false), 800);
++              setTimeout(() => setIsAltarActive(false), 800);
+             }, 1200);
+           }, 2500);
+           h = tempH;
+@@ -5569,6 +6478,24 @@
+         return cls;
+       };
+ 
++      const getAvatarUrl = (avatarKey) => {
++        switch (avatarKey) {
++          case 'mage': return 'avatar_mage.png';
++          case 'assassin': return 'avatar_assassin.png';
++          case 'elf': return 'avatar_elf.png';
++          case 'knight':
++          default: return 'avatar_knight.png';
++        }
++      };
++
++      const getPlayerAvatar = (pIdx) => {
++        if (pIdx === 0) return myProfile?.avatar || 'knight';
++        if (pIdx === 1) return 'mage';
++        if (pIdx === 2) return 'elf';
++        if (pIdx === 3) return 'knight';
++        return 'knight';
++      };
++
+       const renderFanHand = (handContent, playerIdx, isFaceUp = false) => {
+         const total = handContent.length;
+         const isBeingWatchedByMe = watchTarget?.targetIndex === playerIdx && watchTarget?.activatorIndex === myPlayerIndex;
+@@ -5718,6 +6645,7 @@
+               <div className="player-pass-label">PASS</div>
+             )}
+ 
++            <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(playerIdx))})` }}></div>
+             <div className="hand-count-badge">{hands[playerIdx].length}</div>
+             
+             <div className="player-status" style={isMobile && playerIdx !== 0 ? { position: 'absolute', top: '-15px', bottom: 'auto', height: 'auto', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', minWidth: 'max-content', zIndex: 100, fontSize: '10px', padding: '2px 6px' } : {}}>
+@@ -5834,20 +6762,173 @@
+               </div>
+               <div className="title-overlay"></div>
+ 
+-              <div className="title-logo-container">
+-                <img src="logo.webp" alt="アルティメット大富豪" className="title-logo" />
+-                <div className="title-sub">DEATH GAME: THE ULTIMATE CARDS</div>
+-              </div>
+-
+-              <div className="title-button-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1001 }}>
+-                <button className="btn-start-game" onClick={startDealAnimation}>1人プレイ</button>
+-                <button className="btn-start-game" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}
+-                  onClick={() => setMultiplayerMode('connecting')}>マルチプレイ</button>
+-                <div style={{ marginTop: '5px' }}>
+-                  <button className="btn-start-game btn-secondary" onClick={() => setShowExplanation(true)}>カード説明</button>
++              {/* ロゴとSTARTボタンをグループ化し、Stage遷移に応じてスケール＆位置を変化 */}
++              <div className={`title-main-group stage-${titleStage}`}>
++                <div className="title-logo-container">
++                  <img src="logo.webp" alt="アルティメット大富豪" className="title-logo" />
+                 </div>
++
++                {/* Stage 1: スタートUI (START) */}
++                {titleStage === 1 && (
++                  <div className="touch-start-container animate-fade-in" onClick={() => setTitleStage(2)}>
++                    <div className="touch-start-text">START</div>
++                  </div>
++                )}
+               </div>
+ 
++              {/* Stage 2: 1人プレイ / みんなでプレイ のモード選択カード (横並び) */}
++              {titleStage === 2 && (
++                <>
++                  <div className="mode-select-container">
++                    {/* 1人でプレイ */}
++                    <div className="mode-card" onClick={startDealAnimation}>
++                      <div className="mode-card-icon">
++                        <svg viewBox="0 0 100 100" width="100%" height="100%">
++                          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255, 215, 0, 0.15)" strokeWidth="1.5" strokeDasharray="3 3"/>
++                          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 215, 0, 0.08)" strokeWidth="1"/>
++                          <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon1)" opacity="0.85"/>
++                          <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon1)" opacity="0.85"/>
++                          <g transform="rotate(-15 42 53)">
++                            <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                            <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" strokeWidth="1"/>
++                          </g>
++                          <g>
++                            <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                            <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
++                          </g>
++                          <g transform="rotate(15 58 53)">
++                            <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                            <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
++                          </g>
++                          <defs>
++                            <linearGradient id="goldGradientIcon1" x1="0%" y1="0%" x2="100%" y2="100%">
++                              <stop offset="0%" stopColor="#fff1b8"/>
++                              <stop offset="20%" stopColor="#ffe07a"/>
++                              <stop offset="45%" stopColor="#d4af37"/>
++                              <stop offset="60%" stopColor="#aa7c11"/>
++                              <stop offset="80%" stopColor="#ffd257"/>
++                              <stop offset="100%" stopColor="#634505"/>
++                            </linearGradient>
++                          </defs>
++                        </svg>
++                      </div>
++                      <div className="mode-card-text-container">
++                        <div className="mode-card-title">1人でプレイ</div>
++                        <div className="mode-card-desc">AIと対戦するソロモード。ルールを覚えたり練習するのに最適です。</div>
++                      </div>
++                    </div>
++
++                    {/* みんなでプレイ */}
++                    <div className="mode-card" onClick={() => setMultiplayerMode('connecting')}>
++                      <div className="mode-card-icon">
++                        <svg viewBox="0 0 100 100" width="100%" height="100%">
++                          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255, 215, 0, 0.15)" strokeWidth="1.5" strokeDasharray="3 3"/>
++                          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 215, 0, 0.08)" strokeWidth="1"/>
++                          
++                          {/* 4つの「1人プレイと同じシルエット＆カード」を完全に中心（50,50）に対称配置 */}
++                          {/* 左上 */}
++                          <g transform="translate(16, 16) scale(0.4)">
++                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <g transform="rotate(-15 42 53)">
++                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g>
++                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g transform="rotate(15 58 53)">
++                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                          </g>
++
++                          {/* 右上 */}
++                          <g transform="translate(44, 16) scale(0.4)">
++                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <g transform="rotate(-15 42 53)">
++                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g>
++                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g transform="rotate(15 58 53)">
++                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                          </g>
++
++                          {/* 左下 */}
++                          <g transform="translate(16, 44) scale(0.4)">
++                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <g transform="rotate(-15 42 53)">
++                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g>
++                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g transform="rotate(15 58 53)">
++                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                          </g>
++
++                          {/* 右下 */}
++                          <g transform="translate(44, 44) scale(0.4)">
++                            <path d="M50 25 C43 25, 41 33, 44 38 C42 41, 42 46, 45 49 C46 50, 48 50, 50 50 C52 50, 54 50, 55 49 C58 46, 58 41, 56 38 C59 33, 57 25, 50 25 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <path d="M25 78 C25 60, 35 55, 50 55 C65 55, 75 60, 75 78 Z" fill="url(#goldGradientIcon2)" opacity="0.85"/>
++                            <g transform="rotate(-15 42 53)">
++                              <rect x="36" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="38" y1="48" x2="42" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g>
++                              <rect x="44" y="42" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="47" y1="46" x2="53" y2="56" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                            <g transform="rotate(15 58 53)">
++                              <rect x="52" y="44" width="12" height="18" rx="2" fill="#111" stroke="#ffd700" strokeWidth="1.5"/>
++                              <line x1="55" y1="48" x2="59" y2="58" stroke="#ffd700" stroke-width="1"/>
++                            </g>
++                          </g>
++
++                          <defs>
++                            <linearGradient id="goldGradientIcon2" x1="0%" y1="0%" x2="100%" y2="100%">
++                              <stop offset="0%" stopColor="#fff1b8"/>
++                              <stop offset="20%" stopColor="#ffe07a"/>
++                              <stop offset="45%" stopColor="#d4af37"/>
++                              <stop offset="60%" stopColor="#aa7c11"/>
++                              <stop offset="80%" stopColor="#ffd257"/>
++                              <stop offset="100%" stopColor="#634505"/>
++                            </linearGradient>
++                          </defs>
++                        </svg>
++                      </div>
++                      <div className="mode-card-text-container">
++                        <div className="mode-card-title">みんなでプレイ</div>
++                        <div className="mode-card-desc">他プレイヤーと対戦するマルチプレイ。部屋作成やレート戦が可能です。</div>
++                      </div>
++                    </div>
++                  </div>
++
++                  {/* 補助ボタン */}
++                  <div className="mode-aux-buttons">
++                    <button className="btn-start-game btn-aux mystic-btn" onClick={() => setShowExplanation(true)}>
++                      <span className="mystic-btn-text">カード説明</span>
++                    </button>
++                    <button className="btn-start-game btn-aux mystic-btn" onClick={() => setTitleStage(1)}>
++                      <span className="mystic-btn-text">タイトルへ戻る</span>
++                    </button>
++                  </div>
++                </>
++              )}
++
+               {multiplayerMode === 'connecting' && (
+                 <div className="selection-overlay-ui">
+                   <div className="selection-guide">合言葉を入力</div>
+@@ -5880,8 +6961,8 @@
+                       );
+                     })}
+                   </div>
+-                  <button className="action-btn btn-pass btn-close-explanation" onClick={() => setShowExplanation(false)}>
+-                    閉じる
++                  <button className="action-btn btn-pass btn-close-explanation mystic-btn" onClick={() => setShowExplanation(false)}>
++                    <span className="mystic-btn-text">閉じる</span>
+                   </button>
+                 </div>
+               )}
+@@ -5889,7 +6970,7 @@
+             </div>
+           ) : (
+             <div className="table-container">
+-              <button className="btn-exit-to-title" onClick={() => location.reload()}>退場</button>
++              <button className="btn-exit-to-title mystic-btn" onClick={() => location.reload()}><span className="mystic-btn-text">退場</span></button>
+               {multiplayerMode === 'lobby' && (
+                 <div className="selection-overlay-ui" style={{ zIndex: 6000 }}>
+                   <div className="selection-guide">待機中 (合言葉: {passphrase})</div>
+@@ -6046,14 +7127,13 @@
+                 <div>Direction: {playDirection === 1 ? '➡' : '⬅'}</div>
+               </div>
+ 
+-              {/* 新・棺桶型墓地システム */}
+-              <div className={`coffin-container ${isCoffinOpen ? 'open' : ''}`}
++              {/* 石造りの祭壇システム */}
++              <div className={`altar-container ${isAltarActive ? 'active' : ''}`}
+                 onClick={() => { alert('GRAVEYARD:\n' + graveyard.map(c => c.suit + c.rank).join(', ')) }}>
+-                <div className="coffin-body">
+-                  <div className="coffin-inner-cards"></div>
++                <div className="altar-base">
++                  <div className="altar-glow"></div>
+                 </div>
+-                <div className="coffin-lid"></div>
+-                <div className="coffin-count">† {graveyard.length} †</div>
++                <div className="altar-count">† {graveyard.length} †</div>
+               </div>
+ 
+               {resurrectCard && (
+@@ -6065,24 +7145,20 @@
+               )}
+ 
+               {discardingToGy.map((c, idx) => {
+-                /* ズラーっと順番に並んで吸い込まれる演出のため、開始少しだけずらすが、
+-                   軌道自体は大きく散らさず、遅延（delay）で「流れる列」を表現する */
++                /* 画面外左端（left: -150px, top: 200px）からフレームインして、
++                   右上の棺桶（var(--coffin-x), var(--coffin-y)）に吸い込まれていく流れる演出 */
+                 const delay = idx * 0.12;
+                 return (
+                   <div key={`flying-${idx}`} className={`card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''} to-graveyard`}
+                     style={{
+-                      position: 'fixed',
+-                      left: '50%',
+-                      top: '50%',
++                      position: 'absolute',
++                      left: '-150px',
++                      top: '200px',
+                       zIndex: 2000 + idx,
+-                      /* 初期位置のオフセットはテーブル上の元の配置を保つ程度にする */
+-                      '--start-x': `calc(-50% + ${(idx % 3) * 10 - 10}px)`,
+-                      '--start-y': `calc(-50% + ${Math.floor(idx / 3) * 10}px)`,
+                       animationDelay: `${delay}s`
+                     }}>
+-                    <div className="tcg-art" style={{ backgroundImage: TCG_DATA[c.rank]?.url ? `url(${TCG_DATA[c.rank].url})` : '' }}></div>
+-                    <div className="tcg-rank-circle"><span>{c.rank}</span></div>
+-                    <div className="tcg-name">{c.suit + c.rank}</div>
++                    <div className="card-rank">{c.rank === 'Joker' ? 'J' : c.rank}</div>
++                    <div className="tcg-art" style={{ backgroundImage: TCG_DATA[c.rank]?.url ? `url(${TCG_DATA[c.rank].url})` : '', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', width: '100%', height: '100%', borderRadius: '4px' }}></div>
+                   </div>
+                 );
+               })}
+@@ -6155,15 +7231,15 @@
+               <div className="action-panel">
+                 {gameStarted && !selectionMode && !isGameOver && !exchangePhase && (
+                   <>
+-                    <button className="action-btn btn-play" 
++                    <button className="action-btn btn-play mystic-btn" 
+                       disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)} 
+                       onClick={handlePlay}>
+-                      出す
++                      <span className="mystic-btn-text">出す</span>
+                     </button>
+-                    <button className="action-btn btn-pass" 
++                    <button className="action-btn btn-pass mystic-btn" 
+                       disabled={turn !== myPlayerIndex || isActionLoading} 
+                       onClick={handlePass}>
+-                      パス
++                      <span className="mystic-btn-text">パス</span>
+                     </button>
+                   </>
+                 )}
+@@ -6183,8 +7259,8 @@
+                     ))}
+                   </div>
+                   <div className="result-actions">
+-                    <button className="gold-btn" onClick={handleRestart}>再戦</button>
+-                    <button className="gold-btn" onClick={() => location.reload()}>タイトルへ</button>
++                    <button className="gold-btn mystic-btn" onClick={handleRestart}><span className="mystic-btn-text">再戦</span></button>
++                    <button className="gold-btn mystic-btn" onClick={() => location.reload()}><span className="mystic-btn-text">タイトルへ</span></button>
+                   </div>
+                 </div>
+               )}
+@@ -6281,6 +7357,27 @@
+ 
+     // 即時BGM開始試行（ブラウザが許可すればそのまま再生、ブロックされれば最初のクリックで開始）
+     sm.playTitleBGM();
++
++    setTimeout(() => {
++      console.log("=== AUTO CLICK TEST START ===");
++      const startBtn = document.querySelector('.touch-start-container');
++      if (startBtn) {
++        console.log("Clicking START button...");
++        startBtn.click();
++        
++        setTimeout(() => {
++          const modeCards = document.querySelectorAll('.mode-card');
++          if (modeCards && modeCards.length > 0) {
++            console.log("Clicking Single Play card...");
++            modeCards[0].click();
++          } else {
++            console.error("Single Play card not found!");
++          }
++        }, 1000);
++      } else {
++        console.error("START button not found!");
++      }
++    }, 2500);
+   </script>
+ </body>
+ 

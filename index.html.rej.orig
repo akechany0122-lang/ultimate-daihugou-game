@@ -1,0 +1,13 @@
+@@ -7800,10 +7800,10 @@
+                   <img src="logo.webp" alt="アルティメット大富豪" className="title-logo" />
+                 </div>
+ 
+-                {/* Stage 1: スタートUI (START) */}
++                {/* Stage 1: スタートUI (タッチしてスタート) */}
+                 {titleStage === 1 && (
+                   <div className="touch-start-container animate-fade-in" onClick={() => setTitleStage(2)}>
+-                    <div className="touch-start-text">START</div>
++                    <div className="touch-start-text">タッチしてスタート</div>
+                   </div>
+                 )}
+               </div>
