@@ -6155,11 +6155,11 @@
 
             // 出せる条件を満たしているかチェック
             if (playCandidate.length > 0 && isValidPlay(playCandidate)) {
-              handlePlay(playCandidate);
+              handleFlickPlay(playCandidate);
               hasFlickedPlay.current = true; // 1回のフリックで複数回発火しないようにする
             } else if (flickedCard && isValidPlay([flickedCard])) {
               // 選択中カード＋フリックカードでは出せないが、フリックカード単体なら出せる場合
-              handlePlay([flickedCard]);
+              handleFlickPlay([flickedCard]);
               hasFlickedPlay.current = true;
             }
           }
@@ -7459,7 +7459,7 @@
         }
       };
 
-      const handlePlay = (cardsToPlay = selectedCards) => {
+      const handleFlickPlay = (cardsToPlay) => {
         if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
         const canPlay = cardsToPlay.length > 0;
         if (!canPlay) return;
@@ -7473,6 +7473,35 @@
         setIsActionLoading(true);
         if (isValidPlay(cardsToPlay)) {
           executePlay(myPlayerIndex, cardsToPlay); setSelectedCards([]);
+          if (isHost) broadcastState(hands);
+        } else {
+          setIsActionLoading(false);
+          showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
+        }
+      };
+
+                  const handlePlay = () => {
+        showMessage('DEBUG', 'handlePlay Fired!');
+        console.log('handlePlay Fired!');
+        if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) {
+          showMessage('DEBUG', 'Blocked by state');
+          return;
+        }
+        const canPlay = selectedCards.length > 0;
+        if (!canPlay) {
+          showMessage('DEBUG', 'No cards');
+          return;
+        }
+        
+        if (multiplayerMode === 'active' && !isHost) {
+          guestConn.send({ type: 'ACTION', action: 'PLAY', cards: selectedCards });
+          setSelectedCards([]);
+          return;
+        }
+
+        setIsActionLoading(true);
+        if (isValidPlay(selectedCards)) {
+          executePlay(myPlayerIndex, selectedCards); setSelectedCards([]);
           if (isHost) broadcastState(hands);
         } else {
           setIsActionLoading(false);
@@ -8802,14 +8831,24 @@
               <div className="action-panel">
                 {gameStarted && !selectionMode && !isGameOver && !exchangePhase && (
                   <>
-                    <button className="action-btn btn-play mystic-btn" 
-                      disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)} 
-                      onClick={handlePlay}>
+                    <button className="action-btn btn-play mystic-btn"
+                      disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)}
+                      onClick={handlePlay}
+                      onTouchEnd={(e) => {
+                        if (turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)) return;
+                        e.preventDefault();
+                        handlePlay();
+                      }}>
                       <span className="mystic-btn-text">出す</span>
                     </button>
-                    <button className="action-btn btn-pass mystic-btn" 
-                      disabled={turn !== myPlayerIndex || isActionLoading} 
-                      onClick={handlePass}>
+                    <button className="action-btn btn-pass mystic-btn"
+                      disabled={turn !== myPlayerIndex || isActionLoading}
+                      onClick={handlePass}
+                      onTouchEnd={(e) => {
+                        if (turn !== myPlayerIndex || isActionLoading) return;
+                        e.preventDefault();
+                        handlePass();
+                      }}>
                       <span className="mystic-btn-text">パス</span>
                     </button>
                   </>
