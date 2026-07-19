@@ -6266,6 +6266,8 @@
         if (turn !== myPlayerIndex && !ranksDiscovered.includes(turn) && !selectionMode && !isAnimating && !watchTarget) {
           // マルチプレイヤー時はホストのみがCPUを動かす
           if (multiplayerMode === 'active' && !isHost) return;
+          const isCpuTurn = multiplayerMode === 'active' ? turn >= conns.length + 1 : true;
+          if (!isCpuTurn) return;
           if (cpuThinkingRef.current) return;
           const timeout = setTimeout(() => {
             if (cpuThinkingRef.current) return;
@@ -6486,7 +6488,7 @@
         }
       };
 
-      const broadcastState = (currentHands, nextTurnValue = null) => {
+      const broadcastState = (currentHands, nextTurnValue = null, customRemotePlayers = null) => {
         if (!isHost) return;
         const baseState = {
           hands: currentHands,
@@ -6504,7 +6506,7 @@
           isRevolution,
           playDirection,
           graveyard,
-          remotePlayers
+          remotePlayers: customRemotePlayers || remotePlayers
         };
 
         conns.forEach((c, idx) => {
@@ -6534,7 +6536,14 @@
           i++;
         }
         const sortedHands = newHands.map(h => sortHand(h));
-        broadcastState(sortedHands, 0);
+        
+        let finalRemotePlayers = [...remotePlayers];
+        for (let j = finalRemotePlayers.length; j < 4; j++) {
+          finalRemotePlayers.push({ id: `cpu${j}`, name: `CPU ${j}` });
+        }
+        setRemotePlayers(finalRemotePlayers);
+        
+        broadcastState(sortedHands, 0, finalRemotePlayers);
         setGameStarted(true);
         setMultiplayerMode('active');
         setMyPlayerIndex(0);
@@ -7668,7 +7677,7 @@
         [0, 1, 2, 3].forEach(pIdx => {
           const rankPos = roundResults.indexOf(pIdx) + 1; // 1:大富豪, 2:富豪, 3:貧民, 4:大貧民
           // マルチプレイ時は、接続プレイヤー以外のスロットをCPUとして扱う
-          const isCpu = pIdx !== 0 && (multiplayerMode === 'active' ? (pIdx > conns.length) : true);
+          const isCpu = pIdx !== myPlayerIndex && (multiplayerMode === 'active' ? (pIdx > conns.length) : true);
           if (isCpu) {
             if (rankPos === 1) decisions[pIdx] = sortedHands[pIdx].slice(0, 2);
             if (rankPos === 2) decisions[pIdx] = sortedHands[pIdx].slice(0, 1);
@@ -7958,7 +7967,7 @@
                 <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(playerIdx))})` }}></div>
                 {/* 名前はアイコンの下部に配置 */}
                 <div className="player-status">
-                  {`CPU ${playerIdx}`}
+                  {playerIdx === myPlayerIndex ? 'YOU' : (remotePlayers[playerIdx]?.name || `CPU ${playerIdx}`)}
                   {hierarchy && <span className={`rank-badge ${hierarchy.cls}`}>{hierarchy.title}</span>}
                 </div>
               </div>
@@ -8686,7 +8695,7 @@
 
               {/* ターンと方向表示 */}
               <div style={{ position: 'absolute', top: isMobile ? '2px' : '30px', left: isMobile ? '2px' : '40px', zIndex: 200, color: '#ccc', fontFamily: "'Cinzel', serif", transform: isMobile ? 'scale(0.45)' : 'none', transformOrigin: 'top left', whiteSpace: 'nowrap' }}>
-                TURN: <span style={{ color: turn === myPlayerIndex ? 'var(--color-blood)' : '#fff' }}>{turn === myPlayerIndex ? 'YOU' : turn === -1 ? 'ENDED' : `CPU ${turn}`}</span>
+                TURN: <span style={{ color: turn === myPlayerIndex ? 'var(--color-blood)' : '#fff' }}>{turn === myPlayerIndex ? 'YOU' : turn === -1 ? 'ENDED' : (remotePlayers[turn]?.name || `CPU ${turn}`)}</span>
                 {(is11Back || isRevolution) && (
                   <span className="revolution-label" style={{ marginLeft: '15px', color: '#ff4444', fontWeight: 'bold', textShadow: '0 0 10px rgba(255,0,0,0.8)', fontSize: '0.9em' }}>
                     {isRevolution ? "REVOLUTION!!" : "J-BACK"}
@@ -8924,7 +8933,7 @@
                       <div key={i} className={`result-row ${pIdx === 0 ? 'highlight-p0' : ''}`}>
                         <span className="rank-num">{i + 1}位</span>
                         <span className="rank-title">{getHierarchyTitle(i + 1).title}</span>
-                        <span className="rank-player">{pIdx === 0 ? 'YOU' : `CPU ${pIdx}`}</span>
+                        <span className="rank-player">{pIdx === myPlayerIndex ? 'YOU' : (remotePlayers[pIdx]?.name || `CPU ${pIdx}`)}</span>
                         {pIdx === 0 && ratingChange && (
                           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px', animation: 'fadeInUp 1s ease-out forwards' }}>
                             <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: ratingChange.diff >= 0 ? '#4CAF50' : '#F44336' }}>
