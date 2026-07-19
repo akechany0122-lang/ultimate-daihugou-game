@@ -6914,6 +6914,8 @@
             isAsync = true;
             setTimeout(() => {
               triggerTempEffect(setBomberActive, 2000);
+            }, effectDelay);
+
             let targetRanks = [];
             let rShuffled = [...RANKS].sort(() => Math.random() - 0.5);
             targetRanks = rShuffled.slice(0, count);
@@ -6944,15 +6946,17 @@
               }
             });
 
-            setExplodingCards(affectedPlayers.map(pIdx => ({ playerIndex: pIdx, rank: targetRanks[0] })));
-            setCentralBombCards(bombedCards);
-            
+            setTimeout(() => {
+              setExplodingCards(affectedPlayers.map(pIdx => ({ playerIndex: pIdx, rank: targetRanks[0] })));
+              setCentralBombCards(bombedCards);
+            }, effectDelay);
+
             setTimeout(() => {
               setExplodingCards([]);
               setCentralBombCards([]);
               setGraveyard(prev => [...prev, ...bombedCards]);
               // Removed internal executeNextTurn call
-            }, effectDelay - 800); // Wait for cut-in before graveyard move
+            }, effectDelay + 2500); // Wait for cut-in before graveyard move
 
             h = tempH;
             const shieldNote = shieldedPlayers.length > 0 ? ` (シールドにより${shieldedPlayers.length}人は無効)` : '';
