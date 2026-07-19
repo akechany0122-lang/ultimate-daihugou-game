@@ -1,3 +1,4 @@
+
     const { useState, useEffect, useRef } = React;
 
     // --- Supabase Initialization ---
@@ -1360,13 +1361,9 @@
             }
           }
         }
-        const isPlus5Combo = playedCards.length === 2 && playedCards.some(c => c.rank === '5') && playedCards.some(c => c.rank !== '5');
-
         if (rank === '8') {
           isFieldCleared = true; steps = 0;
-          if (!isPlus5Combo) {
-            triggerTempEffect(setGuillotineActive, 1200);
-          }
+          triggerTempEffect(setGuillotineActive, 1200);
         }
         if (rank === '9') {
           pDir = pDir * -1;
@@ -1682,12 +1679,6 @@
         setRanksDiscovered(updatedRanks);
 
         if (isFieldCleared) {
-          const clearDelay = isPlus5Combo ? 5000 : 3400;
-          
-          if (isPlus5Combo) {
-            setTimeout(() => triggerTempEffect(setGuillotineActive, 1200), clearDelay - 800);
-          }
-
           setTimeout(() => {
             triggerClearFieldAnim(() => {
               clearFieldLogic([...currentGraveyard, ...cards]);
@@ -1705,7 +1696,7 @@
               }, 50);
 
             });
-          }, clearDelay); // カットイン終了後（800+2500ms）に場を流す
+          }, 3400); // カットイン終了後（800+2500ms）に場を流す
           return;
         } else {
           setPassCount(0);
@@ -2002,18 +1993,10 @@
         }
       };
 
-                  const handlePlay = () => {
-        showMessage('DEBUG', 'handlePlay Fired!');
-        console.log('handlePlay Fired!');
-        if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) {
-          showMessage('DEBUG', 'Blocked by state');
-          return;
-        }
+      const handlePlay = () => {
+        if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
         const canPlay = selectedCards.length > 0;
-        if (!canPlay) {
-          showMessage('DEBUG', 'No cards');
-          return;
-        }
+        if (!canPlay) return;
         
         if (multiplayerMode === 'active' && !isHost) {
           guestConn.send({ type: 'ACTION', action: 'PLAY', cards: selectedCards });
@@ -3353,24 +3336,14 @@
               <div className="action-panel">
                 {gameStarted && !selectionMode && !isGameOver && !exchangePhase && (
                   <>
-                    <button className="action-btn btn-play mystic-btn"
-                      disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)}
-                      onClick={handlePlay}
-                      onTouchEnd={(e) => {
-                        if (turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)) return;
-                        e.preventDefault();
-                        handlePlay();
-                      }}>
+                    <button className="action-btn btn-play mystic-btn" 
+                      disabled={turn !== myPlayerIndex || selectedCards.length === 0 || isActionLoading || !isValidPlay(selectedCards)} 
+                      onClick={handlePlay}>
                       <span className="mystic-btn-text">出す</span>
                     </button>
-                    <button className="action-btn btn-pass mystic-btn"
-                      disabled={turn !== myPlayerIndex || isActionLoading}
-                      onClick={handlePass}
-                      onTouchEnd={(e) => {
-                        if (turn !== myPlayerIndex || isActionLoading) return;
-                        e.preventDefault();
-                        handlePass();
-                      }}>
+                    <button className="action-btn btn-pass mystic-btn" 
+                      disabled={turn !== myPlayerIndex || isActionLoading} 
+                      onClick={handlePass}>
                       <span className="mystic-btn-text">パス</span>
                     </button>
                   </>
@@ -3743,3 +3716,4 @@
     sm.playTitleBGM();
 
 
+  
