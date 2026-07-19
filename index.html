@@ -7494,16 +7494,12 @@
         }
       };
 
-                  const handlePlay = () => {
-        showMessage('DEBUG', 'handlePlay Fired!');
-        console.log('handlePlay Fired!');
+      const handlePlay = () => {
         if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) {
-          showMessage('DEBUG', 'Blocked by state');
           return;
         }
         const canPlay = selectedCards.length > 0;
         if (!canPlay) {
-          showMessage('DEBUG', 'No cards');
           return;
         }
         
