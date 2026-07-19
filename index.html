@@ -6732,6 +6732,7 @@
 
         const rank = effectiveRank;
         const isPlus5Combo = playedCards.length === 2 && playedCards.some(c => c.rank === '5') && playedCards.some(c => c.rank !== '5');
+        const effectDelay = isPlus5Combo ? 6500 : 3400;
         const count = isPlus5Combo ? 1 : playedCards.length; // プラス5の合成は1枚出し判定とする
         const tcg = TCG_DATA[rank];
 
@@ -6850,7 +6851,9 @@
         }
         if (rank === '8') {
           isFieldCleared = true; steps = 0;
-          triggerTempEffect(setGuillotineActive, 1200);
+          if (!isPlus5Combo) {
+            triggerTempEffect(setGuillotineActive, 1200);
+          }
         }
         if (rank === '9') {
           pDir = pDir * -1;
@@ -6865,7 +6868,7 @@
               setTimeout(() => {
                 setSelectionMode('10');
                 setSelectionInfo({ playerIndex, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
-              }, 3300);
+              }, effectDelay);
               steps = 0;
             } else {
               const dropCount = Math.min(count, h[playerIndex].length);
@@ -6889,7 +6892,7 @@
                   setIsAnimating(false);
                   setTimeout(() => setIsAltarActive(false), 800);
                 }, 1200);
-              }, 1300 + dropCount * 120);
+              }, effectDelay - 2000 + dropCount * 120);
               steps = 1;
             }
           }
@@ -6905,10 +6908,12 @@
               setSelectionMode('Q');
               // Qボンバーは出した枚数分選択可能
               setSelectionInfo({ playerIndex, count: Math.min(count, RANKS.length) });
-            }, 3300);
+            }, effectDelay);
             steps = 0;
           } else {
-            triggerTempEffect(setBomberActive, 2000);
+            isAsync = true;
+            setTimeout(() => {
+              triggerTempEffect(setBomberActive, 2000);
             let targetRanks = [];
             let rShuffled = [...RANKS].sort(() => Math.random() - 0.5);
             targetRanks = rShuffled.slice(0, count);
@@ -6947,9 +6952,8 @@
               setCentralBombCards([]);
               setGraveyard(prev => [...prev, ...bombedCards]);
               // Removed internal executeNextTurn call
-            }, 2500); // Extended for longer cut-in animation
+            }, effectDelay - 800); // Wait for cut-in before graveyard move
 
-            isAsync = true; // Mark as async
             h = tempH;
             const shieldNote = shieldedPlayers.length > 0 ? ` (シールドにより${shieldedPlayers.length}人は無効)` : '';
             title = `${tcg?.name} [${targetRanks.join(',')}] x${count}`;
@@ -6964,7 +6968,7 @@
             setTimeout(() => {
               setWatchSelecting(true);
               setSelectionInfo({ playerIndex, count });
-            }, 3300);
+            }, effectDelay);
             steps = 0;
           } else {
             const watchDuration = 5000;
@@ -7166,6 +7170,12 @@
         setRanksDiscovered(updatedRanks);
 
         if (isFieldCleared) {
+          const clearDelay = isPlus5Combo ? 5000 : 3400;
+          
+          if (isPlus5Combo) {
+            setTimeout(() => triggerTempEffect(setGuillotineActive, 1200), clearDelay - 800);
+          }
+
           setTimeout(() => {
             triggerClearFieldAnim(() => {
               clearFieldLogic([...currentGraveyard, ...cards]);
@@ -7183,7 +7193,7 @@
               }, 50);
 
             });
-          }, 3400); // カットイン終了後（800+2500ms）に場を流す
+          }, clearDelay); // カットイン終了後（800+2500ms）に場を流す
           return;
         } else {
           setPassCount(0);
@@ -8406,7 +8416,19 @@
                   )}
                 </div>
               </div>
-              <button className="btn-exit-to-title mystic-btn" onClick={() => location.reload()}><span className="mystic-btn-text">退場</span></button>
+              <button className="btn-exit-to-title mystic-btn" onClick={() => {
+                sm.playPaperSE();
+                if (peer) {
+                  peer.destroy();
+                  setPeer(null);
+                }
+                setConns([]);
+                setGuestConn(null);
+                setIsHost(false);
+                setGameStarted(false);
+                setMultiplayerMode(null);
+                setTitleStage(2);
+              }}><span className="mystic-btn-text">退場</span></button>
               {multiplayerMode === 'lobby' && (
                 <div className="selection-overlay-ui" style={{ zIndex: 6000, background: 'transparent', padding: '40px', marginTop: '22vh', boxShadow: 'none', border: 'none' }}>
                   <div className="selection-guide" style={{color: 'var(--color-gold)', textShadow: '0 0 15px rgba(212, 175, 55, 0.5)', fontSize: '1.8rem', marginBottom: '10px', letterSpacing: '2px'}}>待機中</div>
