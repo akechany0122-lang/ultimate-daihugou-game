@@ -6382,7 +6382,11 @@
              const state = channel.presenceState();
              const players = [];
              for (const id in state) { players.push(state[id][0]); }
-             players.sort((a, b) => a.joined_at.localeCompare(b.joined_at));
+             players.sort((a, b) => {
+               const timeA = a.joined_at || '';
+               const timeB = b.joined_at || '';
+               return timeA.localeCompare(timeB);
+             });
              setRemotePlayers(players);
              
              if (isHostMode && multiplayerMode === 'online' && players.length >= 2 && !gameStarted) {
@@ -6484,8 +6488,8 @@
         }
       };
 
-      const broadcastState = (currentHands, nextTurnValue = null, customRemotePlayers = null) => {
-        if (!isHost) return;
+      const broadcastState = async (currentHands, nextTurnValue = null, customRemotePlayers = null) => {
+        if (!isHost || !roomChannel) return;
         const baseState = {
           hands: currentHands,
           tableCards,
@@ -6505,17 +6509,10 @@
           remotePlayers: customRemotePlayers || remotePlayers
         };
 
-        conns.forEach((c, idx) => {
-          const playerIdx = idx + 1;
-          const maskedHands = baseState.hands.map((h, hIdx) => {
-            if (hIdx === playerIdx) return h;
-            return h.map(card => ({ id: card.id, hidden: true })); // Mask content
-          });
-          c.conn.send({
-            type: 'STATE_UPDATE',
-            playerIndex: playerIdx,
-            state: { ...baseState, hands: maskedHands }
-          });
+        await roomChannel.send({
+          type: 'broadcast',
+          event: 'STATE_UPDATE',
+          payload: { state: baseState }
         });
         
         // Update local state (Host is player 0)
@@ -8451,10 +8448,11 @@
               </div>
               <button className="btn-exit-to-title mystic-btn" onClick={() => {
                 sm.playPaperSE();
-                if (peer) {
-                  peer.destroy();
-                  setPeer(null);
+                if (roomChannel) {
+                  roomChannel.unsubscribe();
+                  setRoomChannel(null);
                 }
+                setCurrentRoom(null);
                 // setConns([]);
                 // setGuestConn(null);
                 setIsHost(false);
@@ -8486,7 +8484,7 @@
                     ) : (
                       <div style={{ color: 'var(--color-gold)', animation: 'pulse-gold 1s infinite alternate', display: 'flex', alignItems: 'center' }}>ホストの開始を待機しています...</div>
                     )}
-                    <button className="action-btn btn-pass mystic-btn" onClick={() => { peer?.destroy(); setMultiplayerMode(null); sm.playHomeBGM(); }}>
+                    <button className="action-btn btn-pass mystic-btn" onClick={() => { if(roomChannel) { roomChannel.unsubscribe(); setRoomChannel(null); setCurrentRoom(null); } setMultiplayerMode(null); sm.playHomeBGM(); }}>
                       <span className="mystic-btn-text">解散</span>
                     </button>
                   </div>
