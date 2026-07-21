@@ -6446,6 +6446,9 @@
              } else if (data.event === 'PASS') {
                if (data.playerIndex === myPlayerIndexRef.current) return;
                executePassRef.current(data.playerIndex);
+             } else if (data.event === 'COMPLETE_EFFECT') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
+               completeSpecialEffectRef.current(data.choice, data.playerIndex);
              }
           })
           .on('broadcast', { event: 'ACTION' }, (payload) => {
@@ -6467,6 +6470,7 @@
                broadcastEvent({ event: 'PASS', playerIndex: pIdx });
              } else if (data.action === 'COMPLETE_EFFECT') {
                completeSpecialEffectRef.current(data.choice, pIdx);
+               broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: pIdx, choice: data.choice });
              } else if (data.action === 'CONFIRM_EXCHANGE') {
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
              } else if (data.action === 'RESTART' && isGameOverRef.current) {
@@ -6864,12 +6868,17 @@
               steps = 1;
             } else {
               triggerTempEffect(setPassThreadActive, 1000);
+              const rp = remotePlayers[playerIndex];
+              const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
               if (playerIndex === myPlayerIndexRef.current) {
                 // カットイン演出(800ms開始+2500ms)終了後にUIを表示
                 setTimeout(() => {
                   setSelectionMode('7');
                   setSelectionInfo({ playerIndex, nextP, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
                 }, 3300);
+                steps = 0;
+              } else if (isHumanGuest) {
+                // ゲストの入力を待つ
                 steps = 0;
               } else {
                 const passCount = Math.min(count, h[playerIndex].length);
@@ -6930,8 +6939,13 @@
               }, effectDelay);
               steps = 0;
             } else {
-              const dropCount = Math.min(count, h[playerIndex].length);
-              let dropped = [];
+              const rp = remotePlayers[playerIndex];
+              const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+              if (isHumanGuest) {
+                steps = 0;
+              } else {
+                const dropCount = Math.min(count, h[playerIndex].length);
+                let dropped = [];
               for (let i = 0; i < dropCount; i++) {
                 const cIndex = Math.floor(Math.random() * h[playerIndex].length);
                 const card = h[playerIndex].splice(cIndex, 1)[0];
@@ -6970,10 +6984,15 @@
             }, effectDelay);
             steps = 0;
           } else {
-            isAsync = true;
-            setTimeout(() => {
-              triggerTempEffect(setBomberActive, 2000);
-            }, effectDelay);
+            const rp = remotePlayers[playerIndex];
+            const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+            if (isHumanGuest) {
+              steps = 0;
+            } else {
+              isAsync = true;
+              setTimeout(() => {
+                triggerTempEffect(setBomberActive, 2000);
+              }, effectDelay);
 
             let targetRanks = [];
             let rShuffled = [...RANKS].sort(() => Math.random() - 0.5);
@@ -7023,10 +7042,11 @@
             desc = `全領域から${bombCount}枚が灰燼に帰した${shieldNote}`;
             triggerAbilityLog(`Qボンバー: ${targetRanks.join(',')}`);
           }
+          }
         }
         if (rank === 'K') {
           setIsAnimating(true);
-          if (playerIndex === 0) {
+          if (playerIndex === 0 || playerIndex === myPlayerIndexRef.current) {
             // カットイン演出(800ms開始+2500ms)終了後にUIを表示
             setTimeout(() => {
               setWatchSelecting(true);
@@ -7034,6 +7054,11 @@
             }, effectDelay);
             steps = 0;
           } else {
+            const rp = remotePlayers[playerIndex];
+            const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+            if (isHumanGuest) {
+              steps = 0;
+            } else {
             const watchDuration = 5000;
             // シールド所持者はKウォッチの対象から除外
             const others = [0, 1, 2, 3].filter(v => v !== playerIndex && !ranksDiscovered.includes(v) && !shieldStates[v]);
@@ -7070,12 +7095,16 @@
             }
             isAsync = true; // Mark as async
           }
+          }
         }
 
         // if (title) showMessage(title, desc); // Removed to avoid overlapping with cut-in
 
         // Kウォッチ選択モードでない場合のみターンの処理を返す
-        return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: (rank === 'K' && playerIndex === 0) ? 0 : steps, pDir, isAsync, phoenixDrawn };
+        const rp = remotePlayers[playerIndex];
+        const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+        const kWait = rank === 'K' && (playerIndex === 0 || playerIndex === myPlayerIndexRef.current || isHumanGuest);
+        return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: kWait ? 0 : steps, pDir, isAsync, phoenixDrawn };
       };
 
       const executePlay = (playerIndex, cards) => {
@@ -7412,8 +7441,7 @@
         const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
         if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
           sendActionToHost({ action: 'COMPLETE_EFFECT', choice });
-          setSelectionMode(null); setSelectionInfo(null); setSelectedCards([]);
-          return;
+          // returnせずにそのままローカルで演出を実行する（楽観的UI更新）
         }
         if (actingIdx === myPlayerIndex) setIsActionLoading(true);
 
