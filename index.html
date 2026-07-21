@@ -6066,13 +6066,7 @@
       const isGameOverRef = useRef(isGameOver);
       const myPlayerIndexRef = useRef(myPlayerIndex);
 
-      useEffect(() => {
-        turnRef.current = turn;
-        isAnimatingRef.current = isAnimating;
-        remotePlayersRef.current = remotePlayers;
-        isGameOverRef.current = isGameOver;
-        myPlayerIndexRef.current = myPlayerIndex;
-      }, [turn, isAnimating, remotePlayers, isGameOver, myPlayerIndex]);
+      const executePlayRef = useRef();
       const executePassRef = useRef();
       const completeSpecialEffectRef = useRef();
       const handleRestartRef = useRef();
@@ -6083,7 +6077,8 @@
         isAnimatingRef.current = isAnimating;
         remotePlayersRef.current = remotePlayers;
         isGameOverRef.current = isGameOver;
-      }, [turn, isAnimating, remotePlayers, isGameOver]);
+        myPlayerIndexRef.current = myPlayerIndex;
+      }, [turn, isAnimating, remotePlayers, isGameOver, myPlayerIndex]);
 
       const [leaderboardData, setLeaderboardData] = useState([]);
       const [showProfileSettings, setShowProfileSettings] = useState(false);
