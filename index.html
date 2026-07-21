@@ -6064,8 +6064,15 @@
       const isAnimatingRef = useRef(isAnimating);
       const remotePlayersRef = useRef(remotePlayers);
       const isGameOverRef = useRef(isGameOver);
+      const myPlayerIndexRef = useRef(myPlayerIndex);
 
-      const executePlayRef = useRef();
+      useEffect(() => {
+        turnRef.current = turn;
+        isAnimatingRef.current = isAnimating;
+        remotePlayersRef.current = remotePlayers;
+        isGameOverRef.current = isGameOver;
+        myPlayerIndexRef.current = myPlayerIndex;
+      }, [turn, isAnimating, remotePlayers, isGameOver, myPlayerIndex]);
       const executePassRef = useRef();
       const completeSpecialEffectRef = useRef();
       const handleRestartRef = useRef();
@@ -6845,10 +6852,9 @@
               
               isAsync = true;
               steps = 1;
-            }
-            else {
+            } else {
               triggerTempEffect(setPassThreadActive, 1000);
-              if (playerIndex === 0) {
+              if (playerIndex === myPlayerIndexRef.current) {
                 // カットイン演出(800ms開始+2500ms)終了後にUIを表示
                 setTimeout(() => {
                   setSelectionMode('7');
@@ -6906,7 +6912,7 @@
         if (rank === '10') {
           if (h[playerIndex].length > 0) {
             setIsAnimating(true);
-            if (playerIndex === 0) {
+            if (playerIndex === myPlayerIndexRef.current) {
               // カットイン演出(800ms開始+2500ms)終了後にUIを表示
               setTimeout(() => {
                 setSelectionMode('10');
@@ -6945,7 +6951,7 @@
         }
         if (rank === 'Q') {
           const targetRank = RANKS[Math.floor(Math.random() * RANKS.length)];
-          if (playerIndex === 0) {
+          if (playerIndex === myPlayerIndexRef.current) {
             // カットイン演出(800ms開始+2500ms)終了後にUIを表示
             setTimeout(() => {
               setSelectionMode('Q');
