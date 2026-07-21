@@ -6058,6 +6058,26 @@
       const [onlineMatchStatus, setOnlineMatchStatus] = useState('idle'); // 'idle' | 'searching' | 'found'
       const [isOnlineMatch, setIsOnlineMatch] = useState(false);
       const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+      // --- Latest State Refs for Event Listeners (Stale Closure対策) ---
+      const turnRef = useRef(turn);
+      const isAnimatingRef = useRef(isAnimating);
+      const remotePlayersRef = useRef(remotePlayers);
+      const isGameOverRef = useRef(isGameOver);
+
+      const executePlayRef = useRef();
+      const executePassRef = useRef();
+      const completeSpecialEffectRef = useRef();
+      const handleRestartRef = useRef();
+      const isValidPlayRef = useRef();
+
+      useEffect(() => {
+        turnRef.current = turn;
+        isAnimatingRef.current = isAnimating;
+        remotePlayersRef.current = remotePlayers;
+        isGameOverRef.current = isGameOver;
+      }, [turn, isAnimating, remotePlayers, isGameOver]);
+
       const [leaderboardData, setLeaderboardData] = useState([]);
       const [showProfileSettings, setShowProfileSettings] = useState(false);
       const [tempProfileName, setTempProfileName] = useState('');
@@ -6335,7 +6355,6 @@
         setPassphrase(roomNum);
         const hostId = "ultimate-daihugou-" + btoa(roomNum).replace(/=/g, "");
         startAsHost(hostId);
-        setMultiplayerMode('lobby');
       };
 
       const initMultiplayer = (pass) => {
@@ -6359,11 +6378,11 @@
         let targetRoom = null;
         if (isHostMode) {
           const { data, error } = await supabaseClient.from('rooms').insert([{ room_code: roomCode, status: 'waiting' }]).select().single();
-          if (error) { alert("合言葉が既に使われているか、エラーが発生しました"); return; }
+          if (error) { alert("エラーが発生しました: " + error.message + "\n※Supabaseにroomsテーブルが作成されているか確認してください"); return; }
           targetRoom = data;
         } else {
           const { data, error } = await supabaseClient.from('rooms').select('*').eq('room_code', roomCode).single();
-          if (error || !data) { alert("ルームが見つかりません"); return; }
+          if (error || !data) { alert("ルームが見つかりません。(" + (error?.message || '') + ")"); return; }
           targetRoom = data;
         }
         
@@ -6419,30 +6438,30 @@
           .on('broadcast', { event: 'EVENT' }, (payload) => {
              if (isHostMode) return;
              const data = payload.payload;
-             if (data.event === 'PLAY') executePlay(data.playerIndex, data.cards);
-             else if (data.event === 'PASS') executePass(data.playerIndex);
+             if (data.event === 'PLAY') executePlayRef.current(data.playerIndex, data.cards);
+             else if (data.event === 'PASS') executePassRef.current(data.playerIndex);
           })
           .on('broadcast', { event: 'ACTION' }, (payload) => {
              if (!isHostMode) return;
              const data = payload.payload;
              console.log('Action from guest', data);
-             const pIdx = channel.presenceState() ? Object.keys(channel.presenceState()).findIndex(id => id === data.userId) : 1;
-             if (turn !== pIdx || isAnimating) return;
+             const pIdx = remotePlayersRef.current.findIndex(p => p.id === data.userId);
+             if (pIdx <= 0 || turnRef.current !== pIdx || isAnimatingRef.current) return;
 
              if (data.action === 'PLAY') {
-               if (isValidPlay(data.cards)) {
-                 executePlay(pIdx, data.cards);
+               if (isValidPlayRef.current(data.cards)) {
+                 executePlayRef.current(pIdx, data.cards);
                  broadcastEvent({ event: 'PLAY', playerIndex: pIdx, cards: data.cards });
                }
              } else if (data.action === 'PASS') {
-               executePass(pIdx);
+               executePassRef.current(pIdx);
                broadcastEvent({ event: 'PASS', playerIndex: pIdx });
              } else if (data.action === 'COMPLETE_EFFECT') {
-               completeSpecialEffect(data.choice, pIdx);
+               completeSpecialEffectRef.current(data.choice, pIdx);
              } else if (data.action === 'CONFIRM_EXCHANGE') {
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
-             } else if (data.action === 'RESTART' && isGameOver) {
-               handleRestart();
+             } else if (data.action === 'RESTART' && isGameOverRef.current) {
+               handleRestartRef.current();
              }
           });
 
@@ -8108,6 +8127,15 @@
         // 1人プレイ用の開始処理
         startGame();
       };
+
+      // --- Latest Function Refs for Event Listeners ---
+      useEffect(() => {
+        executePlayRef.current = executePlay;
+        executePassRef.current = executePass;
+        completeSpecialEffectRef.current = completeSpecialEffect;
+        handleRestartRef.current = handleRestart;
+        isValidPlayRef.current = isValidPlay;
+      }, [executePlay, executePass, completeSpecialEffect, handleRestart, isValidPlay]);
 
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
