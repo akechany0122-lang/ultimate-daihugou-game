@@ -6866,7 +6866,7 @@
             } else {
               triggerTempEffect(setPassThreadActive, 1000);
               const rp = remotePlayers[playerIndex];
-              const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+              const isWaitingForOther = (!isHost) || (multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu'));
               if (playerIndex === myPlayerIndexRef.current) {
                 // カットイン演出(800ms開始+2500ms)終了後にUIを表示
                 setTimeout(() => {
@@ -6874,7 +6874,7 @@
                   setSelectionInfo({ playerIndex, nextP, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
                 }, 3300);
                 steps = 0;
-              } else if (isHumanGuest) {
+              } else if (isWaitingForOther) {
                 // ゲストの入力を待つ
                 steps = 0;
               } else {
@@ -6937,8 +6937,8 @@
               steps = 0;
             } else {
               const rp = remotePlayers[playerIndex];
-              const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
-              if (isHumanGuest) {
+              const isWaitingForOther = (!isHost) || (multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu'));
+              if (isWaitingForOther) {
                 steps = 0;
               } else {
                 const dropCount = Math.min(count, h[playerIndex].length);
@@ -6983,8 +6983,8 @@
             steps = 0;
           } else {
             const rp = remotePlayers[playerIndex];
-            const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
-            if (isHumanGuest) {
+            const isWaitingForOther = (!isHost) || (multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu'));
+            if (isWaitingForOther) {
               steps = 0;
             } else {
               isAsync = true;
@@ -7053,8 +7053,8 @@
             steps = 0;
           } else {
             const rp = remotePlayers[playerIndex];
-            const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
-            if (isHumanGuest) {
+            const isWaitingForOther = (!isHost) || (multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu'));
+            if (isWaitingForOther) {
               steps = 0;
             } else {
             const watchDuration = 5000;
@@ -7100,8 +7100,8 @@
 
         // Kウォッチ選択モードでない場合のみターンの処理を返す
         const rp = remotePlayers[playerIndex];
-        const isHumanGuest = multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
-        const kWait = rank === 'K' && (playerIndex === 0 || playerIndex === myPlayerIndexRef.current || isHumanGuest);
+        const isWaitingForOther = (!isHost) || (multiplayerMode === 'active' && isHost && rp && rp.id !== 'local' && !rp.id.startsWith('cpu'));
+        const kWait = rank === 'K' && (playerIndex === 0 || playerIndex === myPlayerIndexRef.current || isWaitingForOther);
         return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: kWait ? 0 : steps, pDir, isAsync, phoenixDrawn };
       };
 
