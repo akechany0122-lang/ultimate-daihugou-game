@@ -5498,7 +5498,8 @@
     let myUid = localStorage.getItem('my_uid');
     
     try {
-      if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+      // Babel環境などでのロード遅延に備えて安全に初期化
+      if (typeof window !== 'undefined' && window.supabase && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         isSupabaseReady = true;
       }
@@ -6345,7 +6346,15 @@
       };
 
       const joinRoomAndSyncPresence = async (roomCode, userProfile, isHostMode = false) => {
-        if (!isSupabaseReady) { alert("データベースに接続されていません"); return; }
+        if (!isSupabaseReady) {
+          if (typeof window !== 'undefined' && window.supabase && SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            isSupabaseReady = true;
+          } else {
+            alert("データベースに接続されていません"); 
+            return; 
+          }
+        }
         
         let targetRoom = null;
         if (isHostMode) {
