@@ -6447,13 +6447,15 @@
              if (!isHostMode) return;
              const data = payload.payload;
              console.log('Action from guest', data);
-             const pIdx = remotePlayersRef.current.findIndex(p => p.id === data.userId);
-             if (pIdx <= 0 || turnRef.current !== pIdx || isAnimatingRef.current) return;
+             const pIdx = data.playerIndex;
+             if (pIdx === undefined || pIdx <= 0 || turnRef.current !== pIdx || isAnimatingRef.current) return;
 
              if (data.action === 'PLAY') {
                if (isValidPlayRef.current(data.cards)) {
                  executePlayRef.current(pIdx, data.cards);
                  broadcastEvent({ event: 'PLAY', playerIndex: pIdx, cards: data.cards });
+               } else {
+                 roomChannel.send({ type: 'broadcast', event: 'ACTION_REJECTED', payload: { playerIndex: pIdx, reason: 'INVALID_PLAY' } });
                }
              } else if (data.action === 'PASS') {
                executePassRef.current(pIdx);
@@ -6464,6 +6466,13 @@
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
              } else if (data.action === 'RESTART' && isGameOverRef.current) {
                handleRestartRef.current();
+             }
+          })
+          .on('broadcast', { event: 'ACTION_REJECTED' }, (payload) => {
+             if (isHostMode) return;
+             if (payload.payload.playerIndex === myPlayerIndex) {
+               setIsActionLoading(false);
+               showMessage('INVALID SACRIFICE', 'ホスト側でそのカードは場に出せないと判定されました');
              }
           });
 
@@ -6484,7 +6493,7 @@
 
       const sendActionToHost = async (actionData) => {
         if (!roomChannel || isHost) return;
-        await roomChannel.send({ type: 'broadcast', event: 'ACTION', payload: { ...actionData, userId: myUid } });
+        await roomChannel.send({ type: 'broadcast', event: 'ACTION', payload: { ...actionData, playerIndex: myPlayerIndex } });
       };
 
       const getDisplayIndex = (i) => {
@@ -7541,17 +7550,16 @@
           return;
         }
         
-        if (multiplayerMode === 'active' && !isHost) {
-          sendActionToHost({ action: 'PLAY', cards: selectedCards });
-          setSelectedCards([]);
-          return;
-        }
-
         setIsActionLoading(true);
         if (isValidPlay(selectedCards)) {
-          executePlay(myPlayerIndex, selectedCards); 
-          if (isHost) broadcastEvent({ event: 'PLAY', playerIndex: myPlayerIndex, cards: selectedCards });
-          setSelectedCards([]);
+          if (multiplayerMode === 'active' && !isHost) {
+            sendActionToHost({ action: 'PLAY', cards: selectedCards });
+            setSelectedCards([]);
+          } else {
+            executePlay(myPlayerIndex, selectedCards); 
+            if (isHost) broadcastEvent({ event: 'PLAY', playerIndex: myPlayerIndex, cards: selectedCards });
+            setSelectedCards([]);
+          }
         } else {
           setIsActionLoading(false);
           showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
