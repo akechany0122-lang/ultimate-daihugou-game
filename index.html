@@ -6257,11 +6257,15 @@
       useEffect(() => {
         // ターンが実際に移動したかチェック
         if (turn !== prevTurnRef.current) {
-          if (turn === 0) setIsActionLoading(false);
+          if (turn === myPlayerIndex) setIsActionLoading(false);
           cpuThinkingRef.current = false;
           prevTurnRef.current = turn;
+          if (multiplayerMode === 'active' && isHost && turn !== -1) {
+            // 状態の完全な同期はターンの切り替わり時に一回だけ行う（演出阻害防止）
+            broadcastState(hands, turn);
+          }
         }
-
+        
         // CPUターンのトリガー
         if (turn !== myPlayerIndex && !ranksDiscovered.includes(turn) && !selectionMode && !isAnimating && !watchTarget) {
           // マルチプレイヤー時はホストのみがCPUを動かす
@@ -6421,6 +6425,15 @@
         });
       };
 
+      const broadcastEvent = (eventData, excludePeerId = null) => {
+        if (!isHost) return;
+        conns.forEach(c => {
+          if (c.peerId !== excludePeerId) {
+            c.conn.send({ type: 'EVENT', ...eventData });
+          }
+        });
+      };
+
       const handleMultiplayerData = (data, fromPeerId) => {
         if (data.type === 'STATE_UPDATE') {
           // Guest receives state
@@ -6442,6 +6455,13 @@
           setPlayDirection(data.state.playDirection);
           setGraveyard(data.state.graveyard);
           if (data.state.remotePlayers) setRemotePlayers(data.state.remotePlayers);
+        } else if (data.type === 'EVENT' && !isHost) {
+          // Guest receives action event
+          if (data.event === 'PLAY') {
+            executePlay(data.playerIndex, data.cards);
+          } else if (data.event === 'PASS') {
+            executePass(data.playerIndex);
+          }
         } else if (data.type === 'ACTION' && isHost) {
           // Host receives action from guest
           console.log('Action from', fromPeerId, data);
@@ -6451,11 +6471,13 @@
           if (data.action === 'PLAY') {
             if (isValidPlay(data.cards)) {
               executePlay(pIdx, data.cards);
+              broadcastEvent({ event: 'PLAY', playerIndex: pIdx, cards: data.cards }, fromPeerId);
             } else {
               conns[pIdx - 1].conn.send({ type: 'ERROR', message: 'そのカードは場に出せない' });
             }
           } else if (data.action === 'PASS') {
             executePass(pIdx);
+            broadcastEvent({ event: 'PASS', playerIndex: pIdx }, fromPeerId);
           } else if (data.action === 'COMPLETE_EFFECT') {
             completeSpecialEffect(data.choice, pIdx);
           } else if (data.action === 'CONFIRM_EXCHANGE') {
@@ -6686,12 +6708,7 @@
             return;
           }
 
-          // Hostの場合、ここで同期を行う
-          if (multiplayerMode === 'active' && isHost) {
-            const nextTarget = getNextPlayer(playerIndex, 1, null, ranksDiscovered);
-            broadcastState(hands, nextTarget);
-          }
-
+          if (isHost) broadcastEvent({ event: 'PASS', playerIndex: playerIndex });
           executeNextTurn(playerIndex, 1, null, ranksDiscovered);
         }
       };
@@ -7194,12 +7211,6 @@
         newHands = newHands.map(h => sortHand(h, effectRes.isRev, effectRes.is11B));
         setHands(newHands); setGraveyard(currentGraveyard);
 
-        // NOTE: Hand update is broadcasted here for immediate cards removal, 
-        // but the turn update will be broadcasted inside the setTimeout below.
-        if (multiplayerMode === 'active' && isHost) {
-          broadcastState(newHands);
-        }
-
         // 手札が空になったプレイヤーをランクに登録
         let updatedRanks = [...ranksDiscovered];
         newHands.forEach((h, idx) => {
@@ -7547,8 +7558,9 @@
 
         setIsActionLoading(true);
         if (isValidPlay(selectedCards)) {
-          executePlay(myPlayerIndex, selectedCards); setSelectedCards([]);
-          if (isHost) broadcastState(hands);
+          executePlay(myPlayerIndex, selectedCards); 
+          if (isHost) broadcastEvent({ event: 'PLAY', playerIndex: myPlayerIndex, cards: selectedCards });
+          setSelectedCards([]);
         } else {
           setIsActionLoading(false);
           showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
