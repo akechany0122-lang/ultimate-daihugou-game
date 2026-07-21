@@ -7565,6 +7565,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PLAY', cards: cardsToPlay });
+          setSelectedCards([]);
           return;
         }
 
@@ -7591,6 +7592,7 @@
         if (isValidPlay(selectedCards)) {
           if (multiplayerMode === 'active' && !isHost) {
             sendActionToHost({ action: 'PLAY', cards: selectedCards });
+            setSelectedCards([]);
             return;
           } else {
             executePlay(myPlayerIndex, selectedCards); 
@@ -7608,6 +7610,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PASS' });
+          setSelectedCards([]);
           return;
         }
 
