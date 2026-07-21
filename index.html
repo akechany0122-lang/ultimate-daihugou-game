@@ -6690,6 +6690,7 @@
             }
             // 自動的に次の手番を開始
             setTurn(-1);
+            setIsActionLoading(false); // UIロック解除
             setTimeout(() => setTurn(nextStarter), 10);
           });
         } else {
@@ -7239,6 +7240,7 @@
 
               // 同一ターン主の場合はセットするだけではuseEffectが発火しないため、一瞬-1にしてから再代入する
               setTurn(-1);
+              setIsActionLoading(false); // UIロック解除
               setTimeout(() => {
                 setTurn(nextStarter);
               }, 50);
