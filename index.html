@@ -6292,7 +6292,7 @@
         if (turn !== myPlayerIndex && !ranksDiscovered.includes(turn) && !selectionMode && !isAnimating && !watchTarget) {
           // マルチプレイヤー時はホストのみがCPUを動かす
           if (multiplayerMode === 'active' && !isHost) return;
-          const isCpuTurn = multiplayerMode === 'active' ? turn >= remotePlayers.length : true;
+          const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
           if (!isCpuTurn) return;
           if (cpuThinkingRef.current) return;
           const timeout = setTimeout(() => {
@@ -6440,8 +6440,13 @@
           .on('broadcast', { event: 'EVENT' }, (payload) => {
              if (isHostMode) return;
              const data = payload.payload;
-             if (data.event === 'PLAY') executePlayRef.current(data.playerIndex, data.cards);
-             else if (data.event === 'PASS') executePassRef.current(data.playerIndex);
+             if (data.event === 'PLAY') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
+               executePlayRef.current(data.playerIndex, data.cards);
+             } else if (data.event === 'PASS') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
+               executePassRef.current(data.playerIndex);
+             }
           })
           .on('broadcast', { event: 'ACTION' }, (payload) => {
              if (!isHostMode) return;
@@ -7529,6 +7534,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PLAY', cards: cardsToPlay });
+          executePlay(myPlayerIndex, cardsToPlay);
           setSelectedCards([]);
           return;
         }
@@ -7556,6 +7562,7 @@
         if (isValidPlay(selectedCards)) {
           if (multiplayerMode === 'active' && !isHost) {
             sendActionToHost({ action: 'PLAY', cards: selectedCards });
+            executePlay(myPlayerIndex, selectedCards);
             setSelectedCards([]);
           } else {
             executePlay(myPlayerIndex, selectedCards); 
@@ -7573,6 +7580,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PASS' });
+          executePass(myPlayerIndex);
           setSelectedCards([]);
           return;
         }
