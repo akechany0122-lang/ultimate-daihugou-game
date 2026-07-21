@@ -7371,6 +7371,7 @@
 
         if (foundPlay) {
           executePlay(turn, foundPlay);
+          if (multiplayerMode === 'active' && isHost) broadcastEvent({ event: 'PLAY', playerIndex: turn, cards: foundPlay });
         } else {
           // Plus 5 Fallback for CPU
           const tableEffectiveCount = getEffectiveCount(tableCards.map(tc => tc.card));
@@ -7393,9 +7394,13 @@
           
           if (foundPlay) {
             executePlay(turn, foundPlay);
+            if (multiplayerMode === 'active' && isHost) broadcastEvent({ event: 'PLAY', playerIndex: turn, cards: foundPlay });
           } else {
             const passWait = tableCards.length === 0 ? 500 : 100;
-            setTimeout(() => executePass(turn), passWait);
+            setTimeout(() => {
+              executePass(turn);
+              if (multiplayerMode === 'active' && isHost) broadcastEvent({ event: 'PASS', playerIndex: turn });
+            }, passWait);
           }
         }
         // 思考完了後はreset（次のsetTurn変化に委ねる）
