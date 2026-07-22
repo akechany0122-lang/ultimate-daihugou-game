@@ -6688,7 +6688,12 @@
           setIsPlus5Active(true);
           setTimeout(() => setIsPlus5Active(false), 3000);
         }
-        setTableCards([]);
+        setTableCards(prev => {
+          if (prev && prev.some(tc => tc.isAnimating || tc.isSlammed)) {
+            return prev;
+          }
+          return [];
+        });
         setPreviousTableCards([]);
         setPassedPlayers([]);
         setIsShielded([false, false, false, false]);
