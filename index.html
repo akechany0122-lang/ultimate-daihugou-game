@@ -6418,8 +6418,18 @@
              if (isHostMode) return;
              const data = payload.payload;
              setHands(data.state.hands);
-             setTableCards(data.state.tableCards);
-             if (data.state.previousTableCards) setPreviousTableCards(data.state.previousTableCards);
+             setTableCards(prev => {
+               if (prev && prev.some(tc => tc.isAnimating || tc.isSlammed)) {
+                 return prev;
+               }
+               return data.state.tableCards;
+             });
+             if (data.state.previousTableCards) {
+               setPreviousTableCards(prev => {
+                 if (prev && prev.some(tc => tc.isAnimating || tc.isSlammed)) return prev;
+                 return data.state.previousTableCards;
+               });
+             }
              setTurn(data.state.turn);
              setGameStarted(data.state.gameStarted);
              const pIndex = data.state.remotePlayers.findIndex(rp => rp.id === myPlayerData.id);
@@ -8026,7 +8036,7 @@
               </div>
             )}
 
-            {playerIdx !== 0 ? (
+            {playerIdx !== myPlayerIndex ? (
               <div className="player-center-info" style={{ filter: passedPlayers.includes(playerIdx) ? 'brightness(0.3)' : 'none' }}>
                 {watchTarget && watchTarget.activatorIndex === playerIdx && playerIdx !== myPlayerIndex && (
                   <div className="watch-activator-label">監視中</div>
@@ -8531,8 +8541,8 @@
             <div className="table-container">
               {/* 自分自身（YOU）のアバター・名前 左下固定表示 */}
               <div className="player-you-info-fixed">
-                <div className="hand-count-badge">{hands[0].length}</div>
-                <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(0))})` }}></div>
+                <div className="hand-count-badge">{hands[myPlayerIndex] ? hands[myPlayerIndex].length : 0}</div>
+                <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(myPlayerIndex))})` }}></div>
                 <div className="player-status">
                   YOU
                   {ranksDiscovered.includes(myPlayerIndex) && (
