@@ -6455,7 +6455,7 @@
                executePassRef.current(data.playerIndex);
              } else if (data.event === 'COMPLETE_EFFECT') {
                if (data.playerIndex === myPlayerIndexRef.current) return;
-               completeSpecialEffectRef.current(data.choice, data.playerIndex);
+               completeSpecialEffectRef.current(data.choice, data.playerIndex, data.selectionInfo);
              }
           })
           .on('broadcast', { event: 'ACTION' }, (payload) => {
@@ -6476,8 +6476,8 @@
                executePassRef.current(pIdx);
                broadcastEvent({ event: 'PASS', playerIndex: pIdx });
              } else if (data.action === 'COMPLETE_EFFECT') {
-               completeSpecialEffectRef.current(data.choice, pIdx);
-               broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: pIdx, choice: data.choice });
+               completeSpecialEffectRef.current(data.choice, pIdx, data.selectionInfo);
+               broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: pIdx, choice: data.choice, selectionInfo: data.selectionInfo });
              } else if (data.action === 'CONFIRM_EXCHANGE') {
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
              } else if (data.action === 'RESTART' && isGameOverRef.current) {
@@ -7444,11 +7444,13 @@
         // cpuThinkingRef.current = false; // This will be reset by the useEffect when turn changes
       };
 
-      const completeSpecialEffect = (choice, remotePlayerIdx = null) => {
-        const { playerIndex, nextP, count } = selectionInfo;
+      const completeSpecialEffect = (choice, remotePlayerIdx = null, remoteSelectionInfo = null) => {
+        const info = remoteSelectionInfo || selectionInfo;
+        if (!info) return; // Fallback for safety
+        const { playerIndex, nextP, count } = info;
         const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
         if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
-          sendActionToHost({ action: 'COMPLETE_EFFECT', choice });
+          sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo });
           return; // ゲストはホストからのブロードキャストを待つ
         }
         if (actingIdx === myPlayerIndex) setIsActionLoading(true);
