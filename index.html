@@ -6437,12 +6437,8 @@
              setGraveyard(data.state.graveyard);
              if (data.state.remotePlayers) setRemotePlayers(data.state.remotePlayers);
              
-             // 安全のため、ターン同期時にローカルのUIロックや演出状態を強制リセット
+             // ターン同期時にローカルのUIロックのみ強制リセット（アニメーションは阻害しない）
              setIsActionLoading(false);
-             setIsAnimating(false);
-             setSelectionMode(null);
-             setWatchSelecting(false);
-             setWatchTarget(null);
           })
           .on('broadcast', { event: 'EVENT' }, (payload) => {
              if (isHostMode) return;
@@ -7451,10 +7447,32 @@
         const { playerIndex, nextP, count } = info;
         const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
         if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
-          sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo, selectionMode });
+          sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo, selectionMode: mode });
           // return せずにローカルでも Optimistic に実行する
         }
         if (actingIdx === myPlayerIndex) setIsActionLoading(true);
+
+        if (mode === 'K') {
+          const watchDuration = 5000;
+          setWatchTarget({
+            targetIndexes: choice,
+            activatorIndex: actingIdx,
+            endTime: Date.now() + watchDuration
+          });
+          setWatchSelecting(false);
+          setWatchSelectedTargets([]);
+          triggerAbilityLog(`Kウォッチ: Player${choice.join(',')}`);
+          setSelectionMode(null);
+          setSelectionInfo(null);
+          setIsAnimating(true);
+          sm.playEffectSE('kwatch_start.mp3');
+          setTimeout(() => {
+            setWatchTarget(null);
+            setIsAnimating(false);
+            executeNextTurn(actingIdx, 1);
+          }, watchDuration);
+          return;
+        }
 
         // Host uses a consistent seed or broadcasts the randomness if needed, but for now we'll just broadcast the final state.
         let h = [...hands]; let gy = [...graveyard];
@@ -7898,24 +7916,7 @@
                 const maxTargets = selectionInfo?.count || 1;
 
                 if (newSelected.length >= maxTargets || newSelected.length >= availableTargetsCount) {
-                  const watchDuration = 5000;
-                  setWatchTarget({
-                    targetIndexes: newSelected,
-                    activatorIndex: myPlayerIndex,
-                    endTime: Date.now() + watchDuration
-                  });
-                  setWatchSelecting(false);
-                  setWatchSelectedTargets([]);
-                  triggerAbilityLog(`Kウォッチ: Player${newSelected.join(',')}`);
-                  setSelectionMode(null);
-                  setSelectionInfo(null);
-                  setIsAnimating(true);
-                  sm.playEffectSE('kwatch_start.mp3');
-                  setTimeout(() => {
-                    setWatchTarget(null);
-                    setIsAnimating(false);
-                    executeNextTurn(myPlayerIndex, 1);
-                  }, watchDuration);
+                  completeSpecialEffect(newSelected, null, { playerIndex: myPlayerIndex }, 'K');
                 } else {
                   setWatchSelectedTargets(newSelected);
                   sm.playEffectSE('select.mp3');
