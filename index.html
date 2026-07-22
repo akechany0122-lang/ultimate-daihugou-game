@@ -6689,9 +6689,12 @@
       const executePass = (playerIndex) => {
         const activePlayersCount = 4 - ranksDiscovered.length;
         const newPassCount = passCount + 1;
+        
+        const isServiceAce = tableCards.length > 0 && tableCards.every(tc => tc.card.rank === 'A');
+        const requiredPassCount = isServiceAce ? activePlayersCount : (activePlayersCount - 1);
 
-        // 場に出ているカードがあり、自分以外の全員がパスした場合
-        if (newPassCount >= activePlayersCount - 1 && tableCards.length > 0) {
+        // 場に出ているカードがあり、必要数パスした場合
+        if (newPassCount >= requiredPassCount && tableCards.length > 0) {
           triggerClearFieldAnim(() => {
             clearFieldLogic();
             let nextStarter = lastPlayPlayer;
