@@ -6441,10 +6441,13 @@
              if (isHostMode) return;
              const data = payload.payload;
              if (data.event === 'PLAY') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
                executePlayRef.current(data.playerIndex, data.cards);
              } else if (data.event === 'PASS') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
                executePassRef.current(data.playerIndex);
              } else if (data.event === 'COMPLETE_EFFECT') {
+               if (data.playerIndex === myPlayerIndexRef.current) return;
                completeSpecialEffectRef.current(data.choice, data.playerIndex);
              }
           })
@@ -7565,6 +7568,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PLAY', cards: cardsToPlay });
+          executePlay(myPlayerIndex, cardsToPlay);
           setSelectedCards([]);
           return;
         }
@@ -7592,6 +7596,7 @@
         if (isValidPlay(selectedCards)) {
           if (multiplayerMode === 'active' && !isHost) {
             sendActionToHost({ action: 'PLAY', cards: selectedCards });
+            executePlay(myPlayerIndex, selectedCards);
             setSelectedCards([]);
             return;
           } else {
@@ -7610,6 +7615,7 @@
         
         if (multiplayerMode === 'active' && !isHost) {
           sendActionToHost({ action: 'PASS' });
+          executePass(myPlayerIndex);
           setSelectedCards([]);
           return;
         }
