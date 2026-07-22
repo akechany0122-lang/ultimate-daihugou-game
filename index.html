@@ -7452,7 +7452,7 @@
         const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
         if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
           sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo, selectionMode });
-          return; // ゲストはホストからのブロードキャストを待つ
+          // return せずにローカルでも Optimistic に実行する
         }
         if (actingIdx === myPlayerIndex) setIsActionLoading(true);
 
@@ -8904,7 +8904,7 @@
                 const isMe = pIdx === myPlayerIndex;
                 const targetIdxList = watchTarget?.targetIndexes || [];
                 const isTarget = targetIdxList.includes(pIdx);
-                const isClickable = watchSelecting && pIdx !== 0 && !ranksDiscovered.includes(pIdx) && !isShielded[pIdx];
+                const isClickable = watchSelecting && pIdx !== myPlayerIndex && !ranksDiscovered.includes(pIdx) && !isShielded[pIdx];
                 const isAlreadySelected = watchSelectedTargets.includes(pIdx);
                 const watchClasses = `${isClickable && !isAlreadySelected ? 'k-watch-focus' : ''} ${isTarget ? 'k-watch-target' : ''} ${isAlreadySelected ? 'k-watch-selected' : ''}`;
 
