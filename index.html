@@ -6455,7 +6455,7 @@
                executePassRef.current(data.playerIndex);
              } else if (data.event === 'COMPLETE_EFFECT') {
                if (data.playerIndex === myPlayerIndexRef.current) return;
-               completeSpecialEffectRef.current(data.choice, data.playerIndex, data.selectionInfo);
+               completeSpecialEffectRef.current(data.choice, data.playerIndex, data.selectionInfo, data.selectionMode);
              }
           })
           .on('broadcast', { event: 'ACTION' }, (payload) => {
@@ -6476,8 +6476,8 @@
                executePassRef.current(pIdx);
                broadcastEvent({ event: 'PASS', playerIndex: pIdx });
              } else if (data.action === 'COMPLETE_EFFECT') {
-               completeSpecialEffectRef.current(data.choice, pIdx, data.selectionInfo);
-               broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: pIdx, choice: data.choice, selectionInfo: data.selectionInfo });
+               completeSpecialEffectRef.current(data.choice, pIdx, data.selectionInfo, data.selectionMode);
+               broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: pIdx, choice: data.choice, selectionInfo: data.selectionInfo, selectionMode: data.selectionMode });
              } else if (data.action === 'CONFIRM_EXCHANGE') {
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
              } else if (data.action === 'RESTART' && isGameOverRef.current) {
@@ -7444,13 +7444,14 @@
         // cpuThinkingRef.current = false; // This will be reset by the useEffect when turn changes
       };
 
-      const completeSpecialEffect = (choice, remotePlayerIdx = null, remoteSelectionInfo = null) => {
+      const completeSpecialEffect = (choice, remotePlayerIdx = null, remoteSelectionInfo = null, remoteSelectionMode = null) => {
         const info = remoteSelectionInfo || selectionInfo;
-        if (!info) return; // Fallback for safety
+        const mode = remoteSelectionMode || selectionMode;
+        if (!info || !mode) return; // Fallback for safety
         const { playerIndex, nextP, count } = info;
         const actingIdx = remotePlayerIdx !== null ? remotePlayerIdx : playerIndex;
         if (multiplayerMode === 'active' && !isHost && remotePlayerIdx === null) {
-          sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo });
+          sendActionToHost({ action: 'COMPLETE_EFFECT', choice, selectionInfo, selectionMode });
           return; // ゲストはホストからのブロードキャストを待つ
         }
         if (actingIdx === myPlayerIndex) setIsActionLoading(true);
@@ -7458,12 +7459,12 @@
         // Host uses a consistent seed or broadcasts the randomness if needed, but for now we'll just broadcast the final state.
         let h = [...hands]; let gy = [...graveyard];
 
-        if (selectionMode === '7' || selectionMode === '10') {
+        if (mode === '7' || mode === '10') {
           const chosenCards = choice;
           if (chosenCards.length !== count) return;
 
           // 7渡し：次のプレイヤーがシールド中なら弾き返す
-          if (selectionMode === '7' && isShielded[nextP]) {
+          if (mode === '7' && isShielded[nextP]) {
             triggerMiss(nextP);
             setSelectionMode(null); setSelectionInfo(null); setSelectedCards([]);
             if (!watchSelecting) setTimeout(() => executeNextTurn(actingIdx, 1, null, ranksDiscovered), 1000);
@@ -7474,7 +7475,7 @@
             const hIdx = h[playerIndex].findIndex(hc => hc.id === c.id);
             if (hIdx !== -1) {
               const card = h[playerIndex].splice(hIdx, 1)[0];
-              if (selectionMode === '7') {
+              if (mode === '7') {
                 const newFly = { from: playerIndex, to: nextP, card: { ...card, rank: '?' }, type: 'pass', id: Math.random(), delay: idx * 0.5 };
                 setFlyingCards(prev => [...prev, newFly]);
                 setIsAnimating(true);
@@ -7513,7 +7514,7 @@
             }
           });
         }
-        if (selectionMode === 'Q') {
+        if (mode === 'Q') {
           // Qは複数ランクの配列を受け取れるように
           const targetRanks = Array.isArray(choice) ? choice : [choice];
           triggerTempEffect(setBomberActive, 1800);
