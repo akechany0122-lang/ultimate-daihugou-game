@@ -7593,7 +7593,12 @@
           // showMessage(`Ｑボンバー [${targetRanks.join(',')}]`, `全領域から${totalBombCount}枚が消滅${shieldNote}`);
         }
         setHands(h); setGraveyard(gy); setSelectionMode(null); setSelectionInfo(null); setSelectedCards([]);
-        if (isHost) broadcastState(h);
+        if (isHost) {
+          if (remotePlayerIdx === null && multiplayerMode === 'active') {
+            broadcastEvent({ event: 'COMPLETE_EFFECT', playerIndex: actingIdx, choice, selectionInfo: info, selectionMode: mode });
+          }
+          broadcastState(h);
+        }
         
         if (!watchSelecting) {
           // アニメーション完了（約2s）待機してから次へ進む
