@@ -6436,6 +6436,13 @@
              setPlayDirection(data.state.playDirection);
              setGraveyard(data.state.graveyard);
              if (data.state.remotePlayers) setRemotePlayers(data.state.remotePlayers);
+             
+             // 安全のため、ターン同期時にローカルのUIロックや演出状態を強制リセット
+             setIsActionLoading(false);
+             setIsAnimating(false);
+             setSelectionMode(null);
+             setWatchSelecting(false);
+             setWatchTarget(null);
           })
           .on('broadcast', { event: 'EVENT' }, (payload) => {
              if (isHostMode) return;
@@ -7106,7 +7113,7 @@
       };
 
       const executePlay = (playerIndex, cards) => {
-        if (playerIndex === 0) setIsActionLoading(true);
+        if (playerIndex === myPlayerIndexRef.current) setIsActionLoading(true);
         sm.playPaperSE();
         // Helper to trigger character cut‑in based on rank
         const triggerCutIn = (rank, comboData = null) => {
