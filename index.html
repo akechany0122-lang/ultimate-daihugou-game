@@ -8417,15 +8417,17 @@
                 <>
                   <div className="stage2-background animate-fade-in"></div>
 
-                  {/* 広告枠コンテナ (Ad Space) */}
-                  <div className="ad-overlay-container animate-fade-in">
-                    <div className="ad-side">
-                      <div className="ad-box">AD SPACE</div>
+                  {/* 広告枠コンテナ (Ad Space) - ルール選択画面以外で表示 */}
+                  {multiplayerMode && (
+                    <div className="ad-overlay-container animate-fade-in">
+                      <div className="ad-side">
+                        <div className="ad-box">AD SPACE</div>
+                      </div>
+                      <div className="ad-side">
+                        <div className="ad-box">AD SPACE</div>
+                      </div>
                     </div>
-                    <div className="ad-side">
-                      <div className="ad-box">AD SPACE</div>
-                    </div>
-                  </div>
+                  )}
                   
                   {!multiplayerMode && (
                   <>
