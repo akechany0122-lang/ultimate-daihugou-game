@@ -5535,6 +5535,7 @@
       }
     }
 </style>
+  <script src="ads.js"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.12.12/babel.min.js"></script>
@@ -9126,8 +9127,16 @@
                     ))}
                   </div>
                   <div className="result-actions">
-                    <button className="gold-btn mystic-btn" onClick={handleRestart}><span className="mystic-btn-text">再戦</span></button>
-                    <button className="gold-btn mystic-btn" onClick={() => location.reload()}><span className="mystic-btn-text">タイトルへ</span></button>
+                    <button className="gold-btn mystic-btn" onClick={() => {
+                      window.dispatchEvent(new CustomEvent('requestInterstitialAd', {
+                        detail: { onComplete: () => handleRestart() }
+                      }));
+                    }}><span className="mystic-btn-text">再戦</span></button>
+                    <button className="gold-btn mystic-btn" onClick={() => {
+                      window.dispatchEvent(new CustomEvent('requestInterstitialAd', {
+                        detail: { onComplete: () => location.reload() }
+                      }));
+                    }}><span className="mystic-btn-text">タイトルへ</span></button>
                   </div>
                 </div>
               )}
