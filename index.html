@@ -6226,6 +6226,7 @@
       const lastTouchedId = React.useRef(null);
       const isSwipingRef = React.useRef(false); // スワイプ中判定
       const touchStartPos = React.useRef({ x: 0, y: 0 });
+      const touchStartCardId = React.useRef(null);
       const hasFlickedPlay = React.useRef(false);
 
       const handlePointerDown = (e) => {
@@ -6233,11 +6234,19 @@
         hasFlickedPlay.current = false;
         // PCとモバイル両対応のためポインタ位置を記録
         touchStartPos.current = { x: e.clientX, y: e.clientY };
+
+        const startCardElem = e.target.closest('.card.selectable');
+        if (startCardElem) {
+          touchStartCardId.current = startCardElem.getAttribute('data-card-id');
+        } else {
+          touchStartCardId.current = null;
+        }
+
         try { e.target.setPointerCapture(e.pointerId); } catch(err) {}
       };
 
       const handlePointerMove = (e, playerIdx) => {
-        if (playerIdx !== 0 || turn !== 0 || selectionMode || exchangePhase || hasFlickedPlay.current) return;
+        if (playerIdx !== myPlayerIndex || turn !== myPlayerIndex || selectionMode || exchangePhase || hasFlickedPlay.current) return;
         // ドラッグ（マウスボタン押しっぱなし or タッチ中）のみ処理
         if (e.pointerType === 'mouse' && e.buttons === 0) return;
         
@@ -6254,12 +6263,9 @@
         if (deltaY > 50 && deltaY > deltaX * 1.5) {
           if (!isActionLoading) {
             // フリックされたカードを特定
-            const startElem = document.elementFromPoint(touchStartPos.current.x, touchStartPos.current.y);
-            const startCardElem = startElem?.closest('.card.selectable');
             let flickedCard = null;
-            if (startCardElem) {
-              const cardId = startCardElem.getAttribute('data-card-id');
-              flickedCard = hands[0].find(c => c.id === cardId);
+            if (touchStartCardId.current) {
+              flickedCard = hands[myPlayerIndex].find(c => c.id === touchStartCardId.current);
             }
 
             let playCandidate = [...selectedCards];
@@ -6292,7 +6298,7 @@
         if (cardElem) {
           const cardId = cardElem.getAttribute('data-card-id');
           if (cardId && cardId !== lastTouchedId.current) {
-            const card = hands[0].find(c => c.id === cardId);
+            const card = hands[myPlayerIndex].find(c => c.id === cardId);
             if (card) {
               sm.playLightPaperSE();
               // ユーザー要望：スワイプ中は「触れている位置のみ」を選択
