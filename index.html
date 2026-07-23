@@ -5479,16 +5479,17 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      /* 木枠（特に画面端のカーブ）との干渉を避けるため左右の余白を十分に取る */
-      padding: 0 80px;
+      /* 木枠（特に画面端のカーブ）との干渉を完全に避けるため左右の余白を十分に取る */
+      padding: 0 100px;
       box-sizing: border-box;
       pointer-events: none;
       z-index: 100;
     }
     .ad-side {
-      /* 業界標準のレクタングルサイズに固定 */
-      width: 300px;
-      height: 250px;
+      /* トランプの世界観に合わせた縦長サイズ（スケールダウン） */
+      width: 180px;
+      height: 360px;
+      max-height: 60vh; /* 画面が狭い場合のはみ出し防止 */
       pointer-events: auto;
       display: flex;
       justify-content: center;
