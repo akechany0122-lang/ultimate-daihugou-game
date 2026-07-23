@@ -5480,16 +5480,17 @@
       width: 100vw;
       height: 100vh;
       /* 木枠（特に画面端のカーブ）との干渉を完全に避けるため左右の余白を十分に取る */
-      padding: 0 100px;
+      padding: 0 120px;
       box-sizing: border-box;
       pointer-events: none;
       z-index: 100;
     }
     .ad-side {
-      /* トランプの世界観に合わせた縦長サイズ（スケールダウン） */
-      width: 180px;
-      height: 360px;
-      max-height: 60vh; /* 画面が狭い場合のはみ出し防止 */
+      /* オセロのようなスリムな縦長サイズ（ワイドスカイスクレイパー風） */
+      width: 160px;
+      height: 600px; /* Base height, constrained by max-height */
+      max-height: 450px; /* 背景の木枠に上下が干渉しない上限 */
+      margin: 0 10px; /* 中央UIとの余白を確保 */
       pointer-events: auto;
       display: flex;
       justify-content: center;
@@ -5500,8 +5501,8 @@
       height: 100%;
       /* 赤のフェルト地に馴染む、わずかに赤みを持たせた半透明の暗色 */
       background-color: rgba(30, 0, 0, 0.4);
-      /* 太すぎないソリッドなゴールドの枠線 */
-      border: 2px solid rgba(212, 175, 55, 0.6);
+      /* 太すぎないソリッドなゴールドの枠線 (要件に合わせて1pxに) */
+      border: 1px solid rgba(212, 175, 55, 0.8);
       /* カードに合わせた角丸 */
       border-radius: 10px;
       /* ①真下に落ちる濃く短い影、②枠の内側に落ちるかすかな影 */
