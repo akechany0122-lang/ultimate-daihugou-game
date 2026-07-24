@@ -6788,6 +6788,7 @@
 
         // 場に出ているカードがあり、必要数パスした場合
         if (newPassCount >= requiredPassCount && tableCards.length > 0) {
+          if (isHost) broadcastEvent({ event: 'PASS', playerIndex: playerIndex });
           triggerClearFieldAnim(() => {
             clearFieldLogic();
             let nextStarter = lastPlayPlayer;
