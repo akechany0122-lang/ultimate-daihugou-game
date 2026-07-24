@@ -7697,16 +7697,15 @@
         if (turn !== myPlayerIndex || selectionMode || isAnimating || watchTarget || watchSelecting || isActionLoading) return;
         const canPlay = cardsToPlay.length > 0;
         if (!canPlay) return;
-        
-        if (multiplayerMode === 'active' && !isHost) {
-          sendActionToHost({ action: 'PLAY', cards: cardsToPlay });
-          executePlay(myPlayerIndex, cardsToPlay);
-          setSelectedCards([]);
-          return;
-        }
 
         setIsActionLoading(true);
         if (isValidPlay(cardsToPlay)) {
+          if (multiplayerMode === 'active' && !isHost) {
+            sendActionToHost({ action: 'PLAY', cards: cardsToPlay });
+            executePlay(myPlayerIndex, cardsToPlay);
+            setSelectedCards([]);
+            return;
+          }
           executePlay(myPlayerIndex, cardsToPlay); setSelectedCards([]);
           if (isHost) broadcastState(hands);
         } else {
