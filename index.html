@@ -6481,7 +6481,12 @@
                const timeB = b.joined_at || '';
                return timeA.localeCompare(timeB);
              });
-             setRemotePlayers(players);
+             setRemotePlayers(prev => {
+               if (!gameStarted) return players;
+               // ゲーム中は既存のCPUを維持する
+               const cpus = prev.filter(p => p.id.startsWith('cpu'));
+               return [...players, ...cpus];
+             });
              
              if (isHostMode && multiplayerMode === 'online' && players.length >= 2 && !gameStarted) {
                 setTimeout(() => startGame(), 1000);
