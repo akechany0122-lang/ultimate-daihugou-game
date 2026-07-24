@@ -7561,6 +7561,9 @@
             setWatchTarget(null);
             setIsAnimating(false);
             executeNextTurn(actingIdx, 1);
+            if (isHost) {
+              broadcastState(hands);
+            }
           }, watchDuration);
           return;
         }
