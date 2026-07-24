@@ -6101,6 +6101,7 @@
       const [lastPlayPlayer, setLastPlayPlayer] = useState(null);
       const [selectedCards, setSelectedCards] = useState([]);
       const [ranksDiscovered, setRanksDiscovered] = useState([]);
+      const [restartVotes, setRestartVotes] = useState({});
 
       const [graveyard, setGraveyard] = useState([]);
       const [isShielded, setIsShielded] = useState([false, false, false, false]);
@@ -6132,6 +6133,7 @@
       const remotePlayersRef = useRef(remotePlayers);
       const isGameOverRef = useRef(isGameOver);
       const myPlayerIndexRef = useRef(myPlayerIndex);
+      const restartVotesRef = useRef(restartVotes);
 
       const executePlayRef = useRef();
       const executePassRef = useRef();
@@ -6145,7 +6147,8 @@
         remotePlayersRef.current = remotePlayers;
         isGameOverRef.current = isGameOver;
         myPlayerIndexRef.current = myPlayerIndex;
-      }, [turn, isAnimating, remotePlayers, isGameOver, myPlayerIndex]);
+        restartVotesRef.current = restartVotes;
+      }, [turn, isAnimating, remotePlayers, isGameOver, myPlayerIndex, restartVotes]);
 
       const [leaderboardData, setLeaderboardData] = useState([]);
       const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -6565,7 +6568,12 @@
              } else if (data.action === 'CONFIRM_EXCHANGE') {
                setExchangeDecisions(prev => ({ ...prev, [pIdx]: data.cards }));
              } else if (data.action === 'RESTART' && isGameOverRef.current) {
-               handleRestartRef.current();
+               checkRestartVotesRef.current = checkRestartVotes;
+               setRestartVotes(prev => {
+                 const next = { ...prev, [pIdx]: true };
+                 checkRestartVotesRef.current(next);
+                 return next;
+               });
              }
           })
           .on('broadcast', { event: 'ACTION_REJECTED' }, (payload) => {
@@ -7827,13 +7835,41 @@
         });
       };
 
-      const handleRestart = () => {
-        if (multiplayerMode === 'active' && !isHost) {
-          sendActionToHost({ action: 'RESTART' });
+      const checkRestartVotes = (votes) => {
+        if (!isHost) return;
+        if (multiplayerMode !== 'active') {
+          executeRestart();
           return;
         }
+        
+        // 接続されている人間プレイヤーの数
+        const humanCount = remotePlayers.length;
+        let voteCount = 0;
+        
+        if (votes[0]) voteCount++; // ホスト
+        for (let i = 1; i < remotePlayers.length; i++) {
+          if (votes[i]) voteCount++; // ゲスト
+        }
+        
+        if (voteCount >= humanCount) {
+          executeRestart();
+        }
+      };
 
-        // 新しいカードを配る
+      const handleRestart = () => {
+        setRestartVotes(prev => {
+          const next = { ...prev, [myPlayerIndex]: true };
+          if (isHost) {
+            checkRestartVotes(next);
+          }
+          return next;
+        });
+
+        if (multiplayerMode === 'active' && !isHost) {
+          sendActionToHost({ action: 'RESTART' });
+        }
+      };
+      const executeRestart = () => {
         const deck = shuffle(createDeck());
         const newHands = [[], [], [], []];
         let i = 0;
@@ -7875,6 +7911,7 @@
         });
         setExchangeDecisions(decisions);
         if (isHost) broadcastState(sortedHands);
+        setRestartVotes({});
       };
 
       const confirmExchange = () => {
@@ -9159,11 +9196,15 @@
                     ))}
                   </div>
                   <div className="result-actions">
-                    <button className="gold-btn mystic-btn" onClick={() => {
-                      window.dispatchEvent(new CustomEvent('requestInterstitialAd', {
-                        detail: { onComplete: () => handleRestart() }
-                      }));
-                    }}><span className="mystic-btn-text">再戦</span></button>
+                    <button className={`gold-btn mystic-btn ${restartVotes[myPlayerIndex] ? 'disabled' : ''}`} onClick={() => {
+                      if (!restartVotes[myPlayerIndex]) {
+                        window.dispatchEvent(new CustomEvent('requestInterstitialAd', {
+                          detail: { onComplete: () => handleRestart() }
+                        }));
+                      }
+                    }} disabled={restartVotes[myPlayerIndex]}><span className="mystic-btn-text">
+                      {restartVotes[myPlayerIndex] ? "待機中..." : "再戦"}
+                    </span></button>
                     <button className="gold-btn mystic-btn" onClick={() => {
                       window.dispatchEvent(new CustomEvent('requestInterstitialAd', {
                         detail: { onComplete: () => location.reload() }
