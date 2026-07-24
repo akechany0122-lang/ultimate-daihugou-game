@@ -7964,6 +7964,24 @@
         return 'joker.webp';
       };
 
+      const getAvatarStyle = (avatarKey) => {
+        const url = getAvatarUrl(avatarKey);
+        if (url.endsWith('.webp')) {
+          // カードデザインの場合：キャラの顔部分にズームする（例：上部20%付近、サイズ150%）
+          return {
+            backgroundImage: `url(${url})`,
+            backgroundSize: '150%',
+            backgroundPosition: 'center 20%'
+          };
+        }
+        // カスタムアップロード画像等の場合：通常通り中央をカバー
+        return {
+          backgroundImage: `url(${url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        };
+      };
+
       const getPlayerAvatar = (pIdx) => {
         if (pIdx === 0) return myProfile?.avatar || 'joker.webp';
         // CPUにはランダム感のある固定カードを割り当て（必要に応じて変更可）
@@ -8127,7 +8145,7 @@
                 {/* 手札枚数はアイコンの上部に配置 */}
                 <div className="hand-count-badge">{hands[playerIdx].length}</div>
                 {/* アバターアイコン */}
-                <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(playerIdx))})` }}></div>
+                <div className="player-avatar-icon" style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
                 {/* 名前はアイコンの下部に配置 */}
                 <div className="player-status">
                   {playerIdx === myPlayerIndex ? 'YOU' : (remotePlayers[playerIdx]?.name || `CPU ${playerIdx}`)}
@@ -8637,7 +8655,7 @@
               {/* 自分自身（YOU）のアバター・名前 左下固定表示 */}
               <div className="player-you-info-fixed">
                 <div className="hand-count-badge">{hands[myPlayerIndex] ? hands[myPlayerIndex].length : 0}</div>
-                <div className="player-avatar-icon" style={{ backgroundImage: `url(${getAvatarUrl(getPlayerAvatar(myPlayerIndex))})` }}></div>
+                <div className="player-avatar-icon" style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
                 <div className="player-status">
                   YOU
                   {ranksDiscovered.includes(myPlayerIndex) && (
@@ -9260,7 +9278,7 @@
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
           <div style={{
             width: '60px', height: '60px', borderRadius: '5px', border: '2px solid var(--color-gold)',
-            backgroundImage: `url(${getAvatarUrl(myProfile?.avatar)})`, backgroundSize: 'cover', backgroundPosition: 'center'
+            ...getAvatarStyle(myProfile?.avatar)
           }}></div>
           
           <label style={{ cursor: 'pointer', display: 'inline-block', padding: '8px 15px', background: '#333', color: 'var(--color-gold)', borderRadius: '5px', border: '1px solid var(--color-gold)', fontSize: '0.9rem' }}>
@@ -9308,7 +9326,7 @@
               style={{ 
                 width: '100%', aspectRatio: '1/1', borderRadius: '5px', cursor: 'pointer',
                 border: myProfile?.avatar === avatarKey ? '3px solid var(--color-gold)' : '1px solid #333',
-                backgroundImage: `url(${getAvatarUrl(avatarKey)})`, backgroundSize: 'cover', backgroundPosition: 'center'
+                ...getAvatarStyle(avatarKey)
               }}
             ></div>
           ))}
@@ -9432,7 +9450,7 @@
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
           <div style={{
             width: '60px', height: '60px', borderRadius: '5px', border: '2px solid var(--color-gold)',
-            backgroundImage: `url(${getAvatarUrl(myProfile?.avatar)})`, backgroundSize: 'cover', backgroundPosition: 'center'
+            ...getAvatarStyle(myProfile?.avatar)
           }}></div>
           
           <label style={{ cursor: 'pointer', display: 'inline-block', padding: '8px 15px', background: '#333', color: 'var(--color-gold)', borderRadius: '5px', border: '1px solid var(--color-gold)', fontSize: '0.9rem' }}>
@@ -9480,7 +9498,7 @@
               style={{ 
                 width: '100%', aspectRatio: '1/1', borderRadius: '5px', cursor: 'pointer',
                 border: myProfile?.avatar === avatarKey ? '3px solid var(--color-gold)' : '1px solid #333',
-                backgroundImage: `url(${getAvatarUrl(avatarKey)})`, backgroundSize: 'cover', backgroundPosition: 'center'
+                ...getAvatarStyle(avatarKey)
               }}
             ></div>
           ))}
