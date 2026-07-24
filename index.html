@@ -7956,21 +7956,21 @@
       };
 
       const getAvatarUrl = (avatarKey) => {
-        switch (avatarKey) {
-          case 'mage': return 'avatar_mage.png';
-          case 'assassin': return 'avatar_assassin.png';
-          case 'elf': return 'avatar_elf.png';
-          case 'knight':
-          default: return 'avatar_knight.png';
+        // base64画像データ、またはwebpなどの画像パスが直接入っている場合はそのまま返す
+        if (avatarKey && (avatarKey.startsWith('data:image') || avatarKey.endsWith('.webp'))) {
+          return avatarKey;
         }
+        // 古い設定が残っている場合や未設定の場合はデフォルトアイコンとしてjokerを返す
+        return 'joker.webp';
       };
 
       const getPlayerAvatar = (pIdx) => {
-        if (pIdx === 0) return myProfile?.avatar || 'knight';
-        if (pIdx === 1) return 'mage';
-        if (pIdx === 2) return 'elf';
-        if (pIdx === 3) return 'knight';
-        return 'knight';
+        if (pIdx === 0) return myProfile?.avatar || 'joker.webp';
+        // CPUにはランダム感のある固定カードを割り当て（必要に応じて変更可）
+        if (pIdx === 1) return 'Kimage.webp';
+        if (pIdx === 2) return 'Qimage.webp';
+        if (pIdx === 3) return 'Jimage.webp';
+        return 'joker.webp';
       };
 
       const renderFanHand = (handContent, playerIdx, isFaceUp = false) => {
@@ -9255,13 +9255,58 @@
 
       <div style={{ marginBottom: '30px' }}>
         <label style={{ color: '#ccc', display: 'block', marginBottom: '10px' }}>Avatar:</label>
-        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-          {['knight', 'mage', 'assassin', 'elf'].map(avatarKey => (
+        
+        {/* 現在のアバタープレビューとカスタムアップロードボタン */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+          <div style={{
+            width: '60px', height: '60px', borderRadius: '5px', border: '2px solid var(--color-gold)',
+            backgroundImage: `url(${getAvatarUrl(myProfile?.avatar)})`, backgroundSize: 'cover', backgroundPosition: 'center'
+          }}></div>
+          
+          <label style={{ cursor: 'pointer', display: 'inline-block', padding: '8px 15px', background: '#333', color: 'var(--color-gold)', borderRadius: '5px', border: '1px solid var(--color-gold)', fontSize: '0.9rem' }}>
+            📁 写真をアップロード
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const img = new Image();
+                  img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    // リサイズ（最大150px）してデータ量を削減
+                    const MAX_SIZE = 150;
+                    let width = img.width;
+                    let height = img.height;
+                    // アスペクト比維持で縮小
+                    if (width > height) {
+                      if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                      if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    // 品質0.7のJPEGにしてBase64化
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    updateProfileAvatar(dataUrl);
+                  };
+                  img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+              }
+            }} />
+          </label>
+        </div>
+
+        {/* カードデザインから選択 (グリッド表示) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', maxHeight: '180px', overflowY: 'auto', padding: '5px', background: 'rgba(0,0,0,0.3)', borderRadius: '5px' }}>
+          {['3image.webp', '4image.webp', '5image.webp', '6image.webp', '7image.webp', '8image.webp', '9image.webp', '10image.webp', 'Jimage.webp', 'Qimage.webp', 'Kimage.webp', 'Aimage.webp', '2image.webp', 'joker.webp'].map(avatarKey => (
             <div 
               key={avatarKey} 
               onClick={() => updateProfileAvatar(avatarKey)}
               style={{ 
-                width: '60px', height: '60px', borderRadius: '5px', cursor: 'pointer',
+                width: '100%', aspectRatio: '1/1', borderRadius: '5px', cursor: 'pointer',
                 border: myProfile?.avatar === avatarKey ? '3px solid var(--color-gold)' : '1px solid #333',
                 backgroundImage: `url(${getAvatarUrl(avatarKey)})`, backgroundSize: 'cover', backgroundPosition: 'center'
               }}
