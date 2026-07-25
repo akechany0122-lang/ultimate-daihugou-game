@@ -8217,8 +8217,8 @@
                   <div className="watch-activator-label">監視中</div>
                 )}
                 
-                {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ) */}
-                {multiplayerMode === 'active' && turn === playerIdx && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
+                {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ。CPUは非表示) */}
+                {multiplayerMode === 'active' && turn === playerIdx && !(remotePlayers[playerIdx] && remotePlayers[playerIdx].id.startsWith('cpu')) && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
                   <div className="turn-timer-gauge-container">
                     <div className={`turn-timer-gauge-bar ${turnTimeLeft <= 5 ? 'urgent' : ''}`} style={{ width: `${(turnTimeLeft / 15) * 100}%` }}></div>
                   </div>
@@ -8399,15 +8399,22 @@
       }, [executePlay, executePass, completeSpecialEffect, handleRestart, isValidPlay]);
 
       // --- Online Turn Auto-Pass Timer ---
+      // --- Online Turn Auto-Pass Timer ---
       useEffect(() => {
-        // オンライン対戦中、自分のターンで、かつ進行中のみタイマーを作動させる
-        if (multiplayerMode !== 'active' || turn !== myPlayerIndex || isAnimating || watchTarget || watchSelecting || isGameOver) {
+        // CPUのターンかどうか判定
+        const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
+
+        // オンライン対戦中、かつ進行中のみタイマーを作動させる。CPUターンはタイマー不要
+        if (multiplayerMode !== 'active' || isCpuTurn || isAnimating || watchTarget || watchSelecting || isGameOver) {
           setTurnTimeLeft(15);
           return;
         }
 
         if (turnTimeLeft <= 0) {
-          handlePass();
+          // 自分のターンの場合のみ自動パスを送信
+          if (turn === myPlayerIndex) {
+            handlePass();
+          }
           return;
         }
 
@@ -8416,7 +8423,7 @@
         }, 1000);
 
         return () => clearTimeout(timer);
-      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver]);
+      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver, remotePlayers]);
 
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
