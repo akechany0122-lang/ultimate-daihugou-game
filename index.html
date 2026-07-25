@@ -7882,12 +7882,14 @@
         }
         
         // 接続されている人間プレイヤーの数
-        const humanCount = remotePlayers.length;
+        let humanCount = 0;
         let voteCount = 0;
         
-        if (votes[0]) voteCount++; // ホスト
-        for (let i = 1; i < remotePlayers.length; i++) {
-          if (votes[i]) voteCount++; // ゲスト
+        for (let i = 0; i < remotePlayers.length; i++) {
+          if (remotePlayers[i] && !remotePlayers[i].id.startsWith('cpu')) {
+            humanCount++;
+            if (votes[i]) voteCount++;
+          }
         }
         
         if (voteCount >= humanCount) {
