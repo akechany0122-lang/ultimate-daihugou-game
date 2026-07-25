@@ -6126,6 +6126,7 @@
       const [previousTableCards, setPreviousTableCards] = useState([]);
       const [turn, setTurn] = useState(0);
       const [turnTimeLeft, setTurnTimeLeft] = useState(15);
+      const prevTimerTurnRef = useRef(0);
       const [passCount, setPassCount] = useState(0);
       const [lastPlayPlayer, setLastPlayPlayer] = useState(null);
       const [selectedCards, setSelectedCards] = useState([]);
@@ -8399,22 +8400,28 @@
       }, [executePlay, executePass, completeSpecialEffect, handleRestart, isValidPlay]);
 
       // --- Online Turn Auto-Pass Timer ---
+      // --- Online Turn Auto-Pass Timer ---
       // ターンが変わるごとにタイマーをリセットする
       useEffect(() => {
-        setTurnTimeLeft(15);
-      }, [turn]);
+        // もし直前のターンから今のターンに切り替わったばかりのRenderなら、タイマーをリセットして処理をスキップ
+        let currentTimeLeft = turnTimeLeft;
+        if (prevTimerTurnRef.current !== turn) {
+          prevTimerTurnRef.current = turn;
+          setTurnTimeLeft(15);
+          currentTimeLeft = 15;
+          return;
+        }
 
-      useEffect(() => {
         // CPUのターンかどうか判定
         const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
 
         // オンライン対戦中、かつ進行中のみタイマーを作動させる。CPUターンはタイマー不要
         if (multiplayerMode !== 'active' || isCpuTurn || isAnimating || watchTarget || watchSelecting || isGameOver) {
-          setTurnTimeLeft(15);
+          if (currentTimeLeft !== 15) setTurnTimeLeft(15);
           return;
         }
 
-        if (turnTimeLeft <= 0) {
+        if (currentTimeLeft <= 0) {
           // 自分のターンの場合のみ自動パスを送信
           if (turn === myPlayerIndex) {
             handlePass();
