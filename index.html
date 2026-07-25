@@ -6477,7 +6477,7 @@
         if (turn !== myPlayerIndex && !ranksDiscovered.includes(turn) && !selectionMode && !isAnimating && !watchTarget) {
           // マルチプレイヤー時はホストのみがCPUを動かす
           if (multiplayerMode === 'active' && !isHost) return;
-          const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
+          const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id && remotePlayers[turn].id.startsWith('cpu')) : true;
           if (!isCpuTurn) return;
           if (cpuThinkingRef.current) return;
           const timeout = setTimeout(() => {
@@ -6596,7 +6596,7 @@
              setRemotePlayers(prev => {
                if (!gameStarted) return players;
                // ゲーム中は既存のCPUを維持する
-               const cpus = prev.filter(p => p.id.startsWith('cpu'));
+               const cpus = prev.filter(p => p.id && p.id.startsWith('cpu'));
                return [...players, ...cpus];
              });
              
@@ -7093,7 +7093,7 @@
             } else {
               triggerTempEffect(setPassThreadActive, 1000);
               const rp = remotePlayers[playerIndex];
-              const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+              const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
               if (playerIndex === myPlayerIndexRef.current) {
                 // カットイン演出(800ms開始+2500ms)終了後にUIを表示
                 setTimeout(() => {
@@ -7164,7 +7164,7 @@
               steps = 0;
             } else {
               const rp = remotePlayers[playerIndex];
-              const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+              const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
               if (isWaitingForOther) {
                 steps = 0;
               } else {
@@ -7210,7 +7210,7 @@
             steps = 0;
           } else {
             const rp = remotePlayers[playerIndex];
-            const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+            const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
             if (isWaitingForOther) {
               steps = 0;
             } else {
@@ -7280,7 +7280,7 @@
             steps = 0;
           } else {
             const rp = remotePlayers[playerIndex];
-            const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+            const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
             if (isWaitingForOther) {
               steps = 0;
             } else {
@@ -7327,7 +7327,7 @@
 
         // Kウォッチ選択モードでない場合のみターンの処理を返す
         const rp = remotePlayers[playerIndex];
-        const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !rp.id.startsWith('cpu');
+        const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
         const kWait = rank === 'K' && (playerIndex === 0 || playerIndex === myPlayerIndexRef.current || isWaitingForOther);
         return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: kWait ? 0 : steps, pDir, isAsync, phoenixDrawn };
       };
@@ -7965,7 +7965,7 @@
         let voteCount = 0;
         
         for (let i = 0; i < remotePlayers.length; i++) {
-          if (remotePlayers[i] && !remotePlayers[i].id.startsWith('cpu')) {
+          if (remotePlayers[i] && !(remotePlayers[i].id && remotePlayers[i].id.startsWith('cpu'))) {
             humanCount++;
             if (votes[i]) voteCount++;
           }
@@ -8021,7 +8021,7 @@
         [0, 1, 2, 3].forEach(pIdx => {
           const rankPos = roundResults.indexOf(pIdx) + 1; // 1:大富豪, 2:富豪, 3:貧民, 4:大貧民
           // マルチプレイ時は、接続プレイヤー以外のスロットをCPUとして扱う
-          const isCpu = pIdx !== myPlayerIndex && (multiplayerMode === 'active' ? (remotePlayers[pIdx] && remotePlayers[pIdx].id.startsWith('cpu')) : true);
+          const isCpu = pIdx !== myPlayerIndex && (multiplayerMode === 'active' ? (remotePlayers[pIdx] && remotePlayers[pIdx].id && remotePlayers[pIdx].id.startsWith('cpu')) : true);
           if (isCpu) {
             if (rankPos === 1) decisions[pIdx] = sortedHands[pIdx].slice(0, 2);
             if (rankPos === 2) decisions[pIdx] = sortedHands[pIdx].slice(0, 1);
@@ -8309,7 +8309,7 @@
                 )}
                 
                 {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ。CPUは非表示) */}
-                {multiplayerMode === 'active' && turn === playerIdx && !(remotePlayers[playerIdx] && remotePlayers[playerIdx].id.startsWith('cpu')) && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
+                {multiplayerMode === 'active' && turn === playerIdx && !(remotePlayers[playerIdx] && remotePlayers[playerIdx].id && remotePlayers[playerIdx].id.startsWith('cpu')) && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
                   <div className="turn-timer-gauge-container">
                     <div className={`turn-timer-gauge-bar ${turnTimeLeft <= 5 ? 'urgent' : ''}`} style={{ width: `${(turnTimeLeft / 15) * 100}%` }}></div>
                   </div>
@@ -8507,7 +8507,7 @@
       // 最新の状態をRefに同期
       useEffect(() => {
         timerConditionsRef.current = {
-          isCpuTurn: multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true,
+          isCpuTurn: multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id && remotePlayers[turn].id.startsWith('cpu')) : true,
           isActionLoading,
           multiplayerMode,
           isAnimating,
@@ -9560,7 +9560,7 @@
               {(() => {
                 if (!gameStarted || isGameOver) return null;
                 const allHumansFinished = multiplayerMode === 'active' 
-                  ? remotePlayers.every((rp, i) => rp.id.startsWith('cpu') || ranksDiscovered.includes(i)) && ranksDiscovered.includes(myPlayerIndex)
+                  ? remotePlayers.every((rp, i) => (rp && rp.id && rp.id.startsWith('cpu')) || ranksDiscovered.includes(i)) && ranksDiscovered.includes(myPlayerIndex)
                   : ranksDiscovered.includes(myPlayerIndex);
                 if (allHumansFinished) {
                   return (
