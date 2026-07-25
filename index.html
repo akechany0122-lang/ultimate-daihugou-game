@@ -5534,7 +5534,34 @@
         display: none;
       }
     }
-</style>
+
+    /* --- オンラインターンタイマー --- */
+    .turn-timer-display {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      font-family: 'Cinzel', serif;
+      color: var(--color-gold);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--color-gold);
+      white-space: nowrap;
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+    .turn-timer-display.urgent {
+      color: #ff3333;
+      border-color: #ff3333;
+      animation: pulse-urgent 1s infinite alternate;
+    }
+    @keyframes pulse-urgent {
+      from { text-shadow: 0 0 5px #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.5); }
+      to { text-shadow: 0 0 15px #ff3333, 0 0 25px #ff0000; box-shadow: 0 0 15px rgba(255,51,51,0.8); }
+    }
+  </style>
   <script src="ads.js"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -6097,6 +6124,7 @@
       const [tableCards, setTableCards] = useState([]);
       const [previousTableCards, setPreviousTableCards] = useState([]);
       const [turn, setTurn] = useState(0);
+      const [turnTimeLeft, setTurnTimeLeft] = useState(15);
       const [passCount, setPassCount] = useState(0);
       const [lastPlayPlayer, setLastPlayPlayer] = useState(null);
       const [selectedCards, setSelectedCards] = useState([]);
@@ -8361,6 +8389,26 @@
         isValidPlayRef.current = isValidPlay;
       }, [executePlay, executePass, completeSpecialEffect, handleRestart, isValidPlay]);
 
+      // --- Online Turn Auto-Pass Timer ---
+      useEffect(() => {
+        // オンライン対戦中、自分のターンで、かつ進行中のみタイマーを作動させる
+        if (multiplayerMode !== 'active' || turn !== myPlayerIndex || isAnimating || watchTarget || watchSelecting || isGameOver) {
+          setTurnTimeLeft(15);
+          return;
+        }
+
+        if (turnTimeLeft <= 0) {
+          handlePass();
+          return;
+        }
+
+        const timer = setTimeout(() => {
+          setTurnTimeLeft(prev => prev - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver]);
+
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
           {(watchSelecting || (watchTarget && watchTarget.activatorIndex === myPlayerIndex)) && <div className={`k-watch-overlay ${watchTarget ? 'viewing' : ''}`}></div>}
@@ -9145,7 +9193,12 @@
               </div>
 
               {/* アクションパネル */}
-              <div className="action-panel">
+              <div className="action-panel" style={{ position: 'relative' }}>
+                {multiplayerMode === 'active' && turn === myPlayerIndex && gameStarted && !selectionMode && !isGameOver && !exchangePhase && !isAnimating && !watchTarget && !watchSelecting && (
+                  <div className={`turn-timer-display ${turnTimeLeft <= 5 ? 'urgent' : ''}`}>
+                    あと {turnTimeLeft} 秒
+                  </div>
+                )}
                 {gameStarted && !selectionMode && !isGameOver && !exchangePhase && (
                   <>
                     <button className="action-btn btn-play mystic-btn"
