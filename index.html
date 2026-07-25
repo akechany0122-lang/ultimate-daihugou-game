@@ -6122,7 +6122,7 @@
       const [remotePlayers, setRemotePlayers] = useState([{ id: 'local', name: 'YOU' }]); // For lobby display
       const [isDealing, setIsDealing] = useState(false);
       const [hands, setHands] = useState([[], [], [], []]);
-      const handsRef = useRef(hands);
+      const handsRef = React.useRef(hands);
       useEffect(() => { handsRef.current = hands; }, [hands]);
       const [tableCards, setTableCards] = useState([]);
       const [previousTableCards, setPreviousTableCards] = useState([]);
@@ -8429,10 +8429,6 @@
           watchTarget,
           watchSelecting,
           selectionMode,
-          selectionInfo,
-          hands: handsRef.current,
-          isShielded,
-          ranksDiscovered,
           isGameOver,
           turn,
           myPlayerIndex
@@ -8475,40 +8471,18 @@
       // 選択モード用 10秒タイマー
       useEffect(() => {
         if (!selectionMode && !watchSelecting) {
-          if (selectionTimeLeft !== 10) setSelectionTimeLeft(10);
+          setSelectionTimeLeft(10);
           return;
         }
 
         if (selectionTimeLeft <= 0) {
-          const c = timerConditionsRef.current;
-          const currentCount = (c.selectionInfo && c.selectionInfo.count) ? c.selectionInfo.count : 1;
-          
+          // タイムアウト時の自動処理
           if (watchSelecting) {
             setWatchSelecting(false);
-            const validTargets = [0, 1, 2, 3].filter(p => p !== turn && !c.ranksDiscovered.includes(p) && !c.isShielded[p]);
-            if (validTargets.length > 0) {
-              const randomTargets = [...validTargets].sort(() => Math.random() - 0.5).slice(0, currentCount);
-              completeSpecialEffect(randomTargets, null, { playerIndex: turn }, 'K');
-            } else {
-              if (!isActionLoading) setTimeout(() => executeNextTurn(turn, 1, null, c.ranksDiscovered), 1000);
-            }
+            if (!isActionLoading) setTimeout(() => executeNextTurn(turn, 1, null, ranksDiscovered), 1000);
           } else {
-            if (selectionMode === '7' || selectionMode === '10') {
-              const h = c.hands[turn];
-              if (h && h.length > 0) {
-                const count = Math.min(currentCount, h.length);
-                const randomCards = [...h].sort(() => Math.random() - 0.5).slice(0, count);
-                completeSpecialEffect(randomCards);
-              } else {
-                completeSpecialEffect([]);
-              }
-            } else if (selectionMode === 'Q') {
-              const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2', 'Joker'];
-              const randomRanks = [...ranks].sort(() => Math.random() - 0.5).slice(0, currentCount);
-              completeSpecialEffect(randomRanks);
-            } else {
-              completeSpecialEffect([]);
-            }
+            // 7, 10, Qの場合は何も選ばずスキップする
+            completeSpecialEffect([]);
           }
           return;
         }
