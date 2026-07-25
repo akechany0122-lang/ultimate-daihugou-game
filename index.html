@@ -4934,12 +4934,31 @@
       border: 4px solid #1a1a1c; /* 重厚なダークメタル外枠 */
       outline: 1.5px solid #3a3a3d; /* インナーメタルフレーム */
       outline-offset: -1px;
-      /* 周囲に黄色のふんわりした枠（グロウ）を追加 */
-      box-shadow: 0 0 18px rgba(255, 215, 0, 0.6), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
+      /* ベースはシャドウのみ、オーラは階級に応じて付与 */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
       background-size: cover;
       background-position: center;
       z-index: 550;
       background-color: #111;
+      transition: box-shadow 0.5s ease;
+    }
+
+    /* --- 階級オーラ --- */
+    .player-avatar-icon.rank-daifugo {
+      box-shadow: 0 0 25px rgba(255, 215, 0, 1), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
+      border-color: gold;
+    }
+    .player-avatar-icon.rank-fugo {
+      box-shadow: 0 0 20px rgba(192, 192, 192, 0.9), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
+      border-color: silver;
+    }
+    .player-avatar-icon.rank-hinmin {
+      box-shadow: 0 0 15px rgba(205, 127, 50, 0.8), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
+      border-color: #cd7f32;
+    }
+    .player-avatar-icon.rank-daihinmin {
+      box-shadow: 0 0 25px rgba(0, 0, 0, 1), 0 0 10px rgba(30, 0, 50, 0.8), 0 6px 12px rgba(0, 0, 0, 0.85), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.8), inset 0 0 10px #000;
+      border-color: #111;
     }
 
     /* --- ターン表示パネル (Turn Info Plaque) --- */
@@ -6050,8 +6069,8 @@
     // Rank title mapping representing hierarchy
     const getHierarchyTitle = (finishOrder) => {
       if (finishOrder === 1) return { title: "大富豪", cls: "rank-daifugo" };
-      if (finishOrder === 2) return { title: "富豪", cls: "" };
-      if (finishOrder === 3) return { title: "貧民", cls: "" };
+      if (finishOrder === 2) return { title: "富豪", cls: "rank-fugo" };
+      if (finishOrder === 3) return { title: "貧民", cls: "rank-hinmin" };
       if (finishOrder === 4) return { title: "大貧民", cls: "rank-daihinmin" };
       return { title: "生贄候補", cls: "" };
     };
@@ -8239,7 +8258,7 @@
                 {/* 手札枚数はアイコンの上部に配置 */}
                 <div className="hand-count-badge">{hands[playerIdx].length}</div>
                 {/* アバターアイコン */}
-                <div className="player-avatar-icon" style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
+                <div className={`player-avatar-icon ${hierarchy ? hierarchy.cls : ''}`} style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
                 {/* 名前はアイコンの下部に配置 */}
                 <div className="player-status">
                   {playerIdx === myPlayerIndex ? 'YOU' : (remotePlayers[playerIdx]?.name || `CPU ${playerIdx}`)}
@@ -8885,7 +8904,7 @@
                 )}
 
                 <div className="hand-count-badge">{hands[myPlayerIndex] ? hands[myPlayerIndex].length : 0}</div>
-                <div className="player-avatar-icon" style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
+                <div className={`player-avatar-icon ${ranksDiscovered.includes(myPlayerIndex) ? getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls : ''}`} style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
                 <div className="player-status">
                   YOU
                   {ranksDiscovered.includes(myPlayerIndex) && (
@@ -9278,11 +9297,7 @@
 
                 return (
                   <div key={pIdx} className={`player-pos ${posClass} ${isActive ? 'active-turn' : ''} ${watchClasses}`} style={targetStyle}>
-                    {(ranksDiscovered.includes(pIdx) || isGameOver) && (
-                      <div className={`player-rank-label ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`}>
-                        {getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).title}
-                      </div>
-                    )}
+
                     {renderFanHand(hands[pIdx], pIdx, isMe || isGameOver || (watchTarget?.targetIndexes?.includes(pIdx) && watchTarget?.activatorIndex === myPlayerIndex))}
                     {watchTarget && watchTarget.targetIndexes?.includes(pIdx) && (
                       <div className="watch-gauge-container">
