@@ -8403,26 +8403,25 @@
       // --- Online Turn Auto-Pass Timer ---
       // ターンが変わるごとにタイマーをリセットする
       useEffect(() => {
-        // もし直前のターンから今のターンに切り替わったばかりのRenderなら、タイマーをリセットして処理をスキップ
-        let currentTimeLeft = turnTimeLeft;
         if (prevTimerTurnRef.current !== turn) {
           prevTimerTurnRef.current = turn;
           setTurnTimeLeft(15);
-          currentTimeLeft = 15;
           return;
         }
 
-        // CPUのターンかどうか判定
         const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
 
-        // オンライン対戦中、かつ進行中のみタイマーを作動させる。CPUターンはタイマー不要
         if (multiplayerMode !== 'active' || isCpuTurn || isAnimating || watchTarget || watchSelecting || isGameOver) {
-          if (currentTimeLeft !== 15) setTurnTimeLeft(15);
+          if (turnTimeLeft !== 15) setTurnTimeLeft(15);
           return;
         }
 
-        if (currentTimeLeft <= 0) {
-          // 自分のターンの場合のみ自動パスを送信
+        // アクション送信中の場合はタイマーのカウントダウンをフリーズさせる
+        if (isActionLoading) {
+          return;
+        }
+
+        if (turnTimeLeft <= 0) {
           if (turn === myPlayerIndex) {
             handlePass();
           }
@@ -8434,7 +8433,7 @@
         }, 1000);
 
         return () => clearTimeout(timer);
-      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver, remotePlayers]);
+      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver, isActionLoading, remotePlayers]);
 
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
