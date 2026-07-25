@@ -5535,33 +5535,32 @@
       }
     }
 
-    /* --- オンラインターンタイマー --- */
-    .turn-timer-display {
-      font-size: 1.5rem;
-      font-family: 'Cinzel', serif;
-      color: var(--color-gold);
+    /* --- オンラインターンゲージ --- */
+    .turn-timer-gauge-container {
+      width: 60px;
+      height: 8px;
       background: rgba(0, 0, 0, 0.8);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid var(--color-gold);
-      margin-bottom: -15px; /* アバター/バッジに少し被せるか近づける */
+      border: 1px solid var(--color-gold);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 5px; /* アバター上部に配置するための余白 */
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
       z-index: 1001;
       pointer-events: none;
-      transition: color 0.3s;
-      box-shadow: 0 0 10px rgba(0,0,0,0.8);
     }
-    .turn-timer-display.urgent {
-      color: #ff3333;
-      border-color: #ff3333;
-      animation: pulse-urgent 1s infinite alternate;
+    .turn-timer-gauge-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ffcc00, #ffaa00);
+      transition: width 1s linear, background 0.3s;
     }
-    @keyframes pulse-urgent {
-      from { text-shadow: 0 0 5px #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.5); }
-      to { text-shadow: 0 0 15px #ff3333, 0 0 25px #ff0000; box-shadow: 0 0 15px rgba(255,51,51,0.8); }
+    .turn-timer-gauge-bar.urgent {
+      background: linear-gradient(90deg, #ff3333, #ff0000);
+      box-shadow: 0 0 8px rgba(255, 51, 51, 0.8);
+      animation: pulse-urgent-gauge 1s infinite alternate;
+    }
+    @keyframes pulse-urgent-gauge {
+      from { box-shadow: 0 0 2px rgba(255,51,51,0.5); }
+      to { box-shadow: 0 0 10px rgba(255,51,51,1); }
     }
   </style>
   <script src="ads.js"></script>
@@ -8218,10 +8217,10 @@
                   <div className="watch-activator-label">監視中</div>
                 )}
                 
-                {/* ターンタイマー (オンライン対戦かつ進行中のみ) */}
+                {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ) */}
                 {multiplayerMode === 'active' && turn === playerIdx && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
-                  <div className={`turn-timer-display ${turnTimeLeft <= 5 ? 'urgent' : ''}`}>
-                    {turnTimeLeft}
+                  <div className="turn-timer-gauge-container">
+                    <div className={`turn-timer-gauge-bar ${turnTimeLeft <= 5 ? 'urgent' : ''}`} style={{ width: `${(turnTimeLeft / 15) * 100}%` }}></div>
                   </div>
                 )}
 
@@ -8758,10 +8757,10 @@
               {/* 自分自身（YOU）のアバター・名前 左下固定表示 */}
               <div className="player-you-info-fixed">
                 
-                {/* ターンタイマー (オンライン対戦かつ進行中のみ) */}
+                {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ) */}
                 {multiplayerMode === 'active' && turn === myPlayerIndex && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
-                  <div className={`turn-timer-display ${turnTimeLeft <= 5 ? 'urgent' : ''}`}>
-                    {turnTimeLeft}
+                  <div className="turn-timer-gauge-container">
+                    <div className={`turn-timer-gauge-bar ${turnTimeLeft <= 5 ? 'urgent' : ''}`} style={{ width: `${(turnTimeLeft / 15) * 100}%` }}></div>
                   </div>
                 )}
 
