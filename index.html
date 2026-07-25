@@ -8429,6 +8429,10 @@
           watchTarget,
           watchSelecting,
           selectionMode,
+          selectionInfo,
+          hands: handsRef.current,
+          isShielded,
+          ranksDiscovered,
           isGameOver,
           turn,
           myPlayerIndex
@@ -8476,13 +8480,38 @@
         }
 
         if (selectionTimeLeft <= 0) {
-          // タイムアウト時の自動処理
+          // タイムアウト時の自動処理（ランダム選択）
+          const c = timerConditionsRef.current;
+          
           if (watchSelecting) {
             setWatchSelecting(false);
-            if (!isActionLoading) setTimeout(() => executeNextTurn(turn, 1, null, ranksDiscovered), 1000);
+            const validTargets = [0, 1, 2, 3].filter(p => p !== turn && !c.ranksDiscovered.includes(p) && !c.isShielded[p]);
+            if (validTargets.length > 0) {
+              const count = c.selectionInfo?.count || 1;
+              const randomTargets = [...validTargets].sort(() => Math.random() - 0.5).slice(0, count);
+              completeSpecialEffect(randomTargets, null, { playerIndex: turn }, 'K');
+            } else {
+              if (!isActionLoading) setTimeout(() => executeNextTurn(turn, 1, null, c.ranksDiscovered), 1000);
+            }
           } else {
-            // 7, 10, Qの場合は何も選ばずスキップする
-            completeSpecialEffect([]);
+            // 7, 10, Qの場合はランダムに選んで決定する
+            if (selectionMode === '7' || selectionMode === '10') {
+              const h = c.hands[turn];
+              if (h && h.length > 0) {
+                const count = Math.min(c.selectionInfo?.count || 1, h.length);
+                const randomCards = [...h].sort(() => Math.random() - 0.5).slice(0, count);
+                completeSpecialEffect(randomCards);
+              } else {
+                completeSpecialEffect([]);
+              }
+            } else if (selectionMode === 'Q') {
+              const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2', 'Joker'];
+              const count = c.selectionInfo?.count || 1;
+              const randomRanks = [...ranks].sort(() => Math.random() - 0.5).slice(0, count);
+              completeSpecialEffect(randomRanks);
+            } else {
+              completeSpecialEffect([]);
+            }
           }
           return;
         }
