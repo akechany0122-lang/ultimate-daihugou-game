@@ -6122,7 +6122,7 @@
       const [remotePlayers, setRemotePlayers] = useState([{ id: 'local', name: 'YOU' }]); // For lobby display
       const [isDealing, setIsDealing] = useState(false);
       const [hands, setHands] = useState([[], [], [], []]);
-      const handsRef = React.useRef(hands);
+      const handsRef = useRef(hands);
       useEffect(() => { handsRef.current = hands; }, [hands]);
       const [tableCards, setTableCards] = useState([]);
       const [previousTableCards, setPreviousTableCards] = useState([]);
@@ -8475,7 +8475,7 @@
       // 選択モード用 10秒タイマー
       useEffect(() => {
         if (!selectionMode && !watchSelecting) {
-          setSelectionTimeLeft(10);
+          if (selectionTimeLeft !== 10) setSelectionTimeLeft(10);
           return;
         }
 
