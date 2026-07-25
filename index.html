@@ -6122,6 +6122,8 @@
       const [remotePlayers, setRemotePlayers] = useState([{ id: 'local', name: 'YOU' }]); // For lobby display
       const [isDealing, setIsDealing] = useState(false);
       const [hands, setHands] = useState([[], [], [], []]);
+      const handsRef = React.useRef(hands);
+      useEffect(() => { handsRef.current = hands; }, [hands]);
       const [tableCards, setTableCards] = useState([]);
       const [previousTableCards, setPreviousTableCards] = useState([]);
       const [turn, setTurn] = useState(0);
@@ -7502,7 +7504,7 @@
 
           const nextTarget = getNextPlayer(playerIndex, stepsToUse, effectRes.pDir, updatedRanks);
           if (multiplayerMode === 'active' && isHost) {
-            broadcastState(newHands, nextTarget);
+            broadcastState(effectRes.phoenixDrawn ? handsRef.current : newHands, nextTarget);
           }
           // Ability Log for TCG (Simplified Japanese)
           const tcg = TCG_DATA[effectiveVisualRank];
