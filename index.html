@@ -8401,39 +8401,67 @@
 
       // --- Online Turn Auto-Pass Timer ---
       // --- Online Turn Auto-Pass Timer ---
-      // ターンが変わるごとにタイマーをリセットする
+      // --- Online Turn Auto-Pass Timer ---
+      const timerConditionsRef = useRef({
+        isCpuTurn: false,
+        isActionLoading: false,
+        multiplayerMode: 'lobby',
+        isAnimating: false,
+        watchTarget: null,
+        watchSelecting: false,
+        isGameOver: false,
+        turn: 0,
+        myPlayerIndex: 0
+      });
+
+      // 最新の状態をRefに同期
       useEffect(() => {
-        if (prevTimerTurnRef.current !== turn) {
-          prevTimerTurnRef.current = turn;
-          setTurnTimeLeft(15);
-          return;
-        }
+        timerConditionsRef.current = {
+          isCpuTurn: multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true,
+          isActionLoading,
+          multiplayerMode,
+          isAnimating,
+          watchTarget,
+          watchSelecting,
+          isGameOver,
+          turn,
+          myPlayerIndex
+        };
+      });
 
-        const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
-
-        if (multiplayerMode !== 'active' || isCpuTurn || isAnimating || watchTarget || watchSelecting || isGameOver) {
-          if (turnTimeLeft !== 15) setTurnTimeLeft(15);
-          return;
-        }
-
-        // アクション送信中の場合はタイマーのカウントダウンをフリーズさせる
-        if (isActionLoading) {
-          return;
-        }
-
-        if (turnTimeLeft <= 0) {
-          if (turn === myPlayerIndex) {
-            handlePass();
+      // ターンが変わるごとに確実にタイマーを15秒にリセットし、setIntervalを開始
+      useEffect(() => {
+        setTurnTimeLeft(15);
+        
+        const interval = setInterval(() => {
+          const c = timerConditionsRef.current;
+          
+          if (c.multiplayerMode !== 'active' || c.isCpuTurn || c.isAnimating || c.watchTarget || c.watchSelecting || c.isGameOver) {
+             setTurnTimeLeft(15); // フリーズ & 15秒維持
+             return;
           }
-          return;
-        }
+          if (c.isActionLoading) {
+             return; // フリーズ (秒数維持)
+          }
 
-        const timer = setTimeout(() => {
-          setTurnTimeLeft(prev => prev - 1);
+          setTurnTimeLeft(prev => {
+            if (prev <= 0) return 0;
+            return prev - 1;
+          });
         }, 1000);
 
-        return () => clearTimeout(timer);
-      }, [turnTimeLeft, turn, myPlayerIndex, multiplayerMode, isAnimating, watchTarget, watchSelecting, isGameOver, isActionLoading, remotePlayers]);
+        return () => clearInterval(interval);
+      }, [turn]);
+
+      // 時間切れ時の自動パス処理
+      useEffect(() => {
+        if (turnTimeLeft === 0 && turn === myPlayerIndex) {
+           const c = timerConditionsRef.current;
+           if (!c.isActionLoading && !c.isAnimating && !c.isGameOver && c.multiplayerMode === 'active') {
+             handlePass();
+           }
+        }
+      }, [turnTimeLeft, turn, myPlayerIndex]);
 
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
