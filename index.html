@@ -8876,7 +8876,7 @@
               <div className="player-you-info-fixed">
                 
                 {/* ターンタイマーゲージ (オンライン対戦かつ進行中のみ) */}
-                {multiplayerMode === 'active' && turn === myPlayerIndex && gameStarted && !isGameOver && !isAnimating && !watchTarget && !watchSelecting && (
+                {multiplayerMode === 'active' && turn === myPlayerIndex && gameStarted && !isGameOver && !exchangePhase && !isAnimating && !watchTarget && !watchSelecting && !selectionMode && (
                   <div className="turn-timer-gauge-container">
                     <div className={`turn-timer-gauge-bar ${turnTimeLeft <= 5 ? 'urgent' : ''}`} style={{ width: `${(turnTimeLeft / 15) * 100}%` }}></div>
                   </div>
