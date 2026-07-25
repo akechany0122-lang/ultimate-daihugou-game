@@ -7745,8 +7745,9 @@
             setSelectedCards([]);
             return;
           }
-          executePlay(myPlayerIndex, cardsToPlay); setSelectedCards([]);
-          if (isHost) broadcastState(hands);
+          executePlay(myPlayerIndex, cardsToPlay); 
+          if (isHost) broadcastEvent({ event: 'PLAY', playerIndex: myPlayerIndex, cards: cardsToPlay });
+          setSelectedCards([]);
         } else {
           setIsActionLoading(false);
           showMessage('INVALID SACRIFICE', 'そのカードは場に出せない');
