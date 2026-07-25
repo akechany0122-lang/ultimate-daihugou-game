@@ -6546,7 +6546,10 @@
                });
              }
              setTurn(data.state.turn);
-             setGameStarted(data.state.gameStarted);
+             setGameStarted(prev => {
+               if (!prev && data.state.gameStarted) sm.playGameBGM();
+               return data.state.gameStarted;
+             });
              const pIndex = data.state.remotePlayers.findIndex(rp => rp.id === myPlayerData.id);
              setMyPlayerIndex(pIndex > 0 ? pIndex : 1);
              setMultiplayerMode('active');
@@ -6710,6 +6713,7 @@
         
         broadcastState(sortedHands, 0, finalRemotePlayers);
         setGameStarted(true);
+        sm.playGameBGM();
         setMultiplayerMode('active');
         setMyPlayerIndex(0);
       };
