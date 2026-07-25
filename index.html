@@ -8399,7 +8399,11 @@
       }, [executePlay, executePass, completeSpecialEffect, handleRestart, isValidPlay]);
 
       // --- Online Turn Auto-Pass Timer ---
-      // --- Online Turn Auto-Pass Timer ---
+      // ターンが変わるごとにタイマーをリセットする
+      useEffect(() => {
+        setTurnTimeLeft(15);
+      }, [turn]);
+
       useEffect(() => {
         // CPUのターンかどうか判定
         const isCpuTurn = multiplayerMode === 'active' ? (remotePlayers[turn] && remotePlayers[turn].id.startsWith('cpu')) : true;
