@@ -6144,8 +6144,6 @@
       const [effectMessage, setEffectMessage] = useState(null);
       const [watchTarget, setWatchTarget] = useState(null);
       const [watchSelectedTargets, setWatchSelectedTargets] = useState([]);
-      const [watchSelecting, setWatchSelecting] = useState(false);
-      const [selectionTimeLeft, setSelectionTimeLeft] = useState(10);
       const [myProfile, setMyProfile] = useState(() => {
         const savedAvatar = localStorage.getItem('local_avatar') || 'knight';
         const savedName = localStorage.getItem('local_display_name') || 'YOU';
@@ -8428,7 +8426,6 @@
           isAnimating,
           watchTarget,
           watchSelecting,
-          selectionMode,
           isGameOver,
           turn,
           myPlayerIndex
@@ -8442,7 +8439,7 @@
         const interval = setInterval(() => {
           const c = timerConditionsRef.current;
           
-          if (c.multiplayerMode !== 'active' || c.isCpuTurn || c.isAnimating || c.watchTarget || c.watchSelecting || c.selectionMode || c.isGameOver) {
+          if (c.multiplayerMode !== 'active' || c.isCpuTurn || c.isAnimating || c.watchTarget || c.watchSelecting || c.isGameOver) {
              setTurnTimeLeft(15); // フリーズ & 15秒維持
              return;
           }
@@ -8468,43 +8465,11 @@
            }
         }
       }, [turnTimeLeft, turn, myPlayerIndex]);
-      // 選択モード用 10秒タイマー
-      useEffect(() => {
-        if (!selectionMode && !watchSelecting) {
-          setSelectionTimeLeft(10);
-          return;
-        }
-
-        if (selectionTimeLeft <= 0) {
-          // タイムアウト時の自動処理
-          if (watchSelecting) {
-            setWatchSelecting(false);
-            if (!isActionLoading) setTimeout(() => executeNextTurn(turn, 1, null, ranksDiscovered), 1000);
-          } else {
-            // 7, 10, Qの場合は何も選ばずスキップする
-            completeSpecialEffect([]);
-          }
-          return;
-        }
-
-        const timer = setTimeout(() => {
-          setSelectionTimeLeft(prev => prev - 1);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-      }, [selectionMode, watchSelecting, selectionTimeLeft, turn, ranksDiscovered]);
 
       return (
         <div id="game-root" className={`game-container ${(!gameStarted && multiplayerMode !== 'lobby') ? 'title-bg' : ''} ${watchSelecting ? 'k-watch-active k-watch-selecting' : ''} ${watchTarget && watchTarget.targetIndexes && watchTarget.activatorIndex === myPlayerIndex ? 'k-watch-active k-watch-viewing' : ''}`} onContextMenu={(e) => e.preventDefault()}>
           {(watchSelecting || (watchTarget && watchTarget.activatorIndex === myPlayerIndex)) && <div className={`k-watch-overlay ${watchTarget ? 'viewing' : ''}`}></div>}
-          {watchSelecting && (
-            <div className="k-watch-select-prompt" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div>プレイヤーを選択してください。</div>
-              <div className="turn-timer-gauge-container" style={{ width: '200px', marginTop: '10px' }}>
-                 <div className={`turn-timer-gauge-bar ${selectionTimeLeft <= 3 ? 'urgent' : ''}`} style={{ width: `${(selectionTimeLeft / 10) * 100}%`, backgroundColor: '#e74c3c' }}></div>
-              </div>
-            </div>
-          )}
+          {watchSelecting && <div className="k-watch-select-prompt">プレイヤーを選択してください。</div>}
           
           {(!gameStarted && multiplayerMode !== 'lobby') ? (
             <div className="title-screen">
@@ -9397,10 +9362,6 @@
                       selectionMode === '10' ? `捨てるカード（${selectionInfo?.count}枚）を選択` :
                         selectionMode === 'Q' ? `爆破する階級（${selectionInfo?.count}種類）を選択` :
                           "対象のプレイヤーを選択"}
-                  </div>
-                  
-                  <div className="turn-timer-gauge-container" style={{ width: '80%', marginTop: '10px' }}>
-                     <div className={`turn-timer-gauge-bar ${selectionTimeLeft <= 3 ? 'urgent' : ''}`} style={{ width: `${(selectionTimeLeft / 10) * 100}%`, backgroundColor: '#e74c3c' }}></div>
                   </div>
                   {selectionMode === 'Q' ? (
                     <>
