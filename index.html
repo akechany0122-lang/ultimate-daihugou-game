@@ -7617,7 +7617,7 @@
         const phoenixTotalTime = effectRes.phoenixDrawn
           ? 3400 + 1200 + effectRes.phoenixDrawn.drawn.length * (PHOENIX_FLIGHT_MS + PHOENIX_GAP_MS) + 500
           : 0;
-        let totalAnimTime = isPlus5Combo ? 9000 : (phoenixTotalTime > 0 ? phoenixTotalTime : (effectRes.isAsync ? (playRank === 'Q' ? 3500 : (playRank === 'K' ? 5000 : 3000)) : (isEffectSelecting && playerIndex === 0 ? 4000 : 2800)));
+        let totalAnimTime = isPlus5Combo ? 9000 : (phoenixTotalTime > 0 ? phoenixTotalTime : (effectRes.isAsync ? (playRank === 'Q' ? 5500 : (playRank === 'K' ? 5000 : 3000)) : (isEffectSelecting && playerIndex === 0 ? 4000 : 2800)));
         if (isRevToggle) totalAnimTime += 2200;
         if (isFastForwardRef.current) totalAnimTime = 50;
 
@@ -9418,13 +9418,14 @@
                   const scale = totalT === 1 ? 1.3 : totalT === 2 ? 1.0 : 0.8;
                   targetStyle = { '--target-top': `${topPercent}%`, '--target-scale': scale };
                 }
-                const counterRotate = posClass === 'player-pos-top' ? 'rotate(180deg)' : posClass === 'player-pos-left' ? 'rotate(-90deg)' : posClass === 'player-pos-right' ? 'rotate(90deg)' : 'none';
+                const myOffset = posClass === 'pos-bottom' ? 'calc(-50% - 60px)' : '-50%';
+                const counterRotate = posClass === 'pos-top' ? 'rotate(180deg)' : posClass === 'pos-left' ? 'rotate(-90deg)' : posClass === 'pos-right' ? 'rotate(90deg)' : 'none';
 
                 return (
                   <div key={pIdx} className={`player-pos ${posClass} ${isActive ? 'active-turn' : ''} ${watchClasses}`} style={targetStyle}>
 
                     {ranksDiscovered.includes(pIdx) ? (
-                      <div className={`finished-aura-container ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`} style={{ transform: `translate(-50%, -50%) ${counterRotate}` }}>
+                      <div className={`finished-aura-container ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`} style={{ transform: `translate(-50%, ${myOffset}) ${counterRotate}` }}>
                         <div className="finished-aura-text">{getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).title}</div>
                       </div>
                     ) : (
