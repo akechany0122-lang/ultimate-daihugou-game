@@ -4974,6 +4974,16 @@
     }
 
     /* --- アバター肖像画スタイル --- */
+    .active-turn-ring {
+      position: fixed;
+      pointer-events: none;
+      border: 3.5px solid #ffcc00; /* Gold */
+      border-radius: 50%;
+      z-index: 1000;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 15px rgba(255, 204, 0, 0.8), inset 0 0 10px rgba(255, 204, 0, 0.5);
+    }
+
     .player-avatar-icon {
       position: absolute;
       width: 80px;
@@ -6442,6 +6452,7 @@
       const [watchTimerTick, setWatchTimerTick] = useState(0); // タイマー描画更新用
 
       const [isGameOver, setIsGameOver] = useState(false);
+      const [activeRingStyle, setActiveRingStyle] = useState({ opacity: 0 });
       const [isFastForward, setIsFastForward] = useState(false);
       const isFastForwardRef = useRef(false);
       useEffect(() => { isFastForwardRef.current = isFastForward; }, [isFastForward]);
@@ -6526,7 +6537,34 @@
         }
       }, [revAnimMessage]);
 
-      // Slam animation logic
+      // Update active turn ring position
+      useEffect(() => {
+        const updateRingPosition = () => {
+          if (turn === -1 || isGameOver) {
+            setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
+            return;
+          }
+          const el = document.getElementById(`avatar-${turn}`);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            setActiveRingStyle({
+              top: `${rect.top}px`,
+              left: `${rect.left}px`,
+              width: `${rect.width}px`,
+              height: `${rect.height}px`,
+              opacity: 1,
+              transform: 'scale(1.15)', // slightly larger than the avatar
+            });
+          } else {
+            setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
+          }
+        };
+        // Use requestAnimationFrame to ensure DOM layout is complete before reading rects
+        requestAnimationFrame(updateRingPosition);
+        window.addEventListener('resize', updateRingPosition);
+        return () => window.removeEventListener('resize', updateRingPosition);
+      }, [turn, isGameOver, isMobile, myPlayerIndex, remotePlayers]);
+
       useEffect(() => {
         const hasAnimatingCards = tableCards.some(tc => tc.isAnimating);
         if (hasAnimatingCards) {
@@ -8338,7 +8376,7 @@
                 {/* 手札枚数はアイコンの上部に配置 */}
                 <div className="hand-count-badge">{hands[playerIdx].length}</div>
                 {/* アバターアイコン */}
-                <div className={`player-avatar-icon ${hierarchy ? hierarchy.cls : ''}`} style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
+                <div id={`avatar-${playerIdx}`} className={`player-avatar-icon ${hierarchy ? hierarchy.cls : ''}`} style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
                 {/* 名前はアイコンの下部に配置 */}
                 <div className="player-status">
                   {playerIdx === myPlayerIndex ? 'YOU' : (remotePlayers[playerIdx]?.name || `CPU ${playerIdx}`)}
@@ -8973,6 +9011,7 @@
             </div>
           ) : (
             <div className="table-container">
+              <div className="active-turn-ring" style={activeRingStyle}></div>
               {/* 自分自身（YOU）のアバター・名前 左下固定表示 */}
               <div className="player-you-info-fixed">
                 
@@ -8984,7 +9023,7 @@
                 )}
 
                 <div className="hand-count-badge">{hands[myPlayerIndex] ? hands[myPlayerIndex].length : 0}</div>
-                <div className={`player-avatar-icon ${ranksDiscovered.includes(myPlayerIndex) ? getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls : ''}`} style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
+                <div id={`avatar-${myPlayerIndex}`} className={`player-avatar-icon ${ranksDiscovered.includes(myPlayerIndex) ? getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls : ''}`} style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
                 <div className="player-status">
                   YOU
                   {ranksDiscovered.includes(myPlayerIndex) && (
