@@ -5174,49 +5174,13 @@
       z-index: 1;
     }
 
-    /* 埋め込まれた宝石 (左側) */
-    .mystic-btn::after {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 8px;
-      height: 8px;
-      /* アンバー琥珀の宝石 */
-      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
-      border-radius: 50%;
-      box-shadow: 
-        0 0 8px #ffb300,
-        0 0 2px #000;
-      transition: all 0.3s;
-      z-index: 2;
-    }
-
-    /* ボタン内のテキスト領域と右側の宝石 */
+    /* ボタン内のテキスト領域 */
     .mystic-btn-text {
       position: relative;
       z-index: 2;
-      padding: 0 15px; /* 左右に宝石用のパディングを確保 */
+      padding: 0;
       letter-spacing: 4px;
       white-space: nowrap;
-    }
-    
-    .mystic-btn-text::after {
-      content: '';
-      position: absolute;
-      right: -15px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 8px;
-      height: 8px;
-      /* アンバー琥珀の宝石 */
-      background: radial-gradient(circle at center, #ffe082 0%, #ffb300 70%, #875f00 100%);
-      border-radius: 50%;
-      box-shadow: 
-        0 0 8px #ffb300,
-        0 0 2px #000;
-      transition: all 0.3s;
     }
 
     /* アクティブな輝き（利用可能時） */
