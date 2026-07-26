@@ -9092,6 +9092,37 @@
                 setTitleStage(2);
                 sm.playHomeBGM();
               }}><span className="mystic-btn-text">退場</span></button>
+
+              {/* 早送り（スキップ）ボタン - 退場ボタンの右隣 */}
+              {(() => {
+                if (!gameStarted || isGameOver) return null;
+                const allHumansFinished = multiplayerMode === 'active' 
+                  ? remotePlayers.every((rp, i) => (rp && rp.id && rp.id.startsWith('cpu')) || ranksDiscovered.includes(i)) && ranksDiscovered.includes(myPlayerIndex)
+                  : ranksDiscovered.includes(myPlayerIndex);
+                
+                return (
+                  <button style={{ 
+                    position: 'absolute', top: '135px', left: '110px', zIndex: 10000,
+                    background: 'transparent', border: '1px solid var(--color-gold)', borderRadius: '50%',
+                    width: '36px', height: '36px', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    color: 'var(--color-gold)', 
+                    cursor: allHumansFinished ? 'pointer' : 'default', 
+                    opacity: allHumansFinished ? (isFastForward ? 1 : 0.6) : 0.15,
+                    boxShadow: (allHumansFinished && isFastForward) ? '0 0 10px rgba(212,175,55,0.8)' : 'none',
+                    pointerEvents: allHumansFinished ? 'auto' : 'none',
+                    transition: 'opacity 0.3s ease'
+                  }} onClick={() => {
+                    if (!allHumansFinished) return;
+                    setIsFastForward(!isFastForward);
+                    if (multiplayerMode === 'active' && !isHost) {
+                      sendActionToHost({ action: 'FAST_FORWARD' });
+                    }
+                  }}>
+                    <span style={{ fontSize: '1.2rem', transform: 'translateX(2px)' }}>▶▶</span>
+                  </button>
+                );
+              })()}
+
               {multiplayerMode === 'lobby' && (
                 <div className="selection-overlay-ui" style={{ zIndex: 6000, background: 'transparent', padding: '40px', marginTop: '22vh', boxShadow: 'none', border: 'none' }}>
                   <div className="selection-guide" style={{color: 'var(--color-gold)', textShadow: '0 0 15px rgba(212, 175, 55, 0.5)', fontSize: '1.8rem', marginBottom: '10px', letterSpacing: '2px'}}>待機中</div>
@@ -9668,34 +9699,6 @@
                   )}
                 </div>
               )}
-              
-              {/* 早送りボタン */}
-              {(() => {
-                if (!gameStarted || isGameOver) return null;
-                const allHumansFinished = multiplayerMode === 'active' 
-                  ? remotePlayers.every((rp, i) => (rp && rp.id && rp.id.startsWith('cpu')) || ranksDiscovered.includes(i)) && ranksDiscovered.includes(myPlayerIndex)
-                  : ranksDiscovered.includes(myPlayerIndex);
-                if (allHumansFinished) {
-                  return (
-                    <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 1000 }}>
-                      <button style={{ 
-                        background: 'transparent', border: '1px solid var(--color-gold)', borderRadius: '50%',
-                        width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        color: 'var(--color-gold)', cursor: 'pointer', opacity: isFastForward ? 1 : 0.6,
-                        boxShadow: isFastForward ? '0 0 10px rgba(212,175,55,0.8)' : 'none'
-                      }} onClick={() => {
-                        setIsFastForward(!isFastForward);
-                        if (multiplayerMode === 'active' && !isHost) {
-                          sendActionToHost({ action: 'FAST_FORWARD' });
-                        }
-                      }}>
-                        <span style={{ fontSize: '1.2rem', transform: 'translateX(2px)' }}>▶▶</span>
-                      </button>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
 
             </div>
             </>
