@@ -4974,6 +4974,27 @@
     }
 
     /* --- アバター肖像画スタイル --- */
+    @keyframes ring-glow {
+      0% {
+        box-shadow: 
+          0 0 8px rgba(234, 214, 131, 0.5),
+          inset 0 0 10px rgba(234, 214, 131, 0.2),
+          0 0 15px rgba(255, 255, 255, 0.05);
+      }
+      50% {
+        box-shadow: 
+          0 0 15px rgba(234, 214, 131, 1),
+          inset 0 0 20px rgba(234, 214, 131, 0.8),
+          0 0 25px rgba(255, 255, 255, 0.3);
+      }
+      100% {
+        box-shadow: 
+          0 0 8px rgba(234, 214, 131, 0.5),
+          inset 0 0 10px rgba(234, 214, 131, 0.2),
+          0 0 15px rgba(255, 255, 255, 0.05);
+      }
+    }
+
     .active-turn-ring {
       position: fixed;
       pointer-events: none;
@@ -4987,6 +5008,7 @@
         inset 0 0 12px rgba(234, 214, 131, 0.4),
         0 0 15px rgba(255, 255, 255, 0.1);
       background: radial-gradient(circle, rgba(234, 214, 131, 0.1) 0%, transparent 60%);
+      animation: ring-glow 2.5s infinite ease-in-out;
     }
 
     .player-avatar-icon {
@@ -6458,6 +6480,7 @@
 
       const [isGameOver, setIsGameOver] = useState(false);
       const [activeRingStyle, setActiveRingStyle] = useState({ opacity: 0 });
+      const prevTurnForRingRef = useRef(-1);
       const [isFastForward, setIsFastForward] = useState(false);
       const isFastForwardRef = useRef(false);
       useEffect(() => { isFastForwardRef.current = isFastForward; }, [isFastForward]);
@@ -6544,7 +6567,10 @@
 
       // Update active turn ring position
       useEffect(() => {
-        const updateRingPosition = () => {
+        let isTurnChange = (prevTurnForRingRef.current !== turn);
+        prevTurnForRingRef.current = turn;
+
+        const setPosition = (isInitialForTurn = false) => {
           if (turn === -1 || isGameOver) {
             setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
             return;
@@ -6552,22 +6578,33 @@
           const el = document.getElementById(`avatar-${turn}`);
           if (el) {
             const rect = el.getBoundingClientRect();
-            setActiveRingStyle({
+            setActiveRingStyle(prev => ({
+              ...prev,
               top: `${rect.top + rect.height / 2}px`,
               left: `${rect.left + rect.width / 2}px`,
               width: `${rect.width}px`,
               height: `${rect.height}px`,
-              opacity: 1,
+              opacity: isInitialForTurn ? 0.3 : (prev.opacity === 0 ? 1 : prev.opacity),
               transform: 'translate(-50%, -50%) scale(1.15)',
-            });
+            }));
+            
+            if (isInitialForTurn) {
+              setTimeout(() => {
+                setActiveRingStyle(prev => ({ ...prev, opacity: 1 }));
+              }, 300);
+            }
           } else {
             setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
           }
         };
+
+        const onInit = () => setPosition(isTurnChange);
+        const onResize = () => setPosition(false);
+
         // Use requestAnimationFrame to ensure DOM layout is complete before reading rects
-        requestAnimationFrame(updateRingPosition);
-        window.addEventListener('resize', updateRingPosition);
-        return () => window.removeEventListener('resize', updateRingPosition);
+        requestAnimationFrame(onInit);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
       }, [turn, isGameOver, isMobile, myPlayerIndex, remotePlayers]);
 
       useEffect(() => {
