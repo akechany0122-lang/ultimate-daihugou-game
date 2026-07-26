@@ -8034,7 +8034,7 @@
       const handleRestart = () => {
         setRestartVotes(prev => {
           const next = { ...prev, [myPlayerIndex]: true };
-          if (isHost) {
+          if (isHost || !multiplayerMode || multiplayerMode === 'local') {
             checkRestartVotes(next);
           }
           return next;
