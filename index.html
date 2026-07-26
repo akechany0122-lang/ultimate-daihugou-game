@@ -3861,36 +3861,50 @@
       font-weight: 900;
       font-family: 'Cinzel', serif;
       
-      /* より豪華なゴールドグラデーション */
-      background: linear-gradient(to bottom, #ffffff 0%, #ffdf00 30%, #d4af37 70%, #996515 100%);
+      /* Qボンバーのような赤黒のカラーリングに少しゴールドを混ぜたオーラ */
+      color: #ff3333;
+      background: linear-gradient(to bottom, #ffcccc 0%, #ff0000 40%, #cc0000 70%, #660000 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       
-      /* 立体感のある光彩 */
-      filter: drop-shadow(0 0 20px #ffaa00) drop-shadow(0 0 40px #ff4500) drop-shadow(0 10px 10px rgba(0,0,0,0.8));
+      /* Qボンバーのようなオーラ (赤・黒のドロップシャドウ) */
+      filter: drop-shadow(0 0 20px rgba(255, 0, 0, 1)) drop-shadow(0 0 40px rgba(139, 0, 0, 1)) drop-shadow(0 0 80px rgba(0, 0, 0, 0.9));
       
       opacity: 0;
       z-index: 999999;
       pointer-events: none;
       white-space: nowrap;
-      animation: rev-gorgeous-anim 3.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+      animation: rev-gorgeous-anim 2.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    .rev-gorgeous-overlay::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150vw;
+      height: 150vh;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 0, 0, 0.5) 0%, transparent 60%);
+      z-index: -1;
+      opacity: 0.5;
     }
 
     @keyframes rev-gorgeous-anim {
       0% {
-        transform: translate(-50%, -50%) scale(0.1);
+        transform: translate(-50%, -50%) scale(0.3);
         opacity: 0;
       }
-      10% {
-        transform: translate(-50%, -50%) scale(1.0);
+      20% {
+        transform: translate(-50%, -50%) scale(0.8);
         opacity: 1;
       }
-      85% {
-        transform: translate(-50%, -50%) scale(1.2);
+      80% {
+        transform: translate(-50%, -50%) scale(1.1);
         opacity: 1;
       }
       100% {
-        transform: translate(-50%, -50%) scale(4.0);
+        transform: translate(-50%, -50%) scale(1.5);
         opacity: 0;
       }
     }
@@ -6552,7 +6566,7 @@
         if (revAnimMessage) {
           const tmExit = setTimeout(() => {
             setRevAnimMessage(null);
-          }, 3000);
+          }, 2500);
           return () => clearTimeout(tmExit);
         }
       }, [revAnimMessage]);
@@ -7490,7 +7504,7 @@
           setRevAnimMessage(revText);
           if (sm.playExplosionSE) sm.playExplosionSE();
         }
-        const cutInDelay = isRevToggle ? 3000 : 800;
+        const cutInDelay = isRevToggle ? 2000 : 800;
 
         // --- STAGE 1: Land side-by-side or normally ---
         setTimeout(() => {
@@ -7623,7 +7637,7 @@
           ? 3400 + 1200 + effectRes.phoenixDrawn.drawn.length * (PHOENIX_FLIGHT_MS + PHOENIX_GAP_MS) + 500
           : 0;
         let totalAnimTime = isPlus5Combo ? 9000 : (phoenixTotalTime > 0 ? phoenixTotalTime : (effectRes.isAsync ? (playRank === 'Q' ? 3500 : (playRank === 'K' ? 5000 : 3000)) : (isEffectSelecting && playerIndex === 0 ? 4000 : 2800)));
-        if (isRevToggle) totalAnimTime += 2200;
+        if (isRevToggle) totalAnimTime += 1200;
         if (isFastForwardRef.current) totalAnimTime = 50;
 
         if (playerIndex === 0) setIsActionLoading(true);
