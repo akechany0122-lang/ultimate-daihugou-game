@@ -6686,9 +6686,9 @@
              const pIndex = data.state.remotePlayers.findIndex(rp => rp.id === myPlayerData.id);
              setMyPlayerIndex(pIndex > 0 ? pIndex : 1);
              setMultiplayerMode('active');
-             setRanksDiscovered(data.state.ranksDiscovered);
+             setRanksDiscovered(data.state.ranksDiscovered || []);
              setIsGameOver(data.state.isGameOver);
-             setRoundResults(data.state.roundResults);
+             setRoundResults(data.state.roundResults || []);
              setExchangePhase(data.state.exchangePhase);
              setPassCount(data.state.passCount);
              setLastPlayPlayer(data.state.lastPlayPlayer);
@@ -6992,7 +6992,7 @@
           const remaining = [0, 1, 2, 3].filter(p => !ranksDiscovered.includes(p));
           if (ranksDiscovered.length === 3 && remaining.length === 1) {
             const lastP = remaining[0];
-            const finalRanks = [...ranksDiscovered, lastP];
+            const finalRanks = ranksDiscovered ? [...ranksDiscovered, lastP] : [lastP];
             setRanksDiscovered(finalRanks);
             setRoundResults(finalRanks);
             setIsGameOver(true);
@@ -7115,10 +7115,8 @@
             // drawnをexecut ePlay側の演出へ渡すためresultに保存
             phoenixDrawn = { drawn, playerIndex };
             isAsync = true;
-            title = `${tcg.name} x${count}`;
-            desc = `死者${drawCount}名が冥界より帰還`;
             steps = 1;
-          } else { title = tcg?.name; desc = '墓地が空のため蘇生失敗'; }
+          }
         }
         if (rank === '7') {
           if (h[playerIndex].length > 0) {
@@ -7187,8 +7185,7 @@
                   }, 2000 + i * 500);
                 }
                 isAsync = true; // Mark as async
-                title = `${tcg.name} x${count}`;
-                desc = `契約により${passCount}枚の生贄を譲渡`;
+                isAsync = true;
                 steps = 1; // 7の後、次は順当に次の人
               }
             }
@@ -7364,7 +7361,6 @@
                 activatorIndex: playerIndex,
                 endTime: Date.now() + watchDuration
               });
-              title = `${tcg.name} x${count}`; desc = `${watchDuration / 1000}秒間、魂の中身を暴き続ける`;
               setTimeout(() => {
                 setWatchTarget(null);
                 setIsAnimating(false);
@@ -7532,7 +7528,7 @@
         setHands(newHands); setGraveyard(currentGraveyard);
 
         // 手札が空になったプレイヤーをランクに登録
-        let updatedRanks = [...ranksDiscovered];
+        let updatedRanks = ranksDiscovered ? [...ranksDiscovered] : [];
         newHands.forEach((h, idx) => {
           if (h.length === 0 && !updatedRanks.includes(idx)) {
             updatedRanks.push(idx);
@@ -9425,12 +9421,13 @@
                   const scale = totalT === 1 ? 1.3 : totalT === 2 ? 1.0 : 0.8;
                   targetStyle = { '--target-top': `${topPercent}%`, '--target-scale': scale };
                 }
+                const counterRotate = posClass === 'player-pos-top' ? 'rotate(180deg)' : posClass === 'player-pos-left' ? 'rotate(-90deg)' : posClass === 'player-pos-right' ? 'rotate(90deg)' : 'none';
 
                 return (
                   <div key={pIdx} className={`player-pos ${posClass} ${isActive ? 'active-turn' : ''} ${watchClasses}`} style={targetStyle}>
 
                     {ranksDiscovered.includes(pIdx) ? (
-                      <div className={`finished-aura-container ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`}>
+                      <div className={`finished-aura-container ${getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).cls}`} style={{ transform: `translate(-50%, -50%) ${counterRotate}` }}>
                         <div className="finished-aura-text">{getHierarchyTitle(ranksDiscovered.indexOf(pIdx) + 1).title}</div>
                       </div>
                     ) : (
