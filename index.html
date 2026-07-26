@@ -6665,17 +6665,17 @@
           .on('broadcast', { event: 'STATE_UPDATE' }, (payload) => {
              if (isHostMode) return;
              const data = payload.payload;
-             setHands(data.state.hands);
+             setHands(data.state.hands || [[], [], [], []]);
              setTableCards(prev => {
                if (prev && prev.some(tc => tc.isAnimating || tc.isSlammed)) {
                  return prev;
                }
-               return data.state.tableCards;
+               return data.state.tableCards || [];
              });
              if (data.state.previousTableCards) {
                setPreviousTableCards(prev => {
                  if (prev && prev.some(tc => tc.isAnimating || tc.isSlammed)) return prev;
-                 return data.state.previousTableCards;
+                 return data.state.previousTableCards || [];
                });
              }
              setTurn(data.state.turn);
@@ -6695,7 +6695,7 @@
              setIs11Back(data.state.is11Back);
              setIsRevolution(data.state.isRevolution);
              setPlayDirection(data.state.playDirection);
-             setGraveyard(data.state.graveyard);
+             setGraveyard(data.state.graveyard || []);
              if (data.state.remotePlayers) setRemotePlayers(data.state.remotePlayers);
              
              // ターン同期時にローカルのUIロックのみ強制リセット（アニメーションは阻害しない）
@@ -7654,7 +7654,8 @@
       };
 
       const playCpuTurn = () => {
-        let hand = sortHand([...hands[turn]]);
+        let hand = sortHand([...(hands[turn] || [])]);
+        if (!hand || hand.length === 0) { cpuThinkingRef.current = false; return; }
         if (tableCards.length === 0) { executePlay(turn, [hand[0]]); cpuThinkingRef.current = false; return; }
         const tableEffectiveCount = getEffectiveCount(tableCards.map(tc => tc.card));
         const tableStrength = tableCards[0].card.strength;
@@ -9449,7 +9450,7 @@
                 )}
 
                 <div className="table-cards-container">
-                  {[...previousTableCards, ...tableCards].map((item, idx) => {
+                  {[...(previousTableCards || []), ...(tableCards || [])].map((item, idx) => {
                     const tcg = TCG_DATA[item.card.rank];
                     const aura = tcg?.auraColor || '#b8860b';
                     return (
