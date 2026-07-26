@@ -4978,15 +4978,15 @@
       position: fixed;
       pointer-events: none;
       box-sizing: border-box;
-      border: 3px solid #f0e6d2; /* Whitish gold */
+      border: 3px solid #ead683; /* Pale gold with more yellow */
       border-radius: 50%;
       z-index: 1000;
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 
-        0 0 8px rgba(240, 230, 210, 0.7),
-        inset 0 0 12px rgba(240, 230, 210, 0.4),
-        0 0 15px rgba(255, 255, 255, 0.2);
-      background: radial-gradient(circle, rgba(240, 230, 210, 0.08) 0%, transparent 60%);
+        0 0 8px rgba(234, 214, 131, 0.7),
+        inset 0 0 12px rgba(234, 214, 131, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.1);
+      background: radial-gradient(circle, rgba(234, 214, 131, 0.1) 0%, transparent 60%);
     }
 
     .player-avatar-icon {
@@ -7491,7 +7491,7 @@
           setRevAnimMessage(revText);
           if (sm.playStartSE) sm.playStartSE();
         }
-        const cutInDelay = isRevToggle ? 3000 : 800;
+        const cutInDelay = isFastForwardRef.current ? 10 : (isRevToggle ? 3000 : 800);
 
         // --- STAGE 1: Land side-by-side or normally ---
         setTimeout(() => {
@@ -7540,10 +7540,10 @@
         setRanksDiscovered(updatedRanks);
 
         if (isFieldCleared) {
-          const clearDelay = isPlus5Combo ? 5000 : 3400;
+          const clearDelay = isFastForwardRef.current ? 10 : (isPlus5Combo ? 5000 : 3400);
           
           if (isPlus5Combo) {
-            setTimeout(() => triggerTempEffect(setGuillotineActive, 1200), clearDelay - 800);
+            setTimeout(() => triggerTempEffect(setGuillotineActive, 1200), isFastForwardRef.current ? 10 : (clearDelay - 800));
           }
 
           setTimeout(() => {
@@ -8667,7 +8667,7 @@
 
         const timer = setTimeout(() => {
           setSelectionTimeLeft(prev => prev - 1);
-        }, 1000);
+        }, isFastForwardRef.current ? 10 : 1000);
 
         return () => clearTimeout(timer);
       }, [selectionMode, watchSelecting, selectionTimeLeft, turn]);
@@ -9639,14 +9639,19 @@
                   : ranksDiscovered.includes(myPlayerIndex);
                 if (allHumansFinished) {
                   return (
-                    <div style={{ position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000 }}>
-                      <button className={`action-btn ${isFastForward ? 'btn-pass' : 'btn-confirm'} mystic-btn`} onClick={() => {
+                    <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 1000 }}>
+                      <button style={{ 
+                        background: 'transparent', border: '1px solid var(--color-gold)', borderRadius: '50%',
+                        width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        color: 'var(--color-gold)', cursor: 'pointer', opacity: isFastForward ? 1 : 0.6,
+                        boxShadow: isFastForward ? '0 0 10px rgba(212,175,55,0.8)' : 'none'
+                      }} onClick={() => {
                         setIsFastForward(!isFastForward);
                         if (multiplayerMode === 'active' && !isHost) {
                           sendActionToHost({ action: 'FAST_FORWARD' });
                         }
                       }}>
-                        <span className="mystic-btn-text">▶▶</span>
+                        <span style={{ fontSize: '1.2rem', transform: 'translateX(2px)' }}>▶▶</span>
                       </button>
                     </div>
                   );
