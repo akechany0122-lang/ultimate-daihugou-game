@@ -7440,6 +7440,14 @@
           effectiveVisualRank = '5_SOLO';
         }
         
+        const isRevToggle = cards.length >= 4;
+        if (isRevToggle) {
+          let revTitle = effectRes.isRev ? "革命 (REVOLUTION)" : "反逆 (REBELLION)";
+          let revDesc = effectRes.isRev ? "世界の理が逆転" : "世界の理が元に復帰";
+          showMessage(revTitle, revDesc);
+        }
+        const cutInDelay = isRevToggle ? 3000 : 800;
+
         // --- STAGE 1: Land side-by-side or normally ---
         setTimeout(() => {
           if (isPlus5Combo) {
@@ -7448,7 +7456,7 @@
           } else {
              triggerCutIn(effectiveVisualRank, null, effectRes.title, effectRes.desc); // Standard cards cut-in immediately
           }
-        }, 800);
+        }, cutInDelay);
         
         setPreviousTableCards(prev => [...prev, ...tableCards.map(tc => ({ ...tc, isOld: true }))]);
         setTableCards(styledTableCards);
@@ -7571,6 +7579,7 @@
           ? 3400 + 1200 + effectRes.phoenixDrawn.drawn.length * (PHOENIX_FLIGHT_MS + PHOENIX_GAP_MS) + 500
           : 0;
         let totalAnimTime = isPlus5Combo ? 9000 : (phoenixTotalTime > 0 ? phoenixTotalTime : (effectRes.isAsync ? (playRank === 'Q' ? 3500 : (playRank === 'K' ? 5000 : 3000)) : (isEffectSelecting && playerIndex === 0 ? 4000 : 2800)));
+        if (isRevToggle) totalAnimTime += 2200;
         if (isFastForwardRef.current) totalAnimTime = 50;
 
         if (playerIndex === 0) setIsActionLoading(true);
