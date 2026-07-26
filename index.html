@@ -7124,7 +7124,6 @@
             if (shieldStates[nextP]) {
               // シールド所持者へ渡そうとした場合：カードが使用者に戻ってくる
               triggerMiss(nextP);
-              title = 'SHIELD REPEL'; desc = `呪文の壁が血の契約を拒絶した`;
               
               const passCount = Math.min(count, h[playerIndex].length);
               for (let i = 0; i < passCount; i++) {
@@ -7338,8 +7337,8 @@
             if (others.length === 0) {
               const shieldedOthers = [0, 1, 2, 3].filter(v => v !== playerIndex && !ranksDiscovered.includes(v) && shieldStates[v]);
               if (shieldedOthers.length > 0) triggerMiss(shieldedOthers[0]);
-              title = 'SHIELD BLOCK'; desc = `呪文の壁が邪眼を完全に遮断した`; setIsAnimating(false);
-              return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: 1, pDir, isAsync };
+              setIsAnimating(false);
+              return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: 1, pDir, isAsync, phoenixDrawn, title, desc };
             }
             
             const targetCount = Math.min(count, others.length);
