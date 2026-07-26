@@ -6874,7 +6874,7 @@
             const h = [...hands];
             h[lastPlayPlayer] = [...h[lastPlayPlayer], ...cardsOnly];
             setHands(h);
-            showMessage('SERVICE ACE', `呪われたAが プレイヤー${lastPlayPlayer} の手元へ帰還`);
+            // showMessage('SERVICE ACE', `呪われたAが プレイヤー${lastPlayPlayer} の手元へ帰還`);
           } else {
             // ここでアニメーション用に discardingToGy をセットする (fromPlayer: 'center' を指定)
             setDiscardingToGy(cardsOnly.map(c => ({ card: c, fromPlayer: 'center' })));
