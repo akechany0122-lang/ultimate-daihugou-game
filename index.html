@@ -3862,8 +3862,8 @@
       font-family: 'Cinzel', serif;
       
       /* Qボンバーのような赤黒のカラーリングに少しゴールドを混ぜたオーラ */
-      color: #ff3333;
-      background: linear-gradient(to bottom, #ffcccc 0%, #ff0000 40%, #cc0000 70%, #660000 100%);
+      color: #ffffff;
+      background: linear-gradient(to bottom, #ffffff 0%, #f5f5f5 40%, #e0e0e0 70%, #cccccc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       
@@ -9058,6 +9058,7 @@
                 setGameStarted(false);
                 setMultiplayerMode(null);
                 setTitleStage(2);
+                sm.playTitleBGM();
               }}><span className="mystic-btn-text">退場</span></button>
               {multiplayerMode === 'lobby' && (
                 <div className="selection-overlay-ui" style={{ zIndex: 6000, background: 'transparent', padding: '40px', marginTop: '22vh', boxShadow: 'none', border: 'none' }}>
