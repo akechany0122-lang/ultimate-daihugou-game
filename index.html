@@ -7040,8 +7040,15 @@
         if (playedCards.length >= 4) {
           isRev = !isRev;
           setIsRevolution(isRev);
-          title = "革命 (REVOLUTION)";
-          desc = isRev ? "世界の理が逆転" : "世界の理が元に復帰";
+          let revTitle = isRev ? "革命 (REVOLUTION)" : "反逆 (REBELLION)";
+          let revDesc = isRev ? "世界の理が逆転" : "世界の理が元に復帰";
+          if (title && title !== revTitle) {
+            title = `${revTitle}・${title}`;
+            desc = `${desc} / ${revDesc}`;
+          } else {
+            title = revTitle;
+            desc = revDesc;
+          }
         }
 
         if (rank === '4') {
@@ -7329,20 +7336,20 @@
         const rp = remotePlayers[playerIndex];
         const isWaitingForOther = multiplayerMode === 'active' && rp && rp.id !== 'local' && !(rp.id && rp.id.startsWith('cpu'));
         const kWait = rank === 'K' && (playerIndex === 0 || playerIndex === myPlayerIndexRef.current || isWaitingForOther);
-        return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: kWait ? 0 : steps, pDir, isAsync, phoenixDrawn };
+        return { h, gy, shieldStates, is11B, isRev, isFieldCleared, steps: kWait ? 0 : steps, pDir, isAsync, phoenixDrawn, title, desc };
       };
 
       const executePlay = (playerIndex, cards) => {
         if (playerIndex === myPlayerIndexRef.current) setIsActionLoading(true);
         sm.playPaperSE();
         // Helper to trigger character cut‑in based on rank
-        const triggerCutIn = (rank, comboData = null) => {
+        const triggerCutIn = (rank, comboData = null, customTitle = '', customDesc = '') => {
           let tcg = TCG_DATA[rank];
           if (!tcg && rank !== '5_SOLO') return;
 
           let aura = tcg ? (tcg.auraColor || '#b8860b') : '#b8860b';
-          let name = tcg ? tcg.name : '';
-          let desc = tcg ? tcg.desc : '';
+          let name = customTitle || (tcg ? tcg.name : '');
+          let desc = customDesc || (tcg ? tcg.desc : '');
           let url = tcg ? tcg.url : '';
 
           if (rank === '5_SOLO') {
@@ -7392,6 +7399,10 @@
         let newHands = [...hands];
         newHands[playerIndex] = newHands[playerIndex].filter(c => !cards.find(sc => sc.id === c.id));
 
+        let currentGraveyard = [...graveyard];
+        let steps = 1; let isFieldCleared = false;
+        const effectRes = evaluateSpecialEffects(playerIndex, cards, newHands, currentGraveyard);
+
         const startEdge = getPlayerEdgePosition(playerIndex);
         const isPlus5Combo = cards.length === 2 && cards.some(c => c.rank === '5') && cards.some(c => c.rank !== '5');
 
@@ -7433,9 +7444,9 @@
         setTimeout(() => {
           if (isPlus5Combo) {
              const other = cards.find(c => c.rank !== '5');
-             triggerCutIn('5', { otherRank: other.rank, resultRank: effectiveVisualRank }); // Start Cinematic Merger
+             triggerCutIn('5', { otherRank: other.rank, resultRank: effectiveVisualRank }, effectRes.title, effectRes.desc); // Start Cinematic Merger
           } else {
-             triggerCutIn(effectiveVisualRank); // Standard cards cut-in immediately
+             triggerCutIn(effectiveVisualRank, null, effectRes.title, effectRes.desc); // Standard cards cut-in immediately
           }
         }, 800);
         
@@ -7457,11 +7468,6 @@
           }, 800 + 3400); // Phase4カットイン開始と同時
         }
         // ---------------------------------------------
-
-        let currentGraveyard = [...graveyard];
-        let steps = 1; let isFieldCleared = false;
-
-        const effectRes = evaluateSpecialEffects(playerIndex, cards, newHands, currentGraveyard);
 
         newHands = effectRes.h; currentGraveyard = effectRes.gy;
         setIsShielded(effectRes.shieldStates); setIs11Back(effectRes.is11B);
