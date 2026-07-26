@@ -3877,39 +3877,6 @@
       animation: rev-gorgeous-anim 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
     }
 
-    .rev-gorgeous-overlay::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 150%;
-      height: 250%;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(ellipse, rgba(255, 0, 0, 0.5) 0%, transparent 70%);
-      z-index: -1;
-      opacity: 0.5;
-    }
-
-    .rev-gorgeous-overlay::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 180%;
-      height: 300%;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(ellipse, rgba(255, 200, 0, 0.9) 0%, rgba(255, 69, 0, 0.7) 40%, transparent 70%);
-      z-index: -2;
-      animation: rev-explosion-aura 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-    }
-
-    @keyframes rev-explosion-aura {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); filter: brightness(2); }
-      15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); filter: brightness(1.5); }
-      80% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.5); filter: brightness(1); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(2); filter: brightness(0.5); }
-    }
-
     @keyframes rev-gorgeous-anim {
       0% {
         transform: translate(-50%, -50%) scale(0.3);
