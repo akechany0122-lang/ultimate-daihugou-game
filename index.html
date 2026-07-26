@@ -3890,6 +3890,26 @@
       opacity: 0.5;
     }
 
+    .rev-gorgeous-overlay::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100vw;
+      height: 100vh;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 200, 0, 0.9) 0%, rgba(255, 69, 0, 0.7) 30%, transparent 60%);
+      z-index: -2;
+      animation: rev-explosion-aura 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes rev-explosion-aura {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.1); filter: brightness(2); }
+      15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); filter: brightness(1.5); }
+      80% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.5); filter: brightness(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2); filter: brightness(0.5); }
+    }
+
     @keyframes rev-gorgeous-anim {
       0% {
         transform: translate(-50%, -50%) scale(0.3);
@@ -7087,7 +7107,8 @@
 
         const rank = effectiveRank;
         const isPlus5Combo = playedCards.length === 2 && playedCards.some(c => c.rank === '5') && playedCards.some(c => c.rank !== '5');
-        const effectDelay = isPlus5Combo ? 6500 : 3400;
+        let effectDelay = isPlus5Combo ? 6500 : 3400;
+        if (playedCards.length >= 4) effectDelay += 2200; // Account for revolution animation push
         const count = isPlus5Combo ? 1 : playedCards.length; // プラス5の合成は1枚出し判定とする
         const tcg = TCG_DATA[rank];
 
@@ -7160,7 +7181,7 @@
                 setTimeout(() => {
                   setSelectionMode('7');
                   setSelectionInfo({ playerIndex, nextP, count: Math.min(count, h[playerIndex].length), isSpecialEffect: true });
-                }, 3300);
+                }, effectDelay);
                 steps = 0;
               } else if (isWaitingForOther) {
                 // ゲストの入力を待つ
