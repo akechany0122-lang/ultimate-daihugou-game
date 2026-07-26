@@ -8079,7 +8079,7 @@
       const handleRestart = () => {
         setRestartVotes(prev => {
           const next = { ...prev, [myPlayerIndex]: true };
-          if (isHost || !multiplayerMode || multiplayerMode === 'local') {
+          if (isHost || multiplayerMode !== 'active') {
             checkRestartVotes(next);
           }
           return next;
