@@ -7926,6 +7926,7 @@
             setIsGameOver(false);
             setExchangePhase(null);
             setExchangeDecisions({});
+            setIsFastForward(false);
 
             if (customHands) {
               setHands(customHands);
@@ -8015,6 +8016,7 @@
         setIsGameOver(false);
         setExchangePhase('selecting');
         setSelectedCards([]);
+        setIsFastForward(false);
 
         // NPCの交換カードを即座に決定
         const decisions = {};
