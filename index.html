@@ -7973,11 +7973,11 @@
       };
 
       const checkRestartVotes = (votes) => {
-        if (!isHost) return;
         if (multiplayerMode !== 'active') {
           executeRestart();
           return;
         }
+        if (!isHost) return;
         
         // 接続されている人間プレイヤーの数
         let humanCount = 0;
