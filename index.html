@@ -7312,9 +7312,6 @@
             }, effectDelay + 2500); // Wait for cut-in before graveyard move
 
             h = tempH;
-            const shieldNote = shieldedPlayers.length > 0 ? ` (シールドにより${shieldedPlayers.length}人は無効)` : '';
-            title = `${tcg?.name} [${targetRanks.join(',')}] x${count}`;
-            desc = `全領域から${bombCount}枚が灰燼に帰した${shieldNote}`;
             triggerAbilityLog(`Qボンバー: ${targetRanks.join(',')}`);
           }
           }
