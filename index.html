@@ -3874,7 +3874,7 @@
       z-index: 999999;
       pointer-events: none;
       white-space: nowrap;
-      animation: rev-gorgeous-anim 2.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      animation: rev-gorgeous-anim 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
     }
 
     .rev-gorgeous-overlay::before {
@@ -6566,7 +6566,7 @@
         if (revAnimMessage) {
           const tmExit = setTimeout(() => {
             setRevAnimMessage(null);
-          }, 2500);
+          }, 3000);
           return () => clearTimeout(tmExit);
         }
       }, [revAnimMessage]);
@@ -7094,10 +7094,6 @@
         if (tcg) {
           title = tcg.name;
           desc = tcg.desc || '';
-          if (playedCards.some(c => c.rank === 'Joker') && nonJokers.length > 0) {
-            title = `🃏真・${tcg.name}`;
-            desc = `JOKERが ${rank} になり代わり、${count}連鎖の呪いが発動`;
-          }
         } else if (rank === '10_NO_EFFECT') {
           title = 'プラス5'; // 「連鎖」を削除
           desc = '効果なし（ただの5の2枚出し）';
@@ -7502,9 +7498,9 @@
         if (isRevToggle) {
           let revText = effectRes.isRev ? "革命" : "反革命";
           setRevAnimMessage(revText);
-          if (sm.playExplosionSE) sm.playExplosionSE();
+          if (sm.playStartSE) sm.playStartSE();
         }
-        const cutInDelay = isRevToggle ? 2000 : 800;
+        const cutInDelay = isRevToggle ? 3000 : 800;
 
         // --- STAGE 1: Land side-by-side or normally ---
         setTimeout(() => {
@@ -7637,7 +7633,7 @@
           ? 3400 + 1200 + effectRes.phoenixDrawn.drawn.length * (PHOENIX_FLIGHT_MS + PHOENIX_GAP_MS) + 500
           : 0;
         let totalAnimTime = isPlus5Combo ? 9000 : (phoenixTotalTime > 0 ? phoenixTotalTime : (effectRes.isAsync ? (playRank === 'Q' ? 3500 : (playRank === 'K' ? 5000 : 3000)) : (isEffectSelecting && playerIndex === 0 ? 4000 : 2800)));
-        if (isRevToggle) totalAnimTime += 1200;
+        if (isRevToggle) totalAnimTime += 2200;
         if (isFastForwardRef.current) totalAnimTime = 50;
 
         if (playerIndex === 0) setIsActionLoading(true);
