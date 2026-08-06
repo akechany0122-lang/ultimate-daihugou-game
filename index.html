@@ -4003,7 +4003,134 @@
       border-color: rgba(241, 196, 15, 0.5);
     }
 
-    /* --- タイトル画面 (Title Screen) --- */
+    /* --- 法的情報・広告枠 CSS --- */
+    .legal-footer {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      z-index: 2000;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .legal-footer a {
+      color: rgba(234, 214, 131, 0.7);
+      text-decoration: none;
+      margin: 0 10px;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+    
+    .legal-footer a:hover {
+      color: rgba(234, 214, 131, 1);
+      text-decoration: underline;
+    }
+    
+    .ad-placeholder {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px dashed rgba(234, 214, 131, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(234, 214, 131, 0.5);
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+    }
+    
+    .ad-title-screen {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 50px;
+      z-index: 2000;
+    }
+    
+    .ad-result-screen {
+      width: 300px;
+      height: 250px;
+      margin: 20px auto 0;
+    }
+
+    .legal-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 5000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .legal-modal-content {
+      background: linear-gradient(135deg, #1a1a1c 0%, #0d0d0f 100%);
+      border: 1px solid rgba(234, 214, 131, 0.3);
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(234, 214, 131, 0.05);
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      border-radius: 8px;
+      padding: 30px;
+      position: relative;
+      color: #e0e0e0;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .legal-modal-content h2 {
+      color: #ead683;
+      text-align: center;
+      border-bottom: 1px solid rgba(234, 214, 131, 0.3);
+      padding-bottom: 15px;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 2px;
+    }
+
+    .legal-modal-content h3 {
+      color: #ead683;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .legal-modal-content p, .legal-modal-content li {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      color: #ccc;
+    }
+
+    .legal-modal-content ul {
+      padding-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    .legal-modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      color: rgba(234, 214, 131, 0.5);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    .legal-modal-close:hover {
+      color: #ead683;
+    }
+    /* --- ここまで --- */
+/* --- タイトル画面 (Title Screen) --- */
     .title-screen {
       position: fixed;
       top: 0;
@@ -6205,7 +6332,7 @@
   const [isReady, setIsReady] = useState(false);
   const [isReadyPressed, setIsReadyPressed] = useState(false);
   const [hoveredMode, setHoveredMode] = useState(null);
-
+  const [showLegalModal, setShowLegalModal] = useState(null);
   const handleReadyClick = () => {
     sm.playReadySE();
     setIsReadyPressed(true);
@@ -8757,7 +8884,10 @@
           
           {(!gameStarted && multiplayerMode !== 'lobby') ? (
             <div className="title-screen">
-
+              {/* 広告枠 (タイトル画面上部) */}
+              <div className="ad-placeholder ad-title-screen">
+                Ad Space (320x50)
+              </div>
               {titleStage === 1 && (
               <div className="title-card-fan">
                 {/* 
@@ -9080,9 +9210,12 @@
                     </button>
                   </div>
                 </div>
-              )}
-
-
+              {/* 法的情報フッター (タイトル画面共通) */}
+              <div className="legal-footer">
+                <a onClick={() => setShowLegalModal('privacy')}>プライバシーポリシー</a> | 
+                <a onClick={() => setShowLegalModal('terms')}>利用規約</a> | 
+                <a onClick={() => setShowLegalModal('contact')}>お問い合わせ</a>
+              </div>
             </div>
           ) : (
             <>
@@ -9639,6 +9772,12 @@
                       </div>
                     ))}
                   </div>
+
+                  {/* 広告枠 (リザルト画面) */}
+                  <div className="ad-placeholder ad-result-screen">
+                    Ad Space (300x250)
+                  </div>
+
                   <div className="result-actions">
                     <button className={`gold-btn mystic-btn ${restartVotes[myPlayerIndex] ? 'disabled' : ''}`} onClick={() => {
                       if (!restartVotes[myPlayerIndex]) {
@@ -9900,6 +10039,51 @@
                   <button className="action-btn btn-pass btn-close-explanation mystic-btn" onClick={() => setShowExplanation(false)}>
                     <span className="mystic-btn-text">閉じる</span>
                   </button>
+                </div>
+              )}
+
+              {/* --- 法的情報・コンタクト モーダル --- */}
+              {showLegalModal && (
+                <div className="legal-modal-overlay" onClick={() => setShowLegalModal(null)}>
+                  <div className="legal-modal-content" onClick={e => e.stopPropagation()}>
+                    <button className="legal-modal-close" onClick={() => setShowLegalModal(null)}>×</button>
+                    {showLegalModal === 'privacy' && (
+                      <>
+                        <h2>プライバシーポリシー</h2>
+                        <p>本サイトでは、第三者配信の広告サービス（Google AdSense等）を利用する予定です。<br/>このような広告配信事業者は、ユーザーの興味に応じた商品やサービスの広告を表示するため、本サイトや他サイトへのアクセスに関する情報 「Cookie」(氏名、住所、メール アドレス、電話番号は含まれません) を使用することがあります。</p>
+                        <p>またGoogleアドセンスに関して、このプロセスの詳細やこのような情報が広告配信事業者に使用されないようにする方法については、<a href="https://policies.google.com/technologies/ads?hl=ja" target="_blank" rel="noopener noreferrer" style={{color: '#ead683'}}>Googleのポリシーと規約ページ</a>をご覧ください。</p>
+                      </>
+                    )}
+                    {showLegalModal === 'terms' && (
+                      <>
+                        <h2>利用規約</h2>
+                        <p>本サイトのゲームおよび関連サービスは、個人的な娯楽の目的で提供されています。</p>
+                        <ul>
+                          <li>本サイトを利用したことにより生じたいかなる損害についても、運営者は責任を負いません。</li>
+                          <li>不正アクセスやサーバーに過度な負担をかける行為は禁止します。</li>
+                          <li>予告なくサービスの変更、停止、終了を行う場合があります。</li>
+                        </ul>
+                      </>
+                    )}
+                    {showLegalModal === 'contact' && (
+                      <>
+                        <h2>お問い合わせ</h2>
+                        <p>ゲームに関するご意見、ご要望、不具合の報告、その他のお問い合わせにつきましては、以下の連絡先までお願いいたします。</p>
+                        <p style={{textAlign: 'center', marginTop: '30px'}}>
+                          <a href="mailto:support@example.com" style={{
+                            display: 'inline-block',
+                            padding: '10px 20px',
+                            background: '#ead683',
+                            color: '#111',
+                            textDecoration: 'none',
+                            fontWeight: 'bold',
+                            borderRadius: '5px'
+                          }}>support@example.com</a>
+                        </p>
+                        <p style={{fontSize: '0.8rem', color: '#888', textAlign: 'center', marginTop: '10px'}}>※仮のメールアドレスです。後ほどご自身のメールアドレスに変更してください。</p>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
