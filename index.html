@@ -6591,7 +6591,6 @@
             if (isInitialForTurn) {
               setTimeout(() => {
                 setActiveRingStyle(prev => ({ ...prev, opacity: 1 }));
-                setPosition(false); // Re-sync position after transition completes
               }, 400);
             }
           } else {
@@ -6606,7 +6605,7 @@
         requestAnimationFrame(onInit);
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
-      }, [turn, isGameOver, isMobile, myPlayerIndex, remotePlayers, hands, tableCards]);
+      }, [turn, isGameOver, isMobile, myPlayerIndex, remotePlayers]);
 
       useEffect(() => {
         const hasAnimatingCards = tableCards.some(tc => tc.isAnimating);
