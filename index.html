@@ -5008,7 +5008,27 @@
         inset 0 0 12px rgba(234, 214, 131, 0.4),
         0 0 15px rgba(255, 255, 255, 0.1);
       background: radial-gradient(circle, rgba(234, 214, 131, 0.1) 0%, transparent 60%);
+    }
+
+    .active-turn-ring-local {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%) scale(1.15);
+      pointer-events: none;
+      box-sizing: border-box;
+      border: 3px solid #ead683;
+      border-radius: 50%;
+      z-index: 1000;
+      box-shadow: 
+        0 0 8px rgba(234, 214, 131, 0.7),
+        inset 0 0 12px rgba(234, 214, 131, 0.4),
+        0 0 15px rgba(255, 255, 255, 0.1);
+      background: radial-gradient(circle, rgba(234, 214, 131, 0.1) 0%, transparent 60%);
       animation: ring-glow 2.5s infinite ease-in-out;
+      transition: opacity 0.2s ease-in;
     }
 
     .player-avatar-icon {
@@ -6480,6 +6500,7 @@
 
       const [isGameOver, setIsGameOver] = useState(false);
       const [activeRingStyle, setActiveRingStyle] = useState({ opacity: 0 });
+      const [settledTurn, setSettledTurn] = useState(-1);
       const prevTurnForRingRef = useRef(-1);
       const [isFastForward, setIsFastForward] = useState(false);
       const isFastForwardRef = useRef(false);
@@ -6573,28 +6594,35 @@
         const setPosition = (isInitialForTurn = false) => {
           if (turn === -1 || isGameOver) {
             setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
+            setSettledTurn(-1);
             return;
           }
           const el = document.getElementById(`avatar-${turn}`);
           if (el) {
             const rect = el.getBoundingClientRect();
+            // Start the global moving ring towards the new avatar
             setActiveRingStyle(prev => ({
               ...prev,
               top: `${rect.top + rect.height / 2}px`,
               left: `${rect.left + rect.width / 2}px`,
               width: `${rect.width}px`,
               height: `${rect.height}px`,
-              opacity: isInitialForTurn ? 0.3 : (prev.opacity === 0 ? 1 : prev.opacity),
+              opacity: isInitialForTurn ? 0.4 : 0, // Make it slightly more visible while moving
               transform: 'translate(-50%, -50%) scale(1.15)',
             }));
             
             if (isInitialForTurn) {
+              setSettledTurn(-1); // Hide the local ring while the global ring is moving
               setTimeout(() => {
-                setActiveRingStyle(prev => ({ ...prev, opacity: 1 }));
-              }, 400);
+                setActiveRingStyle(prev => ({ ...prev, opacity: 0 })); // Hide the global ring
+                setSettledTurn(turn); // Show the local ring perfectly attached to the avatar
+              }, 400); // 400ms is close to the 0.5s CSS transition
+            } else {
+              setSettledTurn(turn);
             }
           } else {
             setActiveRingStyle(prev => ({ ...prev, opacity: 0 }));
+            setSettledTurn(-1);
           }
         };
 
@@ -8418,7 +8446,9 @@
                 {/* 手札枚数はアイコンの上部に配置 */}
                 <div className="hand-count-badge">{hands[playerIdx].length}</div>
                 {/* アバターアイコン */}
-                <div id={`avatar-${playerIdx}`} className={`player-avatar-icon ${hierarchy ? hierarchy.cls : ''}`} style={getAvatarStyle(getPlayerAvatar(playerIdx))}></div>
+                <div id={`avatar-${playerIdx}`} className={`player-avatar-icon ${hierarchy ? hierarchy.cls : ''}`} style={getAvatarStyle(getPlayerAvatar(playerIdx))}>
+                  {settledTurn === playerIdx && <div className="active-turn-ring-local"></div>}
+                </div>
                 {/* 名前はアイコンの下部に配置 */}
                 <div className="player-status">
                   {playerIdx === myPlayerIndex ? 'YOU' : (remotePlayers[playerIdx]?.name || `CPU ${playerIdx}`)}
@@ -9066,7 +9096,9 @@
                 )}
 
                 <div className="hand-count-badge">{hands[myPlayerIndex] ? hands[myPlayerIndex].length : 0}</div>
-                <div id={`avatar-${myPlayerIndex}`} className={`player-avatar-icon ${ranksDiscovered.includes(myPlayerIndex) ? getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls : ''}`} style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}></div>
+                <div id={`avatar-${myPlayerIndex}`} className={`player-avatar-icon ${ranksDiscovered.includes(myPlayerIndex) ? getHierarchyTitle(ranksDiscovered.indexOf(myPlayerIndex) + 1).cls : ''}`} style={getAvatarStyle(getPlayerAvatar(myPlayerIndex))}>
+                  {settledTurn === myPlayerIndex && <div className="active-turn-ring-local"></div>}
+                </div>
                 <div className="player-status">
                   YOU
                   {ranksDiscovered.includes(myPlayerIndex) && (
