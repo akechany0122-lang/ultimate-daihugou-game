@@ -4129,6 +4129,53 @@
     .legal-modal-close:hover {
       color: #ead683;
     }
+
+    .ad-fullscreen-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .ad-fullscreen-placeholder {
+      width: 80vw;
+      height: 70vh;
+      max-width: 600px;
+      background: #111;
+      border: 2px dashed rgba(234, 214, 131, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: rgba(234, 214, 131, 0.8);
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .ad-fullscreen-close {
+      background: none;
+      border: 1px solid rgba(234, 214, 131, 0.5);
+      color: rgba(234, 214, 131, 0.8);
+      padding: 10px 30px;
+      font-size: 1.2rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      transition: all 0.3s ease;
+    }
+
+    .ad-fullscreen-close:hover {
+      background: rgba(234, 214, 131, 0.2);
+      color: #ead683;
+      border-color: #ead683;
+    }
     /* --- ここまで --- */
 /* --- タイトル画面 (Title Screen) --- */
     .title-screen {
@@ -6333,6 +6380,37 @@
   const [isReadyPressed, setIsReadyPressed] = useState(false);
   const [hoveredMode, setHoveredMode] = useState(null);
   const [showLegalModal, setShowLegalModal] = useState(null);
+  const [showInterstitialAd, setShowInterstitialAd] = useState(false);
+  
+  const handleExitWithAd = () => {
+    // 30%の確率で全面広告を表示
+    if (Math.random() < 0.3) {
+      setShowInterstitialAd(true);
+      // 実際には広告表示後に閉じるイベント等で退場処理を行いますが、
+      // プレースホルダーでは3秒後に自動で閉じて退場処理を行うモックにします
+      setTimeout(() => {
+        setShowInterstitialAd(false);
+        performExit();
+      }, 3000);
+    } else {
+      performExit();
+    }
+  };
+
+  const performExit = () => {
+    sm.playPaperSE();
+    if (roomChannel) {
+      roomChannel.unsubscribe();
+      setRoomChannel(null);
+    }
+    setCurrentRoom(null);
+    setIsHost(false);
+    setGameStarted(false);
+    setMultiplayerMode(null);
+    setTitleStage(2);
+    sm.playHomeBGM();
+  };
+
   const handleReadyClick = () => {
     sm.playReadySE();
     setIsReadyPressed(true);
@@ -9245,21 +9323,9 @@
                   )}
                 </div>
               </div>
-              <button className="btn-exit-to-title mystic-btn" onClick={() => {
-                sm.playPaperSE();
-                if (roomChannel) {
-                  roomChannel.unsubscribe();
-                  setRoomChannel(null);
-                }
-                setCurrentRoom(null);
-                // setConns([]);
-                // setGuestConn(null);
-                setIsHost(false);
-                setGameStarted(false);
-                setMultiplayerMode(null);
-                setTitleStage(2);
-                sm.playHomeBGM();
-              }}><span className="mystic-btn-text">退場</span></button>
+              <button className="btn-exit-to-title mystic-btn" onClick={handleExitWithAd}>
+                <span className="mystic-btn-text">退場</span>
+              </button>
 
               {/* 早送り（スキップ）ボタン - 退場ボタンの右隣 */}
               {(() => {
@@ -10071,7 +10137,7 @@
                         <h2>お問い合わせ</h2>
                         <p>ゲームに関するご意見、ご要望、不具合の報告、その他のお問い合わせにつきましては、以下の連絡先までお願いいたします。</p>
                         <p style={{textAlign: 'center', marginTop: '30px'}}>
-                          <a href="mailto:support@example.com" style={{
+                          <a href="mailto:akechany0122@gmail.com" style={{
                             display: 'inline-block',
                             padding: '10px 20px',
                             background: '#ead683',
@@ -10079,12 +10145,29 @@
                             textDecoration: 'none',
                             fontWeight: 'bold',
                             borderRadius: '5px'
-                          }}>support@example.com</a>
+                          }}>akechany0122@gmail.com</a>
                         </p>
                         <p style={{fontSize: '0.8rem', color: '#888', textAlign: 'center', marginTop: '10px'}}>※仮のメールアドレスです。後ほどご自身のメールアドレスに変更してください。</p>
                       </>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* --- 全面広告 (退場時など) --- */}
+              {showInterstitialAd && (
+                <div className="ad-fullscreen-overlay">
+                  <div className="ad-fullscreen-placeholder">
+                    Full Screen Ad Space (Interstitial)
+                  </div>
+                  <button className="ad-fullscreen-close" onClick={() => {
+                    setShowInterstitialAd(false);
+                    // モックのため、クリックでも閉じられるようにしておく
+                    // 実際には handleExitWithAd 側で performExit() が呼ばれるか、ここから呼ぶかを統一する
+                    // 今回はモックのため表示だけの制御
+                  }}>
+                    Skip Ad
+                  </button>
                 </div>
               )}
 
