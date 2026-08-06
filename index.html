@@ -6588,6 +6588,8 @@
 
       // Update active turn ring position
       useEffect(() => {
+        if (turn === -1 && !isGameOver) return; // Ignore temporary -1 states during trick clearing
+
         let isTurnChange = (prevTurnForRingRef.current !== turn);
         prevTurnForRingRef.current = turn;
 
